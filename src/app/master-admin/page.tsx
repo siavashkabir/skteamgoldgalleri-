@@ -218,7 +218,7 @@ async function MasterAdminContent() {
               </h2>
               <PlatformSettingsForm
                 name={platformSettings.get("platform_name") ?? "SK Team"}
-                url={platformSettings.get("platform_url") ?? ""}
+                url={platformSettings.get("platform_url") || "https://skteam.ir"}
               />
             </section>
 

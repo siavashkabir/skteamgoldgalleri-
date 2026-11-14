@@ -20,7 +20,7 @@ export default async function StorefrontFooter({
   const mapUrl = safeExternalUrl(store.locationUrl);
   const mapQuery = store.addressText || store.locationUrl || "";
   const navigationQuery = encodeURIComponent(mapQuery);
-  const platformUrl = safeExternalUrl(platform.url) || "/";
+  const platformUrl = safeExternalUrl(platform.url) || "https://skteam.ir";
 
   return (
     <footer className="mt-auto border-t border-white/[0.07] bg-[#131311]">

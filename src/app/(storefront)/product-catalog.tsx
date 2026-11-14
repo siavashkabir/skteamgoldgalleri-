@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type {
   StorefrontCategory,
@@ -20,28 +20,28 @@ export default function ProductCatalog({
   products: StorefrontProduct[];
   store: StorefrontStore;
 }) {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const selectedFilter = searchParams.get("category");
   const categoryOptions = useMemo(() => {
     const options = new Map(categories.map((category) => [category.id, category]));
+    const categoryNames = new Set(
+      categories.map((category) => normalizeCategoryName(category.name)),
+    );
     for (const product of products) {
-      if (product.categoryId && product.categoryName && !options.has(product.categoryId)) {
-        options.set(product.categoryId, {
-          id: product.categoryId,
+      if (!product.categoryName) continue;
+      const nameKey = normalizeCategoryName(product.categoryName);
+      if (categoryNames.has(nameKey)) continue;
+      const id = product.categoryId || product.categoryName;
+      if (!options.has(id)) {
+        options.set(id, {
+          id,
           name: product.categoryName,
           parentId: null,
           slug: categoryFilterSlug(product.categoryName),
         });
-      } else if (product.categoryName) {
-        options.set(product.categoryName, {
-          id: product.categoryName,
-          name: product.categoryName,
-          parentId: null,
-          slug: categoryFilterSlug(product.categoryName),
-        });
+        categoryNames.add(nameKey);
       }
     }
     return [...options.values()];
@@ -67,15 +67,20 @@ export default function ProductCatalog({
         }
       }
     }
-    return products.filter((product) =>
-      product.categoryId
-        ? included.has(product.categoryId)
-        : matches.some((category) => category.name === product.categoryName),
+    const includedNames = new Set(
+      categoryOptions
+        .filter((category) => included.has(category.id))
+        .map((category) => normalizeCategoryName(category.name)),
+    );
+    return products.filter(
+      (product) =>
+        (product.categoryId !== null && included.has(product.categoryId)) ||
+        (product.categoryName !== null &&
+          includedNames.has(normalizeCategoryName(product.categoryName))),
     );
   }, [categoryOptions, products, selectedFilter]);
 
   function selectCategory(category: StorefrontCategory | null) {
-    setSelectedCategory(category?.id ?? "all");
     const filter = category
       ? /مرد|men/i.test(category.name)
         ? "men"
@@ -107,7 +112,10 @@ export default function ProductCatalog({
         </button>
         {categoryOptions.map((category) => (
           <button
-            aria-pressed={selectedCategory === category.id || selectedFilter === category.slug || (selectedFilter === "men" && /مرد|men/i.test(category.name)) || (selectedFilter === "women" && /زن|women/i.test(category.name))}
+            aria-pressed={selectedFilter === category.id || selectedFilter === category.slug}
+            className={categoryClass(
+              selectedFilter === category.id || selectedFilter === category.slug,
+            )}
             key={category.id}
             onClick={() => selectCategory(category)}
             type="button"
@@ -221,6 +229,10 @@ function categoryFilterSlug(name: string) {
   if (/مرد|men/i.test(name)) return "men";
   if (/زن|women/i.test(name)) return "women";
   return name.trim().toLocaleLowerCase("fa").replace(/\s+/g, "-");
+}
+
+function normalizeCategoryName(name: string) {
+  return name.trim().toLocaleLowerCase("fa");
 }
 
 function formatPrice(value: number): string {

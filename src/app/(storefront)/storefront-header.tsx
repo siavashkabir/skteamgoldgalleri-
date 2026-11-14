@@ -50,7 +50,6 @@ export default function StorefrontHeader({
               </div>
             </details>
           ) : null}
-          <LivePriceWidget tenantId={store.id} />
           <Link
             className="hidden text-sm text-[#aaa79b] transition hover:text-[#e2c16d] sm:inline-flex"
             href={`/${store.slug}#products`}
@@ -75,6 +74,7 @@ export default function StorefrontHeader({
           </Link>
         </nav>
       </div>
+      <LivePriceWidget />
     </header>
   );
 }

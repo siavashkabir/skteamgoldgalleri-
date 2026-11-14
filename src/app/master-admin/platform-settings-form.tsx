@@ -22,7 +22,7 @@ export default function PlatformSettingsForm({
       </label>
       <label className="text-sm text-[#c5c1b6]">
         نشانی پلتفرم
-        <input className={inputClass} defaultValue={url} name="platform_url" placeholder="https://example.com" type="url" />
+        <input className={inputClass} defaultValue={url} name="platform_url" placeholder="https://skteam.ir" type="url" />
       </label>
       <button className={buttonClass} disabled={pending} type="submit">
         {pending ? "در حال ذخیره..." : "ذخیره برند"}

@@ -60,10 +60,11 @@ products to a browser-persisted cart. Checkout requires a signed-in customer,
 rechecks product prices in Turso, and creates a pending mock order; no online
 payment is performed. Store owners can configure storefront branding,
 contact details, nested categories, and product specifications from `/admin`.
-The master admin can edit tenant settings and the platform footer name/URL.
-The storefront gold-price widget uses the Gold API and ExchangeRate-API, with
-the tenant's optional manual toman-per-dollar rate overriding the live exchange
-rate.
+The master admin can edit tenant settings and the platform footer name/URL. The
+storefront filters products with `?category=...`. Its live-price widget fetches
+gold-ounce and USD/IRR rates from Gold API and ExchangeRate-API through
+`/api/prices`, displays the converted toman rate and 18k gold price, and refreshes
+every five minutes.
 
 To seed the default store with sample products and men's/women's categories, run:
 

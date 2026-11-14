@@ -14,6 +14,6 @@ export async function getPlatformBranding(): Promise<{
   );
   return {
     name: values.get("platform_name") || "SK Team",
-    url: values.get("platform_url") || "",
+    url: values.get("platform_url") || "https://skteam.ir",
   };
 }
