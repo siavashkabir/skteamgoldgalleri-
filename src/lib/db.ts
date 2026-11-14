@@ -25,7 +25,24 @@ function readAuthToken(name: string): string {
   return token;
 }
 
-export const db = createClient({
-  url: requiredEnv("TURSO_DATABASE_URL").trim(),
-  authToken: readAuthToken("TURSO_AUTH_TOKEN"),
+type DatabaseClient = ReturnType<typeof createClient>;
+
+let client: DatabaseClient | undefined;
+
+function getClient(): DatabaseClient {
+  if (!client) {
+    client = createClient({
+      url: requiredEnv("TURSO_DATABASE_URL").trim(),
+      authToken: readAuthToken("TURSO_AUTH_TOKEN"),
+    });
+  }
+  return client;
+}
+
+export const db = new Proxy({} as DatabaseClient, {
+  get(_target, property) {
+    const database = getClient();
+    const value = Reflect.get(database, property, database);
+    return typeof value === "function" ? value.bind(database) : value;
+  },
 });
