@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
     "db:init-storage": "node --env-file=.env.local scripts/init-storage.mjs",
-    "db:seed-admin": "node --env-file=.env.local scripts/seed-admin.mjs"
+    "db:seed-admin": "node --env-file=.env.local scripts/seed-admin.mjs",
+    "db:seed-products": "node --env-file=.env.local scripts/seed-products.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

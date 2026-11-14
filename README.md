@@ -54,3 +54,12 @@ categories are loaded from Turso. Customers can add products to a browser-persis
 cart, submit shipping details at `/checkout`, and create a pending mock order;
 no online payment is performed. Run `npm run db:init` to add shipping detail
 columns to an existing `orders` table.
+
+To seed the default store with sample products and men's/women's categories, run:
+
+```sh
+npm run db:seed-products
+```
+
+The seed is safe to rerun: it updates only its two sample categories and eight
+sample products for the default tenant.
