@@ -7,6 +7,7 @@ import {
 } from "@/lib/storefront-types";
 import AddTenantDialog from "./add-tenant-dialog";
 import EditTenantDialog from "./edit-tenant-dialog";
+import PlatformSettingsForm from "./platform-settings-form";
 import { signOut } from "./actions";
 import Link from "next/link";
 
@@ -15,6 +16,17 @@ type Tenant = {
   name: string;
   domain: string | null;
   createdAt: string;
+  description: string;
+  logoUrl: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  phoneNumbers: string;
+  addressText: string;
+  locationUrl: string;
+  instagramUrl: string;
+  telegramUrl: string;
+  whatsappUrl: string;
+  tomanRate: string;
 };
 
 export default function MasterAdminPage() {
@@ -28,14 +40,32 @@ export default function MasterAdminPage() {
 async function MasterAdminContent() {
   const { email: accountEmail } = await getSuperAdminContext();
 
-  const result = await db.execute(
-    "SELECT id, name, domain, created_at FROM tenants ORDER BY created_at DESC",
+  const [result, platformResult] = await Promise.all([
+    db.execute(`SELECT id, name, domain, created_at, description, logo_url, hero_title,
+                       hero_subtitle, phone_numbers, address_text, location_url,
+                       instagram_url, telegram_url, whatsapp_url, toman_rate
+                FROM tenants ORDER BY created_at DESC`),
+    db.execute("SELECT key, value FROM platform_settings"),
+  ]);
+  const platformSettings = new Map(
+    platformResult.rows.map((row) => [String(row.key), String(row.value)]),
   );
   const tenants: Tenant[] = result.rows.map((row) => ({
     id: String(row.id),
     name: String(row.name),
     domain: row.domain === null ? null : String(row.domain),
     createdAt: String(row.created_at),
+    description: row.description === null ? "" : String(row.description),
+    logoUrl: row.logo_url === null ? "" : String(row.logo_url),
+    heroTitle: row.hero_title === null ? "" : String(row.hero_title),
+    heroSubtitle: row.hero_subtitle === null ? "" : String(row.hero_subtitle),
+    phoneNumbers: parsePhoneNumbers(row.phone_numbers).join("\n"),
+    addressText: row.address_text === null ? "" : String(row.address_text),
+    locationUrl: row.location_url === null ? "" : String(row.location_url),
+    instagramUrl: row.instagram_url === null ? "" : String(row.instagram_url),
+    telegramUrl: row.telegram_url === null ? "" : String(row.telegram_url),
+    whatsappUrl: row.whatsapp_url === null ? "" : String(row.whatsapp_url),
+    tomanRate: row.toman_rate === null ? "" : String(row.toman_rate),
   }));
   return (
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9]">
@@ -182,6 +212,16 @@ async function MasterAdminContent() {
               </article>
             </section>
 
+            <section aria-labelledby="platform-settings-heading">
+              <h2 className="mb-3 text-base font-semibold" id="platform-settings-heading">
+                برند پلتفرم در فوتر فروشگاه‌ها
+              </h2>
+              <PlatformSettingsForm
+                name={platformSettings.get("platform_name") ?? "SK Team"}
+                url={platformSettings.get("platform_url") ?? ""}
+              />
+            </section>
+
             <section
               className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#171716]"
               id="tenants"
@@ -287,6 +327,14 @@ async function MasterAdminContent() {
       </div>
     </div>
   );
+}
+
+function parsePhoneNumbers(value: unknown): string[] {
+  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "[]");
+  if (!Array.isArray(parsed) || !parsed.every((phone) => typeof phone === "string")) {
+    throw new Error("شماره‌های تماس ذخیره‌شده معتبر نیستند.");
+  }
+  return parsed;
 }
 
 function formatDate(value: string) {

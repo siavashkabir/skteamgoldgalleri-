@@ -10,6 +10,13 @@ export type StoreSettings = {
   instagramUrl: string;
   telegramUrl: string;
   whatsappUrl: string;
+  logoUrl: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  phoneNumbers: string;
+  addressText: string;
+  locationUrl: string;
+  tomanRate: string;
 };
 
 export default function StoreSettingsForm({
@@ -55,6 +62,34 @@ export default function StoreSettingsForm({
             placeholder="درباره فروشگاه و محصولات آن بنویسید."
             rows={5}
           />
+        </label>
+        <label className="block text-sm text-[#c5c1b6]">
+          نشانی لوگو
+          <input className={inputClass} defaultValue={settings.logoUrl} name="logo_url" type="url" />
+        </label>
+        <label className="block text-sm text-[#c5c1b6]">
+          نرخ دستی دلار (تومان)
+          <input className={inputClass} defaultValue={settings.tomanRate} min="1" name="toman_rate" step="any" type="number" />
+        </label>
+        <label className="block text-sm text-[#c5c1b6]">
+          عنوان ویترین
+          <input className={inputClass} defaultValue={settings.heroTitle} maxLength={200} name="hero_title" />
+        </label>
+        <label className="block text-sm text-[#c5c1b6]">
+          زیرعنوان ویترین
+          <input className={inputClass} defaultValue={settings.heroSubtitle} maxLength={1000} name="hero_subtitle" />
+        </label>
+        <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+          شماره‌های تماس (هر شماره در یک خط)
+          <textarea className={`${inputClass} min-h-24 py-3`} defaultValue={settings.phoneNumbers} maxLength={500} name="phone_numbers" rows={3} />
+        </label>
+        <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+          نشانی فروشگاه
+          <textarea className={`${inputClass} min-h-20 py-3`} defaultValue={settings.addressText} maxLength={1000} name="address_text" rows={2} />
+        </label>
+        <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+          لینک موقعیت نقشه
+          <input className={inputClass} defaultValue={settings.locationUrl} name="location_url" type="url" />
         </label>
         <label className="block text-sm text-[#c5c1b6]">
           لینک اینستاگرام

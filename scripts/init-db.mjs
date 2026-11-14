@@ -19,6 +19,14 @@ const schema = [
     name TEXT NOT NULL,
     domain TEXT,
     description TEXT,
+    logo_url TEXT,
+    hero_title TEXT,
+    hero_subtitle TEXT,
+    phone_numbers TEXT NOT NULL DEFAULT '[]',
+    address_text TEXT,
+    location_url TEXT,
+    social_links TEXT NOT NULL DEFAULT '{}',
+    toman_rate REAL,
     instagram_url TEXT,
     telegram_url TEXT,
     whatsapp_url TEXT,
@@ -28,7 +36,13 @@ const schema = [
     id TEXT PRIMARY KEY,
     tenant_id TEXT NOT NULL REFERENCES tenants(id),
     role TEXT NOT NULL,
-    full_name TEXT
+    full_name TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    national_id TEXT,
+    mobile TEXT,
+    email TEXT,
+    address TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS categories (
     id TEXT PRIMARY KEY,
@@ -47,7 +61,8 @@ const schema = [
     category_id TEXT REFERENCES categories(id),
     is_visible INTEGER NOT NULL DEFAULT 1 CHECK (is_visible IN (0, 1)),
     condition TEXT NOT NULL DEFAULT 'new' CHECK (condition IN ('new', 'used')),
-    labor_percentage REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0)
+    labor_percentage REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0),
+    specifications TEXT NOT NULL DEFAULT '{}'
   )`,
   `CREATE TABLE IF NOT EXISTS cart_items (
     id TEXT PRIMARY KEY,
@@ -90,6 +105,10 @@ const schema = [
     status TEXT NOT NULL DEFAULT 'pending',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
+  `CREATE TABLE IF NOT EXISTS platform_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )`,
 ];
 
 async function ensureColumn(table, column, definition) {
@@ -105,6 +124,14 @@ try {
 
   for (const [column, definition] of [
     ["description", "TEXT"],
+    ["logo_url", "TEXT"],
+    ["hero_title", "TEXT"],
+    ["hero_subtitle", "TEXT"],
+    ["phone_numbers", "TEXT NOT NULL DEFAULT '[]'"],
+    ["address_text", "TEXT"],
+    ["location_url", "TEXT"],
+    ["social_links", "TEXT NOT NULL DEFAULT '{}'"],
+    ["toman_rate", "REAL"],
     ["instagram_url", "TEXT"],
     ["telegram_url", "TEXT"],
     ["whatsapp_url", "TEXT"],
@@ -119,8 +146,22 @@ try {
     ["is_visible", "INTEGER NOT NULL DEFAULT 1 CHECK (is_visible IN (0, 1))"],
     ["condition", "TEXT NOT NULL DEFAULT 'new' CHECK (condition IN ('new', 'used'))"],
     ["labor_percentage", "REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0)"],
+    ["specifications", "TEXT NOT NULL DEFAULT '{}'"],
   ]) {
     await ensureColumn("products", column, definition);
+  }
+
+  await ensureColumn("categories", "parent_id", "TEXT REFERENCES categories(id)");
+
+  for (const [column, definition] of [
+    ["first_name", "TEXT"],
+    ["last_name", "TEXT"],
+    ["national_id", "TEXT"],
+    ["mobile", "TEXT"],
+    ["email", "TEXT"],
+    ["address", "TEXT"],
+  ]) {
+    await ensureColumn("profiles", column, definition);
   }
 
   for (const [column, definition] of [
@@ -153,7 +194,8 @@ try {
     `SELECT name FROM sqlite_master
      WHERE type = 'table'
        AND name IN ('tenants', 'profiles', 'categories', 'products',
-                    'cart_items', 'orders', 'order_items', 'custom_orders')`,
+                    'cart_items', 'orders', 'order_items', 'custom_orders',
+                    'platform_settings')`,
   );
   const createdTables = new Set(result.rows.map((row) => row.name));
   const expectedTables = [
@@ -165,6 +207,7 @@ try {
     "orders",
     "order_items",
     "custom_orders",
+    "platform_settings",
   ];
   const missingTables = expectedTables.filter(
     (table) => !createdTables.has(table),

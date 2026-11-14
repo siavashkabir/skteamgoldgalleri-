@@ -8,6 +8,17 @@ type Props = {
     id: string;
     name: string;
     domain: string | null;
+    description: string;
+    logoUrl: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    phoneNumbers: string;
+    addressText: string;
+    locationUrl: string;
+    instagramUrl: string;
+    telegramUrl: string;
+    whatsappUrl: string;
+    tomanRate: string;
   };
 };
 
@@ -74,6 +85,52 @@ export default function EditTenantDialog({ tenant }: Props) {
                   required
                 />
               </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  توضیحات فروشگاه
+                  <textarea className={`${inputClass} min-h-24 py-3`} defaultValue={tenant.description} maxLength={5000} name="description" rows={3} />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  لوگو (URL)
+                  <input className={inputClass} defaultValue={tenant.logoUrl} name="logo_url" type="url" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  نرخ دستی دلار (تومان)
+                  <input className={inputClass} defaultValue={tenant.tomanRate} min="1" name="toman_rate" step="any" type="number" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  عنوان ویترین
+                  <input className={inputClass} defaultValue={tenant.heroTitle} maxLength={200} name="hero_title" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  زیرعنوان ویترین
+                  <input className={inputClass} defaultValue={tenant.heroSubtitle} maxLength={1000} name="hero_subtitle" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  شماره‌های تماس (هر شماره در یک خط)
+                  <textarea className={`${inputClass} min-h-24 py-3`} defaultValue={tenant.phoneNumbers} maxLength={500} name="phone_numbers" rows={3} />
+                </label>
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  نشانی فروشگاه
+                  <textarea className={`${inputClass} min-h-20 py-3`} defaultValue={tenant.addressText} maxLength={1000} name="address_text" rows={2} />
+                </label>
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  لینک موقعیت مکانی نقشه
+                  <input className={inputClass} defaultValue={tenant.locationUrl} name="location_url" type="url" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  اینستاگرام
+                  <input className={inputClass} defaultValue={tenant.instagramUrl} name="instagram_url" type="url" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  تلگرام
+                  <input className={inputClass} defaultValue={tenant.telegramUrl} name="telegram_url" type="url" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  واتساپ
+                  <input className={inputClass} defaultValue={tenant.whatsappUrl} name="whatsapp_url" type="url" />
+                </label>
+              </div>
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">
                   دامنه اختصاصی
@@ -176,3 +233,6 @@ export default function EditTenantDialog({ tenant }: Props) {
     </>
   );
 }
+
+const inputClass =
+  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";

@@ -105,6 +105,22 @@ async function ProductDetailsContent({
             )}
           </div>
 
+          {Object.entries(product.specifications).length ? (
+            <section className="mt-6 border-t border-white/[0.07] pt-6">
+              <h2 className="mb-3 text-sm font-semibold text-[#e9e5db]">
+                مشخصات
+              </h2>
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                {Object.entries(product.specifications).map(([key, value]) => (
+                  <div className="rounded-lg bg-white/[0.03] px-3 py-2" key={key}>
+                    <dt className="text-xs text-[#858378]">{key}</dt>
+                    <dd className="mt-1 text-[#e9e5db]">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+
           <div className="mt-auto pt-8">
             <AddToCartButton product={product} store={store} />
             <p className="mt-3 text-center text-[11px] leading-5 text-[#77766e]">

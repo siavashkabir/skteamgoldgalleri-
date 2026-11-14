@@ -28,6 +28,8 @@ export async function saveProduct(
   const weight = Number(readText(formData, "weight"));
   const laborPercentage = Number(readText(formData, "labor_percentage"));
   const isVisible = formData.get("is_visible") === "on";
+  const specificationKeys = formData.getAll("specification_keys");
+  const specificationValues = formData.getAll("specification_values");
 
   if (!name || name.length > 160) {
     return { error: "نام محصول را وارد کنید (حداکثر ۱۶۰ نویسه)." };
@@ -46,6 +48,27 @@ export async function saveProduct(
   }
   if (description.length > 20000) {
     return { error: "توضیحات نباید بیشتر از ۲۰۰۰۰ نویسه باشد." };
+  }
+  if (
+    specificationKeys.length !== specificationValues.length ||
+    specificationKeys.length > 30
+  ) {
+    return { error: "مشخصات محصول معتبر نیست." };
+  }
+  const specifications: Record<string, string> = {};
+  for (let index = 0; index < specificationKeys.length; index += 1) {
+    const key = String(specificationKeys[index]).trim();
+    const value = String(specificationValues[index]).trim();
+    if (!key && !value) {
+      continue;
+    }
+    if (!key || !value || key.length > 80 || value.length > 300) {
+      return { error: "نام و مقدار هر مشخصه را کامل و کوتاه وارد کنید." };
+    }
+    if (specifications[key]) {
+      return { error: "نام مشخصه‌ها نباید تکراری باشد." };
+    }
+    specifications[key] = value;
   }
 
   if (categoryId) {
@@ -127,6 +150,7 @@ export async function saveProduct(
     is_active: Number(isVisible),
     condition,
     labor_percentage: laborPercentage,
+    specifications: JSON.stringify(specifications),
   };
 
   if (productColumns.has("shop_id")) {
@@ -195,8 +219,9 @@ export async function deleteProduct(
   );
   for (const row of dependencies.rows) {
     const dependency = await db.execute({
-      sql: `SELECT 1 FROM ${String(row.name)} WHERE product_id = ? LIMIT 1`,
-      args: [id],
+      sql: `SELECT 1 FROM ${String(row.name)}
+            WHERE product_id = ? AND tenant_id = ? LIMIT 1`,
+      args: [id, tenantId],
     });
     if (dependency.rows.length > 0) {
       return { error: "این محصول در سبد خرید یا سفارش ثبت شده و قابل حذف نیست." };

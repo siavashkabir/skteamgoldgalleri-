@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type {
   StorefrontCategory,
   StorefrontProduct,
@@ -19,32 +20,75 @@ export default function ProductCatalog({
   products: StorefrontProduct[];
   store: StorefrontStore;
 }) {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const selectedFilter = searchParams.get("category");
   const categoryOptions = useMemo(() => {
     const options = new Map(categories.map((category) => [category.id, category]));
     for (const product of products) {
-      if (product.categoryId && product.categoryName) {
+      if (product.categoryId && product.categoryName && !options.has(product.categoryId)) {
         options.set(product.categoryId, {
           id: product.categoryId,
           name: product.categoryName,
+          parentId: null,
+          slug: categoryFilterSlug(product.categoryName),
         });
       } else if (product.categoryName) {
         options.set(product.categoryName, {
           id: product.categoryName,
           name: product.categoryName,
+          parentId: null,
+          slug: categoryFilterSlug(product.categoryName),
         });
       }
     }
     return [...options.values()];
   }, [categories, products]);
-  const visibleProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter(
-          (product) =>
-            product.categoryId === selectedCategory ||
-            (!product.categoryId && product.categoryName === selectedCategory),
-        );
+  const visibleProducts = useMemo(() => {
+    if (!selectedFilter) return products;
+    const matches = categoryOptions.filter((category) => {
+      if (category.id === selectedFilter || category.slug === selectedFilter) {
+        return true;
+      }
+      if (selectedFilter === "men") return /مرد|men/i.test(category.name) && !category.parentId;
+      if (selectedFilter === "women") return /زن|women/i.test(category.name) && !category.parentId;
+      return false;
+    });
+    const included = new Set(matches.map((category) => category.id));
+    let found = true;
+    while (found) {
+      found = false;
+      for (const category of categoryOptions) {
+        if (category.parentId && included.has(category.parentId) && !included.has(category.id)) {
+          included.add(category.id);
+          found = true;
+        }
+      }
+    }
+    return products.filter((product) =>
+      product.categoryId
+        ? included.has(product.categoryId)
+        : matches.some((category) => category.name === product.categoryName),
+    );
+  }, [categoryOptions, products, selectedFilter]);
+
+  function selectCategory(category: StorefrontCategory | null) {
+    setSelectedCategory(category?.id ?? "all");
+    const filter = category
+      ? /مرد|men/i.test(category.name)
+        ? "men"
+        : /زن|women/i.test(category.name)
+          ? "women"
+          : category.slug
+      : null;
+    const params = new URLSearchParams(searchParams.toString());
+    if (filter) params.set("category", filter);
+    else params.delete("category");
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}#products`, { scroll: false });
+  }
 
   return (
     <>
@@ -54,19 +98,18 @@ export default function ProductCatalog({
         role="group"
       >
         <button
-          aria-pressed={selectedCategory === "all"}
-          className={categoryClass(selectedCategory === "all")}
-          onClick={() => setSelectedCategory("all")}
+          aria-pressed={!selectedFilter}
+          className={categoryClass(!selectedFilter)}
+          onClick={() => selectCategory(null)}
           type="button"
         >
           همه محصولات
         </button>
         {categoryOptions.map((category) => (
           <button
-            aria-pressed={selectedCategory === category.id}
-            className={categoryClass(selectedCategory === category.id)}
+            aria-pressed={selectedCategory === category.id || selectedFilter === category.slug || (selectedFilter === "men" && /مرد|men/i.test(category.name)) || (selectedFilter === "women" && /زن|women/i.test(category.name))}
             key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
+            onClick={() => selectCategory(category)}
             type="button"
           >
             {category.name}
@@ -84,7 +127,9 @@ export default function ProductCatalog({
         <div className="rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-12 text-center text-sm text-[#929085]">
           {products.length === 0
             ? "هنوز محصولی در فروشگاه ثبت نشده است."
-            : "در این دسته‌بندی محصولی ثبت نشده است."}
+            : selectedFilter
+              ? "در این دسته‌بندی محصولی ثبت نشده است."
+              : "در این دسته‌بندی محصولی ثبت نشده است."}
         </div>
       )}
     </>
@@ -170,6 +215,12 @@ function categoryClass(active: boolean) {
       ? "border-[#d6ad56] bg-[#d6ad56] font-semibold text-[#211a0d]"
       : "border-white/[0.09] bg-[#171716] text-[#aaa79b] hover:border-[#d6ad56]/40 hover:text-[#e2c16d]"
   }`;
+}
+
+function categoryFilterSlug(name: string) {
+  if (/مرد|men/i.test(name)) return "men";
+  if (/زن|women/i.test(name)) return "women";
+  return name.trim().toLocaleLowerCase("fa").replace(/\s+/g, "-");
 }
 
 function formatPrice(value: number): string {

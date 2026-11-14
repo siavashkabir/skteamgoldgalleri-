@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "./storefront-provider";
-import type { StorefrontStore } from "@/lib/storefront-types";
+import LivePriceWidget from "./live-price-widget";
+import type { StorefrontCategory, StorefrontStore } from "@/lib/storefront-types";
 
 export default function StorefrontHeader({
   store,
+  categories,
 }: {
   store: StorefrontStore;
+  categories: StorefrontCategory[];
 }) {
   const { itemCount } = useCart();
 
@@ -18,9 +22,13 @@ export default function StorefrontHeader({
           className="flex min-w-0 items-center gap-3"
           href={`/${store.slug}`}
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d6ad56]/30 bg-[#d6ad56]/[0.09] text-xl font-semibold text-[#e2c16d]">
-            ت
-          </span>
+          {store.logoUrl ? (
+            <Image alt="" className="h-11 w-11 rounded-xl object-cover" height={44} src={store.logoUrl} unoptimized width={44} />
+          ) : (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d6ad56]/30 bg-[#d6ad56]/[0.09] text-xl font-semibold text-[#e2c16d]">
+              ت
+            </span>
+          )}
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold text-[#f5f2e9] sm:text-base">
               {store.name}
@@ -32,6 +40,17 @@ export default function StorefrontHeader({
         </Link>
 
         <nav className="flex shrink-0 items-center gap-2 sm:gap-4">
+          {categories.length ? (
+            <details className="relative hidden sm:block">
+              <summary className="cursor-pointer list-none text-sm text-[#aaa79b] hover:text-[#e2c16d]">
+                دسته‌بندی‌ها
+              </summary>
+              <div className="absolute right-0 top-full z-40 mt-4 max-h-[70vh] min-w-56 overflow-y-auto rounded-xl border border-white/10 bg-[#171716] p-3 shadow-xl">
+                <CategoryTree categories={categories} parentId={null} store={store} />
+              </div>
+            </details>
+          ) : null}
+          <LivePriceWidget tenantId={store.id} />
           <Link
             className="hidden text-sm text-[#aaa79b] transition hover:text-[#e2c16d] sm:inline-flex"
             href={`/${store.slug}#products`}
@@ -57,6 +76,54 @@ export default function StorefrontHeader({
         </nav>
       </div>
     </header>
+  );
+}
+
+function CategoryTree({
+  categories,
+  parentId,
+  store,
+  ancestors = [],
+}: {
+  categories: StorefrontCategory[];
+  parentId: string | null;
+  store: StorefrontStore;
+  ancestors?: string[];
+}) {
+  return categories
+    .filter((category) => category.parentId === parentId && !ancestors.includes(category.id))
+    .map((category) => (
+      <div className={parentId ? "pr-4" : "py-1"} key={category.id}>
+        <CategoryLink category={category} store={store} />
+        <CategoryTree
+          ancestors={[...ancestors, category.id]}
+          categories={categories}
+          parentId={category.id}
+          store={store}
+        />
+      </div>
+    ));
+}
+
+function CategoryLink({
+  category,
+  store,
+}: {
+  category: StorefrontCategory;
+  store: StorefrontStore;
+}) {
+  const filter = /مرد|men/i.test(category.name)
+    ? "men"
+    : /زن|women/i.test(category.name)
+      ? "women"
+      : category.slug;
+  return (
+    <Link
+      className="block rounded-lg px-3 py-2 text-xs text-[#c5c1b6] hover:bg-white/[0.05] hover:text-[#e2c16d]"
+      href={`/${store.slug}?category=${encodeURIComponent(filter)}#products`}
+    >
+      {category.name}
+    </Link>
   );
 }
 

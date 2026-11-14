@@ -41,8 +41,12 @@ async function StorefrontContent({
               اصالت، ظرافت، ماندگاری
             </p>
             <h1 className="text-4xl font-semibold leading-[1.5] tracking-tight text-[#f6f0df] sm:text-5xl lg:text-6xl">
-              {store.name}
-              <span className="mt-1 block text-[#d6ad56]">زیباییِ ماندگار</span>
+              {store.heroTitle || store.name}
+              {store.heroSubtitle ? (
+                <span className="mt-1 block text-[#d6ad56]">{store.heroSubtitle}</span>
+              ) : (
+                <span className="mt-1 block text-[#d6ad56]">زیباییِ ماندگار</span>
+              )}
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-8 text-[#aaa79b] sm:text-base">
               {store.description ||

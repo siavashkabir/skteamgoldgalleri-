@@ -9,7 +9,7 @@ import { useCart } from "../storefront-provider";
 const initialState: { error?: string; orderNumber?: string } = {};
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, totalWeight, clearCart } = useCart();
   const [state, action, pending] = useActionState(createMockOrder, initialState);
   const tenantIds = new Set(items.map((item) => item.tenantId));
   const canCheckout = items.length > 0 && tenantIds.size === 1;
@@ -180,6 +180,12 @@ export default function CheckoutPage() {
               <span className="text-[#aaa79b]">جمع کل</span>
               <span className="font-semibold text-[#e2c16d]">
                 {formatPrice(totalPrice)}
+              </span>
+            </div>
+            <div className="mt-3 flex justify-between gap-3 text-sm">
+              <span className="text-[#aaa79b]">وزن کل</span>
+              <span className="text-[#c5c1b6]">
+                {totalWeight.toLocaleString("fa-IR")} گرم
               </span>
             </div>
             <p className="mt-4 text-[11px] leading-5 text-[#77766e]">

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getStoreBySlug } from "@/lib/storefront-data";
+import { getStoreBySlug, getStorefrontCategories } from "@/lib/storefront-data";
 import StorefrontFrame from "../storefront-frame";
 
 export default async function TenantStorefrontLayout({
@@ -15,5 +15,6 @@ export default async function TenantStorefrontLayout({
     notFound();
   }
 
-  return <StorefrontFrame store={store}>{children}</StorefrontFrame>;
+  const categories = await getStorefrontCategories(store.id);
+  return <StorefrontFrame categories={categories} store={store}>{children}</StorefrontFrame>;
 }

@@ -17,8 +17,10 @@ export async function getStoreBySlug(
   );
   const result = shopsTable.rows.length
     ? await db.execute({
-        sql: `SELECT t.id, t.name, t.description, t.instagram_url,
-                     t.telegram_url, t.whatsapp_url
+        sql:         `SELECT t.id, t.name, t.description, t.instagram_url,
+                     t.telegram_url, t.whatsapp_url, t.logo_url, t.hero_title,
+                     t.hero_subtitle, t.phone_numbers, t.address_text,
+                     t.location_url, t.social_links, t.toman_rate
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
@@ -50,8 +52,10 @@ export async function getStoreBySlug(
         ],
       })
     : await db.execute({
-        sql: `SELECT id, name, description, instagram_url, telegram_url,
-                     whatsapp_url
+        sql:         `SELECT id, name, description, instagram_url, telegram_url,
+                     whatsapp_url, logo_url, hero_title, hero_subtitle,
+                     phone_numbers, address_text, location_url, social_links,
+                     toman_rate
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
@@ -80,6 +84,14 @@ export async function getStoreBySlug(
       row.instagram_url === null ? null : String(row.instagram_url),
     telegramUrl: row.telegram_url === null ? null : String(row.telegram_url),
     whatsappUrl: row.whatsapp_url === null ? null : String(row.whatsapp_url),
+    logoUrl: row.logo_url === null ? null : String(row.logo_url),
+    heroTitle: row.hero_title === null ? null : String(row.hero_title),
+    heroSubtitle: row.hero_subtitle === null ? null : String(row.hero_subtitle),
+    phoneNumbers: parseStringArray(row.phone_numbers),
+    addressText: row.address_text === null ? null : String(row.address_text),
+    locationUrl: row.location_url === null ? null : String(row.location_url),
+    socialLinks: parseStringRecord(row.social_links),
+    tomanRate: row.toman_rate === null ? null : Number(row.toman_rate),
   };
 }
 
@@ -89,7 +101,7 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
 }> {
   const [categoryResult, productColumnsResult] = await Promise.all([
     db.execute({
-      sql: "SELECT id, name FROM categories WHERE tenant_id = ? ORDER BY name",
+      sql: "SELECT id, name, parent_id FROM categories WHERE tenant_id = ? ORDER BY name",
       args: [tenantId],
     }),
     db.execute("PRAGMA table_info(products)"),
@@ -118,7 +130,8 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
                  ${descriptionColumn} AS description,
                  ${imageColumn} AS image_url,
                  ${categoryIdColumn} AS category_id,
-                 ${categoryNameExpression} AS category_name
+                 ${categoryNameExpression} AS category_name,
+                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications
           FROM products p
           ${categoryJoin}
           WHERE p.tenant_id = ? AND p.is_visible = 1
@@ -130,6 +143,8 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
     categories: categoryResult.rows.map((row) => ({
       id: String(row.id),
       name: String(row.name),
+      parentId: row.parent_id === null ? null : String(row.parent_id),
+      slug: categorySlug(String(row.name)),
     })),
     products: productResult.rows.map((row) => ({
       id: String(row.id),
@@ -141,8 +156,24 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
       categoryId: row.category_id === null ? null : String(row.category_id),
       categoryName:
         row.category_name === null ? null : String(row.category_name),
+      specifications: parseStringRecord(row.specifications),
     })),
   };
+}
+
+export async function getStorefrontCategories(
+  tenantId: string,
+): Promise<StorefrontCategory[]> {
+  const result = await db.execute({
+    sql: "SELECT id, name, parent_id FROM categories WHERE tenant_id = ? ORDER BY name",
+    args: [tenantId],
+  });
+  return result.rows.map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    parentId: row.parent_id === null ? null : String(row.parent_id),
+    slug: categorySlug(String(row.name)),
+  }));
 }
 
 export async function getVisibleProduct(
@@ -174,7 +205,8 @@ export async function getVisibleProduct(
                  ${descriptionColumn} AS description,
                  ${imageColumn} AS image_url,
                  ${categoryIdColumn} AS category_id,
-                 ${categoryNameExpression} AS category_name
+                 ${categoryNameExpression} AS category_name,
+                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications
           FROM products p
           ${categoryJoin}
           WHERE p.tenant_id = ? AND p.id = ? AND p.is_visible = 1
@@ -193,6 +225,32 @@ export async function getVisibleProduct(
         categoryId: row.category_id === null ? null : String(row.category_id),
         categoryName:
           row.category_name === null ? null : String(row.category_name),
+        specifications: parseStringRecord(row.specifications),
       }
     : null;
+}
+
+function parseStringArray(value: unknown): string[] {
+  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "[]");
+  if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
+    throw new Error("مقدار phone_numbers در پایگاه داده معتبر نیست.");
+  }
+  return parsed;
+}
+
+function parseStringRecord(value: unknown): Record<string, string> {
+  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "{}");
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed) ||
+    !Object.values(parsed).every((item) => typeof item === "string")
+  ) {
+    throw new Error("مقدار JSON تنظیمات فروشگاه معتبر نیست.");
+  }
+  return parsed as Record<string, string>;
+}
+
+export function categorySlug(name: string): string {
+  return name.trim().toLocaleLowerCase("fa").replace(/\s+/g, "-");
 }

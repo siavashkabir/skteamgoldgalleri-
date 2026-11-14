@@ -14,11 +14,17 @@ npm run db:init
 ```
 
 This command creates the tenant profile, customer cart/order tables, and custom
-order table, and adds the store settings and product fields needed by the admin
-panels to existing databases. It also renames the seeded system tenant to
+order table, and migrates tenant branding, manual currency rates, customer
+registration details, nested categories, product specifications, and platform
+branding settings in existing databases. It also renames the seeded system tenant to
 `گالری طلای امیر`. Tenant admins and customers need a Supabase Auth user and a
 corresponding `profiles` row with their `tenant_id` and the `tenant_admin` or
 `customer` role.
+
+Add `/reset-password` to the Supabase Auth redirect URL allow list to enable
+password recovery for both customers and tenant admins. Customer registration
+is available at `/register`; it creates the Supabase Auth account and its
+customer profile under the default system tenant.
 
 To create or update the Super Admin account and its Turso profile, provide the
 password through the environment and run:
@@ -49,11 +55,15 @@ at `/master-admin`. Product images are uploaded to the public `products` bucket;
 supported formats are JPEG, PNG, WebP, and AVIF, up to 5 MB each.
 
 The public storefront for the default shop is available at `/skteam` (the
-tenant ID `/team-gold-system` is also accepted). Visible products and store
-categories are loaded from Turso. Customers can add products to a browser-persisted
-cart, submit shipping details at `/checkout`, and create a pending mock order;
-no online payment is performed. Run `npm run db:init` to add shipping detail
-columns to an existing `orders` table.
+tenant ID `/team-gold-system` is also accepted). Visible products and store categories are loaded from Turso. Customers can add
+products to a browser-persisted cart. Checkout requires a signed-in customer,
+rechecks product prices in Turso, and creates a pending mock order; no online
+payment is performed. Store owners can configure storefront branding,
+contact details, nested categories, and product specifications from `/admin`.
+The master admin can edit tenant settings and the platform footer name/URL.
+The storefront gold-price widget uses the Gold API and ExchangeRate-API, with
+the tenant's optional manual toman-per-dollar rate overriding the live exchange
+rate.
 
 To seed the default store with sample products and men's/women's categories, run:
 

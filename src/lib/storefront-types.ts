@@ -9,11 +9,21 @@ export type StorefrontStore = {
   instagramUrl: string | null;
   telegramUrl: string | null;
   whatsappUrl: string | null;
+  logoUrl: string | null;
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  phoneNumbers: string[];
+  addressText: string | null;
+  locationUrl: string | null;
+  socialLinks: Record<string, string>;
+  tomanRate: number | null;
 };
 
 export type StorefrontCategory = {
   id: string;
   name: string;
+  parentId: string | null;
+  slug: string;
 };
 
 export type StorefrontProduct = {
@@ -25,4 +35,5 @@ export type StorefrontProduct = {
   imageUrl: string | null;
   categoryId: string | null;
   categoryName: string | null;
+  specifications: Record<string, string>;
 };

@@ -19,7 +19,8 @@ async function Products() {
   const [productResult, categoryResult] = await Promise.all([
     db.execute({
       sql: `SELECT id, name, price, weight, description, image_url,
-                   category_id, is_visible, condition, labor_percentage
+                 category_id, is_visible, condition, labor_percentage,
+                 specifications
             FROM products WHERE tenant_id = ? ORDER BY name`,
       args: [tenantId],
     }),
@@ -40,6 +41,7 @@ async function Products() {
     isVisible: Number(row.is_visible) === 1,
     condition: row.condition === "used" ? "used" : "new",
     laborPercentage: Number(row.labor_percentage ?? 0),
+    specifications: parseSpecifications(row.specifications),
   }));
   const categories: AdminCategory[] = categoryResult.rows.map((row) => ({
     id: String(row.id),
@@ -56,4 +58,17 @@ async function Products() {
       <ProductManager categories={categories} products={products} />
     </div>
   );
+}
+
+function parseSpecifications(value: unknown): Record<string, string> {
+  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "{}");
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed) ||
+    !Object.values(parsed).every((item) => typeof item === "string")
+  ) {
+    throw new Error("مشخصات ذخیره‌شده محصول معتبر نیست.");
+  }
+  return parsed as Record<string, string>;
 }

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import LoginForm from "./login-form";
 
@@ -77,6 +78,14 @@ async function LoginPageContent() {
               </p>
             </div>
             <LoginForm />
+            <div className="mt-5 flex justify-between gap-4 text-xs">
+              <Link className="text-[#aaa79b] hover:text-[#e2c16d]" href="/forgot-password">
+                فراموشی رمز عبور
+              </Link>
+              <Link className="text-[#e2c16d] hover:text-[#f0d48f]" href="/register">
+                ثبت‌نام مشتری
+              </Link>
+            </div>
             <p className="mt-9 text-center text-xs leading-6 text-[#777569]">
               با ورود به پنل، امنیت حساب خود را حفظ کنید و از اشتراک‌گذاری
               اطلاعات ورود بپرهیزید.

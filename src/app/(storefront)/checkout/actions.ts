@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getCustomerContext } from "@/lib/admin-context";
 
 type CheckoutState = {
   error?: string;
@@ -10,7 +11,6 @@ type CheckoutState = {
 type SubmittedItem = {
   productId: string;
   quantity: number;
-  tenantId: string;
 };
 
 type Column = {
@@ -25,6 +25,7 @@ export async function createMockOrder(
   _previousState: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
+  const customer = await getCustomerContext();
   const name = readText(formData, "customer_name");
   const phone = normalizeDigits(readText(formData, "customer_phone"));
   const city = readText(formData, "shipping_city");
@@ -51,7 +52,37 @@ export async function createMockOrder(
   if (!submitted) {
     return { error: "سبد خرید معتبر نیست؛ لطفاً محصولات را دوباره بررسی کنید." };
   }
-  const tenantIds = new Set(submitted.map((item) => item.tenantId));
+  const productIds = submitted.map((item) => item.productId);
+  const productColumnsResult = await db.execute("PRAGMA table_info(products)");
+  const productColumns = new Set(
+    productColumnsResult.rows.map((row) => String(row.name)),
+  );
+  const nameColumn = productColumns.has("name") ? "name" : "title";
+  const placeholders = productIds.map(() => "?").join(", ");
+  const productsResult = await db.execute({
+    sql: `SELECT id, tenant_id, ${nameColumn} AS product_name, price, weight
+          FROM products
+          WHERE id IN (${placeholders}) AND is_visible = 1`,
+    args: productIds,
+  });
+  const products = new Map(
+    productsResult.rows.map((row) => [
+      String(row.id),
+      {
+        tenantId: String(row.tenant_id),
+        name: String(row.product_name ?? ""),
+        price: Number(row.price),
+        weight: row.weight === null ? 0 : Number(row.weight),
+      },
+    ]),
+  );
+  if (products.size !== submitted.length) {
+    return {
+      error: "یک یا چند محصول دیگر در فروشگاه موجود یا قابل سفارش نیست.",
+    };
+  }
+
+  const tenantIds = new Set([...products.values()].map((product) => product.tenantId));
   if (tenantIds.size !== 1) {
     return { error: "برای ثبت سفارش، محصولات باید از یک فروشگاه باشند." };
   }
@@ -63,35 +94,6 @@ export async function createMockOrder(
   const tenant = tenantResult.rows[0];
   if (!tenant) {
     return { error: "فروشگاه این سبد خرید دیگر در دسترس نیست." };
-  }
-
-  const productIds = submitted.map((item) => item.productId);
-  const productColumnsResult = await db.execute("PRAGMA table_info(products)");
-  const productColumns = new Set(
-    productColumnsResult.rows.map((row) => String(row.name)),
-  );
-  const nameColumn = productColumns.has("name") ? "name" : "title";
-  const placeholders = productIds.map(() => "?").join(", ");
-  const productsResult = await db.execute({
-    sql: `SELECT id, ${nameColumn} AS product_name, price, weight
-          FROM products
-          WHERE id IN (${placeholders}) AND tenant_id = ? AND is_visible = 1`,
-    args: [...productIds, tenantId],
-  });
-  const products = new Map(
-    productsResult.rows.map((row) => [
-      String(row.id),
-      {
-        name: String(row.product_name ?? ""),
-        price: Number(row.price),
-        weight: row.weight === null ? 0 : Number(row.weight),
-      },
-    ]),
-  );
-  if (products.size !== submitted.length) {
-    return {
-      error: "یک یا چند محصول دیگر در فروشگاه موجود یا قابل سفارش نیست.",
-    };
   }
 
   let total = 0;
@@ -138,26 +140,18 @@ export async function createMockOrder(
         })
       : { rows: [] };
   const shopId = shopResult.rows[0]?.id;
-  const guestProfileId = crypto.randomUUID();
   const orderIdColumn = orderColumns.find((column) => column.name === "id");
   const orderId =
     orderIdColumn?.type.toUpperCase().includes("INT")
       ? null
       : crypto.randomUUID();
-  const customerIdColumn = orderColumns.find(
-    (column) => column.name === "customer_id",
-  );
-  const storedCustomerId =
-    customerIdColumn && !customerIdColumn.type.toUpperCase().includes("INT")
-      ? guestProfileId
-      : null;
   const shippingAddress = [address, city, postalCode && `کدپستی ${postalCode}`]
     .filter(Boolean)
     .join("، ");
   const orderValues: Record<string, string | number | null> = {
     id: orderId,
     tenant_id: tenantId,
-    customer_id: storedCustomerId,
+    customer_id: customer.userId,
     shop_id: shopId === undefined ? null : Number(shopId),
     status: "pending",
     total,
@@ -197,7 +191,7 @@ export async function createMockOrder(
       return {
         order_id: orderId ?? "__pending_order_id__",
         tenant_id: tenantId,
-        customer_id: guestProfileId,
+        customer_id: customer.userId,
         product_id: Number.isFinite(Number(item.productId))
           ? Number(item.productId)
           : item.productId,
@@ -212,20 +206,8 @@ export async function createMockOrder(
     assertRequiredColumns(itemColumns, entries, "order_items");
   }
 
-  const needsGuestProfile = orderColumns.some(
-    (column) =>
-      column.name === "customer_id" &&
-      !column.type.toUpperCase().includes("INT"),
-  );
   const transaction = await db.transaction("write");
   try {
-    if (needsGuestProfile) {
-      await transaction.execute({
-        sql: `INSERT INTO profiles (id, tenant_id, role, full_name)
-              VALUES (?, ?, 'customer', ?)`,
-        args: [guestProfileId, tenantId, name],
-      });
-    }
     const insertOrder = await insertRow(
       transaction,
       "orders",
@@ -326,9 +308,6 @@ function parseItems(value: string): SubmittedItem[] | null {
       typeof item.productId !== "string" ||
       item.productId.length < 1 ||
       item.productId.length > 64 ||
-      typeof item.tenantId !== "string" ||
-      item.tenantId.length < 1 ||
-      item.tenantId.length > 120 ||
       !Number.isSafeInteger(item.quantity) ||
       Number(item.quantity) < 1 ||
       Number(item.quantity) > 20
@@ -342,7 +321,6 @@ function parseItems(value: string): SubmittedItem[] | null {
     }
     items.set(item.productId, {
       productId: item.productId,
-      tenantId: item.tenantId,
       quantity,
     });
   }

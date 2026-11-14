@@ -50,6 +50,21 @@ export async function updateTenant(
   const idEntry = formData.get("id");
   const nameEntry = formData.get("name");
   const domainEntry = formData.get("domain");
+  const logoUrl = readText(formData, "logo_url");
+  const heroTitle = readText(formData, "hero_title");
+  const heroSubtitle = readText(formData, "hero_subtitle");
+  const phoneNumbers = readText(formData, "phone_numbers")
+    .split(/\r?\n/)
+    .map((phone) => phone.trim())
+    .filter(Boolean);
+  const addressText = readText(formData, "address_text");
+  const locationUrl = readText(formData, "location_url");
+  const instagramUrl = readText(formData, "instagram_url");
+  const telegramUrl = readText(formData, "telegram_url");
+  const whatsappUrl = readText(formData, "whatsapp_url");
+  const tomanRateInput = readText(formData, "toman_rate");
+  const tomanRate = tomanRateInput ? Number(tomanRateInput) : null;
+  const description = readText(formData, "description");
   const id = typeof idEntry === "string" ? idEntry.trim() : "";
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
   const domain = typeof domainEntry === "string" ? domainEntry.trim() : "";
@@ -70,10 +85,55 @@ export async function updateTenant(
   ) {
     return { error: "نام دامنه معتبر نیست؛ فقط نام میزبان را وارد کنید." };
   }
+  for (const [label, value] of [
+    ["لوگو", logoUrl],
+    ["موقعیت مکانی", locationUrl],
+    ["اینستاگرام", instagramUrl],
+    ["تلگرام", telegramUrl],
+    ["واتساپ", whatsappUrl],
+  ]) {
+    if (value && !isHttpUrl(value)) {
+      return { error: `نشانی ${label} باید با http یا https شروع شود.` };
+    }
+  }
+  if (
+    heroTitle.length > 200 ||
+    heroSubtitle.length > 1000 ||
+    description.length > 5000 ||
+    addressText.length > 1000 ||
+    phoneNumbers.length > 10 ||
+    phoneNumbers.some((phone) => phone.length > 40) ||
+    (tomanRate !== null && (!Number.isFinite(tomanRate) || tomanRate <= 0))
+  ) {
+    return { error: "مقادیر تنظیمات فروشگاه معتبر نیستند." };
+  }
 
   const result = await db.execute({
-    sql: "UPDATE tenants SET name = ?, domain = ? WHERE id = ?",
-    args: [name, domain || null, id],
+    sql: `UPDATE tenants SET name = ?, domain = ?, description = ?, logo_url = ?, hero_title = ?,
+          hero_subtitle = ?, phone_numbers = ?, address_text = ?, location_url = ?,
+          instagram_url = ?, telegram_url = ?, whatsapp_url = ?, social_links = ?,
+          toman_rate = ? WHERE id = ?`,
+    args: [
+      name,
+      domain || null,
+      description || null,
+      logoUrl || null,
+      heroTitle || null,
+      heroSubtitle || null,
+      JSON.stringify(phoneNumbers),
+      addressText || null,
+      locationUrl || null,
+      instagramUrl || null,
+      telegramUrl || null,
+      whatsappUrl || null,
+      JSON.stringify({
+        instagram: instagramUrl,
+        telegram: telegramUrl,
+        whatsapp: whatsappUrl,
+      }),
+      tomanRate,
+      id,
+    ],
   });
   if (result.rowsAffected === 0) {
     return { error: "فروشگاه پیدا نشد." };
@@ -81,6 +141,39 @@ export async function updateTenant(
 
   revalidatePath("/master-admin");
   return { success: "اطلاعات فروشگاه ذخیره شد." };
+}
+
+export async function savePlatformSettings(
+  _previousState: TenantActionState,
+  formData: FormData,
+): Promise<TenantActionState> {
+  await getSuperAdminContext();
+  const name = readText(formData, "platform_name");
+  const url = readText(formData, "platform_url");
+  if (!name || name.length > 100) {
+    return { error: "نام پلتفرم را وارد کنید (حداکثر ۱۰۰ نویسه)." };
+  }
+  if (url && !isHttpUrl(url)) {
+    return { error: "نشانی پلتفرم باید یک URL معتبر با http یا https باشد." };
+  }
+  await db.batch(
+    [
+      {
+        sql: `INSERT INTO platform_settings (key, value) VALUES ('platform_name', ?)
+              ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        args: [name],
+      },
+      {
+        sql: `INSERT INTO platform_settings (key, value) VALUES ('platform_url', ?)
+              ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        args: [url],
+      },
+    ],
+    "write",
+  );
+  revalidatePath("/master-admin");
+  revalidatePath("/", "layout");
+  return { success: "تنظیمات برند پلتفرم ذخیره شد." };
 }
 
 export async function signOut() {
@@ -92,4 +185,18 @@ export async function signOut() {
   }
 
   redirect("/login");
+}
+
+function readText(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }

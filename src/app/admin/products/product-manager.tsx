@@ -17,6 +17,7 @@ export type AdminProduct = {
   isVisible: boolean;
   condition: "new" | "used";
   laborPercentage: number;
+  specifications: Record<string, string>;
 };
 
 export default function ProductManager({
@@ -67,6 +68,9 @@ function ProductForm({
   onCancel?: () => void;
 }) {
   const [state, action, pending] = useActionState(saveProduct, {});
+  const [specifications, setSpecifications] = useState(
+    () => Object.entries(product?.specifications ?? {}).map(([key, value]) => ({ key, value })),
+  );
 
   return (
     <form
@@ -95,6 +99,44 @@ function ProductForm({
             required
           />
         </label>
+
+        <fieldset className="space-y-3 sm:col-span-2">
+          <legend className="text-sm text-[#c5c1b6]">مشخصات تکمیلی</legend>
+          {specifications.map((specification, index) => (
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" key={index}>
+              <input
+                aria-label="نام مشخصه"
+                className={inputClass}
+                defaultValue={specification.key}
+                maxLength={80}
+                name="specification_keys"
+                placeholder="مثلاً برند"
+              />
+              <input
+                aria-label="مقدار مشخصه"
+                className={inputClass}
+                defaultValue={specification.value}
+                maxLength={300}
+                name="specification_values"
+                placeholder="مثلاً رولکس"
+              />
+              <button
+                className="rounded-xl border border-white/[0.1] px-3 text-xs text-red-300"
+                onClick={() => setSpecifications((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                type="button"
+              >
+                حذف
+              </button>
+            </div>
+          ))}
+          <button
+            className="text-xs text-[#e2c16d]"
+            onClick={() => setSpecifications((current) => [...current, { key: "", value: "" }])}
+            type="button"
+          >
+            افزودن مشخصه
+          </button>
+        </fieldset>
 
         <label className="block text-sm text-[#c5c1b6]">
           قیمت (تومان)
@@ -275,6 +317,11 @@ function ProductCard({
               <span>{product.weight.toLocaleString("fa-IR")} گرم</span>
               <span>کارمزد {product.laborPercentage.toLocaleString("fa-IR")}٪</span>
             </div>
+            {Object.keys(product.specifications).length ? (
+              <p className="mt-2 text-xs text-[#858378]">
+                {Object.entries(product.specifications).map(([key, value]) => `${key}: ${value}`).join(" · ")}
+              </p>
+            ) : null}
             <div className="mt-4 flex gap-4">
               <button
                 className="text-xs text-[#d6ad56] hover:text-[#f0d48f]"
@@ -312,13 +359,34 @@ function CategorySelect({
   return (
     <select className={inputClass} defaultValue={defaultValue} name="category_id">
       <option value="">بدون دسته‌بندی</option>
-      {categories.map((category) => (
+      {flattenCategories(categories).map(({ category, depth }) => (
         <option key={category.id} value={category.id}>
-          {category.name}
+          {"　".repeat(depth)}{category.name}
         </option>
       ))}
     </select>
   );
+}
+
+function flattenCategories(categories: AdminCategory[]) {
+  const children = new Map<string | null, AdminCategory[]>();
+  const knownIds = new Set(categories.map((category) => category.id));
+  for (const category of categories) {
+    const parentId = category.parentId && knownIds.has(category.parentId)
+      ? category.parentId
+      : null;
+    children.set(parentId, [...(children.get(parentId) ?? []), category]);
+  }
+  const result: Array<{ category: AdminCategory; depth: number }> = [];
+  function visit(parentId: string | null, depth: number, visited: Set<string>) {
+    for (const category of children.get(parentId) ?? []) {
+      if (visited.has(category.id)) continue;
+      result.push({ category, depth });
+      visit(category.id, depth + 1, new Set([...visited, category.id]));
+    }
+  }
+  visit(null, 0, new Set());
+  return result;
 }
 
 function ActionMessage({ state }: { state: AdminActionState }) {
