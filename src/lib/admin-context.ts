@@ -37,6 +37,17 @@ export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile> {
 }
 
 export async function getOptionalCustomerContext(): Promise<AuthenticatedProfile | null> {
+  const profile = await getOptionalAuthenticatedProfile();
+  if (!profile) {
+    return null;
+  }
+  if (profile.role !== "customer") {
+    notFound();
+  }
+  return profile;
+}
+
+export async function getOptionalAuthenticatedProfile(): Promise<AuthenticatedProfile | null> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -56,11 +67,7 @@ export async function getOptionalCustomerContext(): Promise<AuthenticatedProfile
     return null;
   }
 
-  const profile = await getProfileForUser(userId, data?.claims?.email);
-  if (profile.role !== "customer") {
-    notFound();
-  }
-  return profile;
+  return getProfileForUser(userId, data?.claims?.email);
 }
 
 async function getProfileForUser(

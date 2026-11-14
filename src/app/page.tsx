@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getAuthenticatedProfile } from "@/lib/admin-context";
+import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
+import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
 
 export default function Home() {
   return (
@@ -11,11 +12,15 @@ export default function Home() {
 }
 
 async function HomeRedirect() {
-  const { role } = await getAuthenticatedProfile();
+  const profile = await getOptionalAuthenticatedProfile();
+  if (!profile) {
+    redirect(`/${DEFAULT_STORE_SLUG}`);
+  }
+
   return redirect(
-    role === "customer"
+    profile.role === "customer"
       ? "/profile"
-      : role === "super_admin"
+      : profile.role === "super_admin"
         ? "/master-admin"
         : "/admin",
   );
