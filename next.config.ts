@@ -7,8 +7,6 @@ const codespacesOrigin =
     : undefined;
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
   ...(codespacesOrigin ? { allowedDevOrigins: [codespacesOrigin] } : {}),
   experimental: {
     serverActions: {
