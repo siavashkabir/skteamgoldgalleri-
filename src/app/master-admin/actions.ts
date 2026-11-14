@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getSuperAdminContext } from "@/lib/admin-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type TenantActionState = {
@@ -14,15 +15,7 @@ export async function createTenant(
   _previousState: TenantActionState,
   formData: FormData,
 ): Promise<TenantActionState> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.getClaims();
-
-  if (error) {
-    throw error;
-  }
-  if (!data?.claims?.sub) {
-    redirect("/login");
-  }
+  await getSuperAdminContext();
 
   const nameEntry = formData.get("name");
   const domainEntry = formData.get("domain");

@@ -32,7 +32,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.replace("/master-admin");
+      router.replace("/");
       router.refresh();
     } catch {
       setErrorMessage("ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.");

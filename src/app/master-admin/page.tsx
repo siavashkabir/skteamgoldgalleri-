@@ -1,6 +1,6 @@
+import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { getSuperAdminContext } from "@/lib/admin-context";
 import AddTenantDialog from "./add-tenant-dialog";
 import { signOut } from "./actions";
 
@@ -11,16 +11,16 @@ type Tenant = {
   createdAt: string;
 };
 
-export default async function MasterAdminPage() {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.getClaims();
+export default function MasterAdminPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#10100f]" />}>
+      <MasterAdminContent />
+    </Suspense>
+  );
+}
 
-  if (error) {
-    throw error;
-  }
-  if (!data?.claims?.sub) {
-    redirect("/login");
-  }
+async function MasterAdminContent() {
+  const { email: accountEmail } = await getSuperAdminContext();
 
   const result = await db.execute(
     "SELECT id, name, domain, created_at FROM tenants ORDER BY created_at DESC",
@@ -31,10 +31,6 @@ export default async function MasterAdminPage() {
     domain: row.domain === null ? null : String(row.domain),
     createdAt: String(row.created_at),
   }));
-  const emailClaim = data?.claims?.email;
-  const accountEmail =
-    typeof emailClaim === "string" ? emailClaim : "مدیر سیستم";
-
   return (
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9]">
       <div className="flex min-h-screen">

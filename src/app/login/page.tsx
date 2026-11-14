@@ -1,8 +1,17 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import LoginForm from "./login-form";
 
-export default async function LoginPage() {
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#10100f]" />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+async function LoginPageContent() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -10,7 +19,7 @@ export default async function LoginPage() {
     throw error;
   }
   if (data?.claims?.sub) {
-    redirect("/master-admin");
+    redirect("/");
   }
 
   return (
