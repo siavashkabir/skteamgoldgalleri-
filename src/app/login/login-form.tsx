@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,6 +19,7 @@ export default function LoginForm() {
     const password = String(formData.get("password") ?? "");
 
     try {
+      const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
       const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,

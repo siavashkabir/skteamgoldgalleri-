@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordForm() {
   const [message, setMessage] = useState("");
@@ -22,6 +21,7 @@ export default function ResetPasswordForm() {
       return;
     }
     try {
+      const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
       const supabase = createSupabaseBrowserClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
