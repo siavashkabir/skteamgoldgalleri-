@@ -11,6 +11,7 @@ import PlatformSettingsForm from "./platform-settings-form";
 import { signOut } from "./actions";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
 type Tenant = {

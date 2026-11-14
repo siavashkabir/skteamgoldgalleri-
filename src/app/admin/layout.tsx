@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { getTenantAdminContext } from "@/lib/admin-context";
 import { signOut } from "@/app/master-admin/actions";
 
+export const dynamic = "force-dynamic";
+
 const navigation = [
   { href: "/admin", label: "داشبورد", icon: "⌂" },
   { href: "/admin/categories", label: "مدیریت دسته‌بندی‌ها", icon: "◇" },
