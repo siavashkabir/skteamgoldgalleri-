@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 
+export const runtime = "edge";
+
 export default function AdminDashboardPage() {
   return (
     <Suspense fallback={<div className="h-72 animate-pulse rounded-3xl bg-white/[0.03]" />}>

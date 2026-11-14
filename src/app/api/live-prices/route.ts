@@ -1,6 +1,8 @@
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
 import { db } from "@/lib/db";
 
+export const runtime = "edge";
+
 export async function GET(request: Request) {
   try {
     const tenantId =

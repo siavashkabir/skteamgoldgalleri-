@@ -1,5 +1,7 @@
 import ForgotPasswordForm from "./forgot-password-form";
 
+export const runtime = "edge";
+
 export default function ForgotPasswordPage() {
   return (
     <main className="min-h-screen bg-[#10100f] px-5 py-16 text-[#f5f2e9]">

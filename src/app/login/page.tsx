@@ -4,6 +4,8 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import LoginForm from "./login-form";
 
+export const runtime = "edge";
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<main className="min-h-screen bg-[#10100f]" />}>

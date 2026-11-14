@@ -3,6 +3,8 @@ import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import CategoryManager, { type AdminCategory } from "./category-manager";
 
+export const runtime = "edge";
+
 export default function CategoriesPage() {
   return (
     <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-white/[0.03]" />}>

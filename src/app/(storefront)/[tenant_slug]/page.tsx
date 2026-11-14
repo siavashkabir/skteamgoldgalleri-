@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getStoreBySlug, getStorefrontCatalog } from "@/lib/storefront-data";
 import ProductCatalog from "../product-catalog";
 
+export const runtime = "edge";
+
 export default function StorefrontPage(props: PageProps<"/[tenant_slug]">) {
   return (
     <Suspense

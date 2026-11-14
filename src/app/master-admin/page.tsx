@@ -11,6 +11,8 @@ import PlatformSettingsForm from "./platform-settings-form";
 import { signOut } from "./actions";
 import Link from "next/link";
 
+export const runtime = "edge";
+
 type Tenant = {
   id: string;
   name: string;

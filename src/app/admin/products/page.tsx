@@ -6,6 +6,8 @@ import ProductManager, {
 } from "./product-manager";
 import type { AdminCategory } from "../categories/category-manager";
 
+export const runtime = "edge";
+
 export default function ProductsPage() {
   return (
     <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-white/[0.03]" />}>

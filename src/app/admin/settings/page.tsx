@@ -3,6 +3,8 @@ import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import StoreSettingsForm, { type StoreSettings } from "./settings-form";
 
+export const runtime = "edge";
+
 export default function SettingsPage() {
   return (
     <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-white/[0.03]" />}>

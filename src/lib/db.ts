@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from "@libsql/client";
+import { createClient } from "@libsql/client/web";
 
 function requiredEnv(name: string): string {
   const value = process.env[name];

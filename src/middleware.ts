@@ -8,7 +8,9 @@ function requiredEnv(name: string, value: string | undefined): string {
   return value;
 }
 
-export async function proxy(request: NextRequest) {
+export const runtime = "experimental-edge";
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAdminRoute =
     pathname === "/admin" ||

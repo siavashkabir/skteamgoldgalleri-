@@ -1,6 +1,8 @@
 import Link from "next/link";
 import RegisterForm from "./register-form";
 
+export const runtime = "edge";
+
 export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-[#10100f] px-5 py-12 text-[#f5f2e9]">

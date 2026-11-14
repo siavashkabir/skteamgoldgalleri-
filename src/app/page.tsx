@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
 
+export const runtime = "edge";
+
 export default function Home() {
   return (
     <Suspense fallback={<main className="min-h-screen bg-[#10100f]" />}>

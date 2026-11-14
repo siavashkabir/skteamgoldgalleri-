@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 export default function OrdersPage() {
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-[#171716] px-6 py-16 text-center">
