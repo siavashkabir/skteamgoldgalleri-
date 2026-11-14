@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
+import { continueToCheckout } from "../checkout/actions";
 import { useCart } from "../storefront-provider";
 
 export default function CartPage() {
@@ -124,12 +125,14 @@ export default function CartPage() {
                 {formatPrice(totalPrice)}
               </span>
             </div>
-            <Link
-              className="block rounded-xl bg-[#d6ad56] px-4 py-3 text-center text-sm font-semibold text-[#211a0d] transition hover:bg-[#e2bf70]"
-              href="/checkout"
-            >
-              ادامه و ثبت سفارش
-            </Link>
+            <form action={continueToCheckout}>
+              <button
+                className="block w-full rounded-xl bg-[#d6ad56] px-4 py-3 text-center text-sm font-semibold text-[#211a0d] transition hover:bg-[#e2bf70]"
+                type="submit"
+              >
+                ادامه و ثبت سفارش
+              </button>
+            </form>
             <Link
               className="mt-4 block text-center text-xs text-[#898578] hover:text-[#e2c16d]"
               href={`/${items[0].tenantSlug}`}

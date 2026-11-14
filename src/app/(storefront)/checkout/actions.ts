@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getOptionalCustomerContext } from "@/lib/admin-context";
 
@@ -20,6 +21,11 @@ type Column = {
   dflt_value: unknown;
   pk: number;
 };
+
+export async function continueToCheckout(): Promise<never> {
+  const customer = await getOptionalCustomerContext();
+  redirect(customer ? "/checkout" : "/login");
+}
 
 export async function createMockOrder(
   _previousState: CheckoutState,
