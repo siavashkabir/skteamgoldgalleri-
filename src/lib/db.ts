@@ -10,7 +10,22 @@ function requiredEnv(name: string): string {
   return value;
 }
 
+/**
+ * The auth token is sent in an HTTP `Authorization` header, which only accepts
+ * ASCII characters. JWTs never contain whitespace, so anything after the first
+ * whitespace (e.g. an accidentally pasted label or note) is discarded.
+ */
+function readAuthToken(name: string): string {
+  const token = requiredEnv(name).trim().split(/\s+/)[0];
+  if (!/^[\x21-\x7e]+$/.test(token)) {
+    throw new Error(
+      `Environment variable ${name} contains characters that are not allowed in an HTTP header.`,
+    );
+  }
+  return token;
+}
+
 export const db = createClient({
-  url: requiredEnv("TURSO_DATABASE_URL"),
-  authToken: requiredEnv("TURSO_AUTH_TOKEN"),
+  url: requiredEnv("TURSO_DATABASE_URL").trim(),
+  authToken: readAuthToken("TURSO_AUTH_TOKEN"),
 });
