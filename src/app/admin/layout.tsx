@@ -40,7 +40,7 @@ async function TenantAdminShell({ children }: { children: React.ReactNode }) {
             ت
           </span>
           <span>
-            <span className="block text-sm font-semibold">گالری طلای امیر</span>
+            <span className="block text-sm font-semibold">{tenantName}</span>
             <span className="mt-1 block max-w-40 truncate text-xs text-[#8b897f]">
               {tenantName}
             </span>

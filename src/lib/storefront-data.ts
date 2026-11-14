@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import {
   DEFAULT_STORE_SLUG,
+  DEFAULT_TENANT_ID,
   type StorefrontCategory,
   type StorefrontProduct,
   type StorefrontStore,
@@ -17,15 +18,14 @@ export async function getStoreBySlug(
   const result = shopsTable.rows.length
     ? await db.execute({
         sql: `SELECT t.id, t.name, t.description, t.instagram_url,
-                     t.telegram_url, t.whatsapp_url,
-                     COALESCE(
-                       (SELECT slug FROM shops WHERE name = t.name LIMIT 1),
-                       (SELECT slug FROM shops ORDER BY id LIMIT 1),
-                       ?
-                     ) AS shop_slug
+                     t.telegram_url, t.whatsapp_url
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
+                 OR (
+                   lower(t.id) = lower(?)
+                   AND lower(?) = lower(?)
+                 )
                  OR EXISTS (
                    SELECT 1 FROM shops s
                    WHERE lower(s.slug) = lower(?)
@@ -39,16 +39,28 @@ export async function getStoreBySlug(
                 ELSE 1
               END
               LIMIT 1`,
-        args: [DEFAULT_STORE_SLUG, slug, slug, slug, slug],
+        args: [
+          slug,
+          slug,
+          DEFAULT_TENANT_ID,
+          slug,
+          DEFAULT_STORE_SLUG,
+          slug,
+          slug,
+        ],
       })
     : await db.execute({
         sql: `SELECT id, name, description, instagram_url, telegram_url,
-                     whatsapp_url, id AS shop_slug
+                     whatsapp_url
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
+                 OR (
+                   lower(id) = lower(?)
+                   AND lower(?) = lower(?)
+                 )
               LIMIT 1`,
-        args: [slug, slug],
+        args: [slug, slug, DEFAULT_TENANT_ID, slug, DEFAULT_STORE_SLUG],
       });
   const row = result.rows[0];
   if (!row) {
@@ -56,10 +68,13 @@ export async function getStoreBySlug(
   }
 
   const rawName = String(row.name);
+  const tenantId = String(row.id);
   return {
-    id: String(row.id),
-    slug: String(row.shop_slug || slug),
-    name: String(row.id) === "team-gold-system" ? "گالری طلای امیر" : rawName,
+    id: tenantId,
+    slug: tenantId.toLowerCase() === DEFAULT_TENANT_ID
+      ? DEFAULT_STORE_SLUG
+      : tenantId,
+    name: tenantId === DEFAULT_TENANT_ID ? "گالری طلای امیر" : rawName,
     description: row.description === null ? "" : String(row.description),
     instagramUrl:
       row.instagram_url === null ? null : String(row.instagram_url),

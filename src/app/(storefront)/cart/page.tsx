@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
+import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
 import { useCart } from "../storefront-provider";
 
 export default function CartPage() {
@@ -149,7 +149,7 @@ export default function CartPage() {
           </p>
           <Link
             className="mt-6 inline-flex rounded-xl bg-[#d6ad56] px-5 py-3 text-sm font-semibold text-[#211a0d] hover:bg-[#e2bf70]"
-            href={`/${DEFAULT_TENANT_ID}`}
+            href={`/${DEFAULT_STORE_SLUG}`}
           >
             مشاهده محصولات
           </Link>

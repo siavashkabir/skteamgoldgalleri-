@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import Link from "next/link";
-import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
+import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
 import { createMockOrder } from "./actions";
 import { useCart } from "../storefront-provider";
 
@@ -39,7 +39,7 @@ export default function CheckoutPage() {
         </p>
         <Link
           className="mx-auto mt-8 block w-fit rounded-xl bg-[#d6ad56] px-5 py-3 text-sm font-semibold text-[#211a0d] hover:bg-[#e2bf70]"
-          href={`/${DEFAULT_TENANT_ID}`}
+          href={`/${DEFAULT_STORE_SLUG}`}
         >
           بازگشت به فروشگاه
         </Link>

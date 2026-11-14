@@ -1,9 +1,14 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { getSuperAdminContext } from "@/lib/admin-context";
+import {
+  DEFAULT_STORE_SLUG,
+  DEFAULT_TENANT_ID,
+} from "@/lib/storefront-types";
 import AddTenantDialog from "./add-tenant-dialog";
 import EditTenantDialog from "./edit-tenant-dialog";
 import { signOut } from "./actions";
+import Link from "next/link";
 
 type Tenant = {
   id: string;
@@ -36,17 +41,17 @@ async function MasterAdminContent() {
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9]">
       <div className="flex min-h-screen">
         <aside className="hidden w-[260px] shrink-0 flex-col border-l border-white/[0.07] bg-[#151514] px-5 py-7 lg:flex">
-          <a className="mb-12 flex items-center gap-3 px-2" href="/master-admin">
+          <Link className="mb-12 flex items-center gap-3 px-2" href="/master-admin">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#e2c16d]/30 bg-[#d6ad56]/10 text-xl font-semibold text-[#e2c16d]">
               ت
             </span>
             <span>
-              <span className="block text-sm font-semibold">گالری طلای امیر</span>
+              <span className="block text-sm font-semibold">پنل مدیریت مادر</span>
               <span className="mt-1 block text-[10px] tracking-[0.18em] text-[#77766e]">
-                MASTER ADMIN
+                SK TEAM PLATFORM
               </span>
             </span>
-          </a>
+          </Link>
 
           <p className="mb-3 px-3 text-[10px] font-semibold tracking-[0.16em] text-[#77766e]">
             فضای مدیریت
@@ -202,6 +207,7 @@ async function MasterAdminContent() {
                         <th className="px-6 py-4 font-medium">دامنه</th>
                         <th className="px-6 py-4 font-medium">تاریخ ثبت</th>
                         <th className="px-6 py-4 font-medium">شناسه</th>
+                        <th className="px-6 py-4 font-medium">سایت</th>
                         <th className="px-6 py-4 font-medium">تنظیمات</th>
                       </tr>
                     </thead>
@@ -238,6 +244,14 @@ async function MasterAdminContent() {
                             {tenant.id.slice(0, 8)}
                           </td>
                           <td className="px-6 py-4">
+                            <Link
+                              className="inline-flex whitespace-nowrap rounded-lg border border-[#d6ad56]/30 px-3 py-2 text-xs font-medium text-[#e2c16d] transition hover:bg-[#d6ad56]/[0.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e2bf70]"
+                              href={`/${tenant.id === DEFAULT_TENANT_ID ? DEFAULT_STORE_SLUG : tenant.id}`}
+                            >
+                              مشاهده سایت
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4">
                             <EditTenantDialog tenant={tenant} />
                           </td>
                         </tr>
@@ -265,7 +279,7 @@ async function MasterAdminContent() {
             </section>
 
             <footer className="mt-8 flex flex-col gap-2 text-[11px] text-[#68675e] sm:flex-row sm:items-center sm:justify-between">
-              <span>گالری طلای امیر · پنل مدیریت مرکزی</span>
+              <span>SK Team Platform · پنل مدیریت مادر</span>
               <span>سامانه مدیریت فروشگاه‌ها</span>
             </footer>
           </div>
