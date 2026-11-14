@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { getCustomerContext } from "@/lib/admin-context";
+import { getOptionalCustomerContext } from "@/lib/admin-context";
 
 type CheckoutState = {
   error?: string;
@@ -25,7 +25,11 @@ export async function createMockOrder(
   _previousState: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
-  const customer = await getCustomerContext();
+  const customer = await getOptionalCustomerContext();
+  if (!customer) {
+    return { error: "برای ثبت سفارش، ابتدا وارد حساب کاربری خود شوید." };
+  }
+
   const name = readText(formData, "customer_name");
   const phone = normalizeDigits(readText(formData, "customer_phone"));
   const city = readText(formData, "shipping_city");

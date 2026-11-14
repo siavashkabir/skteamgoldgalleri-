@@ -33,8 +33,40 @@ export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile> {
   if (typeof userId !== "string") {
     redirect("/login");
   }
-  const emailClaim = data?.claims?.email;
+  return getProfileForUser(userId, data?.claims?.email);
+}
 
+export async function getOptionalCustomerContext(): Promise<AuthenticatedProfile | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getClaims();
+
+  if (
+    error &&
+    error.status !== 401 &&
+    error.name !== "AuthSessionMissingError"
+  ) {
+    throw error;
+  }
+  if (error) {
+    return null;
+  }
+
+  const userId = data?.claims?.sub;
+  if (typeof userId !== "string") {
+    return null;
+  }
+
+  const profile = await getProfileForUser(userId, data?.claims?.email);
+  if (profile.role !== "customer") {
+    notFound();
+  }
+  return profile;
+}
+
+async function getProfileForUser(
+  userId: string,
+  emailClaim: unknown,
+): Promise<AuthenticatedProfile> {
   const result = await db.execute({
     sql: `SELECT p.tenant_id, p.role, p.full_name, t.name AS tenant_name
           FROM profiles p
