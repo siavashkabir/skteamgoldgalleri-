@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 import { DEFAULT_STORE_SLUG } from "@/lib/storefront-types";
 
-export const runtime = "edge";
 
 export default function Home() {
   return (

@@ -3,7 +3,6 @@ import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import StoreSettingsForm, { type StoreSettings } from "./settings-form";
 
-export const runtime = "edge";
 
 export default function SettingsPage() {
   return (

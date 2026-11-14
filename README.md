@@ -1,5 +1,14 @@
 # گالری طلای امیر
 
+## Cloudflare deployment
+
+This app is deployed as a Cloudflare Worker using `@opennextjs/cloudflare`;
+the OpenNext adapter does not deploy to Cloudflare Pages. Use `npm run preview`
+to test the Worker locally or `npm run deploy` to build and deploy it. Configure
+the app's environment variables as Worker secrets/variables in Cloudflare. The
+`IMAGES` binding enables `next/image` optimization and may incur Cloudflare
+Images charges.
+
 ## Database setup
 
 Set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `NEXT_PUBLIC_SUPABASE_URL`,

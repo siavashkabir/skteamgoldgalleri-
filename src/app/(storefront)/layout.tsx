@@ -1,7 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { StorefrontProvider } from "./storefront-provider";
 
-export const runtime = "edge";
 
 export default function StorefrontLayout({
   children,

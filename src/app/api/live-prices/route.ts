@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
 
-export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {

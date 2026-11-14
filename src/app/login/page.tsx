@@ -4,7 +4,6 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import LoginForm from "./login-form";
 
-export const runtime = "edge";
 
 export default function LoginPage() {
   return (

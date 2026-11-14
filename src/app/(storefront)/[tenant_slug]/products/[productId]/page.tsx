@@ -6,7 +6,6 @@ import { getStoreBySlug, getVisibleProduct } from "@/lib/storefront-data";
 import AddToCartButton from "../../../product-actions";
 import ProductDescription from "../../../product-description";
 
-export const runtime = "edge";
 
 export default function ProductDetailsPage(
   props: PageProps<"/[tenant_slug]/products/[productId]">,

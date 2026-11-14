@@ -1,6 +1,5 @@
 import ResetPasswordForm from "./reset-password-form";
 
-export const runtime = "edge";
 
 export default function ResetPasswordPage() {
   return (

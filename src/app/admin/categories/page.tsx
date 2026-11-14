@@ -3,7 +3,6 @@ import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import CategoryManager, { type AdminCategory } from "./category-manager";
 
-export const runtime = "edge";
 
 export default function CategoriesPage() {
   return (

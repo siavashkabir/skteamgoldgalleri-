@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { supabaseAdmin } from "@/lib/supabase";
 import Image from "next/image";
 
-export const runtime = "edge";
 
 type CustomOrder = {
   id: string;

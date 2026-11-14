@@ -1,7 +1,6 @@
 import Link from "next/link";
 import RegisterForm from "./register-form";
 
-export const runtime = "edge";
 
 export default function RegisterPage() {
   return (

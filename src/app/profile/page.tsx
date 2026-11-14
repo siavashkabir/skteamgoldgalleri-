@@ -8,7 +8,6 @@ import { signOut } from "@/app/master-admin/actions";
 import { addItemToCart, removeCartItem, saveProfile } from "./actions";
 import CustomOrderForm from "./custom-order-form";
 
-export const runtime = "edge";
 
 type CartRow = {
   id: string;

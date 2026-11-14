@@ -1,6 +1,5 @@
 import ForgotPasswordForm from "./forgot-password-form";
 
-export const runtime = "edge";
 
 export default function ForgotPasswordPage() {
   return (

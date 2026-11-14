@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 
-export const runtime = "edge";
 
 export default function AdminDashboardPage() {
   return (

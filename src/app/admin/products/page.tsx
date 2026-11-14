@@ -6,7 +6,6 @@ import ProductManager, {
 } from "./product-manager";
 import type { AdminCategory } from "../categories/category-manager";
 
-export const runtime = "edge";
 
 export default function ProductsPage() {
   return (
