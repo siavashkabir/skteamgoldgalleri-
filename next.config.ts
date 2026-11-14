@@ -9,6 +9,7 @@ const codespacesOrigin =
 const nextConfig: NextConfig = {
   ...(codespacesOrigin ? { allowedDevOrigins: [codespacesOrigin] } : {}),
   experimental: {
+    optimizePackageImports: ["@supabase/supabase-js"],
     serverActions: {
       bodySizeLimit: "6mb",
       ...(codespacesOrigin ? { allowedOrigins: [codespacesOrigin] } : {}),
