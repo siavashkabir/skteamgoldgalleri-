@@ -16,10 +16,14 @@ async function LoginPageContent() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
-  if (error) {
+  if (
+    error &&
+    error.status !== 401 &&
+    error.name !== "AuthSessionMissingError"
+  ) {
     throw error;
   }
-  if (data?.claims?.sub) {
+  if (!error && data?.claims?.sub) {
     redirect("/");
   }
 
