@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCustomerContext } from "@/lib/admin-context";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import { signOut } from "@/app/master-admin/actions";
 import { addItemToCart, removeCartItem, saveProfile } from "./actions";
 import CustomOrderForm from "./custom-order-form";
@@ -75,7 +75,7 @@ async function CustomerDashboard() {
   const customOrders: CustomOrderRow[] = await Promise.all(
     customOrdersResult.rows.map(async (row) => {
       const imagePath = String(row.image_url);
-      const { data, error } = await supabaseAdmin.storage
+      const { data, error } = await getSupabaseAdminClient().storage
         .from("custom-orders")
         .createSignedUrl(imagePath, 60 * 60);
       if (error) {

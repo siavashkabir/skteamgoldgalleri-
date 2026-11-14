@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCustomerContext } from "@/lib/admin-context";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminActionState } from "../admin/action-state";
 
 const imageTypes = new Map([
@@ -99,6 +99,7 @@ export async function submitCustomOrder(
     return { error: "حجم تصویر نباید بیشتر از ۵ مگابایت باشد." };
   }
 
+  const supabaseAdmin = getSupabaseAdminClient();
   const { data: bucket, error: bucketError } =
     await supabaseAdmin.storage.getBucket("custom-orders");
   if (bucketError) {

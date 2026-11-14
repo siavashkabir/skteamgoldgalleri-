@@ -1,6 +1,6 @@
 import { getTenantAdminContext } from "@/lib/admin-context";
 import { db } from "@/lib/db";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import Image from "next/image";
 
 
@@ -29,7 +29,7 @@ export default async function CustomOrdersPage() {
 
   const orders: CustomOrder[] = await Promise.all(
     result.rows.map(async (row) => {
-      const { data: image, error } = await supabaseAdmin.storage
+      const { data: image, error } = await getSupabaseAdminClient().storage
         .from("custom-orders")
         .createSignedUrl(String(row.image_url), 60 * 60);
       if (error) {

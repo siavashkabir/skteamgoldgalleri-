@@ -1,9 +1,10 @@
 import "server-only";
 
 import { createClient } from "@libsql/client/web";
+import { getEnv } from "@/lib/env";
 
 function requiredEnv(name: string): string {
-  const value = process.env[name];
+  const value = getEnv(name);
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -29,7 +30,7 @@ type DatabaseClient = ReturnType<typeof createClient>;
 
 let client: DatabaseClient | undefined;
 
-function getClient(): DatabaseClient {
+export function getDbClient(): DatabaseClient {
   if (!client) {
     client = createClient({
       url: requiredEnv("TURSO_DATABASE_URL").trim(),
@@ -41,7 +42,7 @@ function getClient(): DatabaseClient {
 
 export const db = new Proxy({} as DatabaseClient, {
   get(_target, property) {
-    const database = getClient();
+    const database = getDbClient();
     const value = Reflect.get(database, property, database);
     return typeof value === "function" ? value.bind(database) : value;
   },

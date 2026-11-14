@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
-
+import { getDbClient } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
-    const { db } = await import("@/lib/db");
+    const db = getDbClient();
     const tenantId =
       new URL(request.url).searchParams.get("tenant") || DEFAULT_TENANT_ID;
     const tenantResult = await db.execute({

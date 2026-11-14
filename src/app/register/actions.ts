@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
 
 export type RegistrationState = {
@@ -41,6 +41,7 @@ export async function registerCustomer(
     return { error: "نشانی را وارد کنید (حداکثر ۱۰۰۰ نویسه)." };
   }
 
+  const supabaseAdmin = getSupabaseAdminClient();
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
