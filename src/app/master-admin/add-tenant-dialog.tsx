@@ -66,7 +66,7 @@ export default function AddTenantDialog() {
                   className="h-12 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-4 text-sm text-[#f5f2e9] outline-none transition placeholder:text-[#64635c] focus:border-[#d6ad56]/70 focus:ring-4 focus:ring-[#d6ad56]/[0.08]"
                   maxLength={120}
                   name="name"
-                  placeholder="مثلاً گالری طلایی"
+                  placeholder="گالری طلای امیر"
                   required
                 />
               </label>

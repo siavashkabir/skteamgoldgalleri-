@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { getSuperAdminContext } from "@/lib/admin-context";
 import AddTenantDialog from "./add-tenant-dialog";
+import EditTenantDialog from "./edit-tenant-dialog";
 import { signOut } from "./actions";
 
 type Tenant = {
@@ -40,7 +41,7 @@ async function MasterAdminContent() {
               ت
             </span>
             <span>
-              <span className="block text-sm font-semibold">تیم گلد</span>
+              <span className="block text-sm font-semibold">گالری طلای امیر</span>
               <span className="mt-1 block text-[10px] tracking-[0.18em] text-[#77766e]">
                 MASTER ADMIN
               </span>
@@ -201,6 +202,7 @@ async function MasterAdminContent() {
                         <th className="px-6 py-4 font-medium">دامنه</th>
                         <th className="px-6 py-4 font-medium">تاریخ ثبت</th>
                         <th className="px-6 py-4 font-medium">شناسه</th>
+                        <th className="px-6 py-4 font-medium">تنظیمات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.055]">
@@ -235,6 +237,9 @@ async function MasterAdminContent() {
                           >
                             {tenant.id.slice(0, 8)}
                           </td>
+                          <td className="px-6 py-4">
+                            <EditTenantDialog tenant={tenant} />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -260,7 +265,7 @@ async function MasterAdminContent() {
             </section>
 
             <footer className="mt-8 flex flex-col gap-2 text-[11px] text-[#68675e] sm:flex-row sm:items-center sm:justify-between">
-              <span>تیم گلد · پنل مدیریت مرکزی</span>
+              <span>گالری طلای امیر · پنل مدیریت مرکزی</span>
               <span>سامانه مدیریت فروشگاه‌ها</span>
             </footer>
           </div>

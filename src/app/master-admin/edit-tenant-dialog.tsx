@@ -1,0 +1,178 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { updateTenant, type TenantActionState } from "./actions";
+
+type Props = {
+  tenant: {
+    id: string;
+    name: string;
+    domain: string | null;
+  };
+};
+
+const initialState: TenantActionState = {};
+
+export default function EditTenantDialog({ tenant }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    updateTenant,
+    initialState,
+  );
+  const domain = tenant.domain?.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+
+  return (
+    <>
+      <button
+        className="rounded-lg border border-white/10 px-3 py-2 text-xs text-[#d6ad56] transition hover:bg-white/[0.04]"
+        onClick={() => setIsOpen(true)}
+        type="button"
+      >
+        ویرایش و تنظیم دامنه
+      </button>
+      {isOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+          <section
+            aria-labelledby={`edit-tenant-${tenant.id}`}
+            aria-modal="true"
+            className="my-auto max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#191918] p-6 shadow-2xl sm:p-8"
+            role="dialog"
+          >
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="mb-2 text-xs font-medium text-[#d6ad56]">
+                  مدیریت فروشگاه
+                </p>
+                <h2
+                  className="text-xl font-semibold"
+                  id={`edit-tenant-${tenant.id}`}
+                >
+                  ویرایش فروشگاه و تنظیم دامنه
+                </h2>
+              </div>
+              <button
+                aria-label="بستن پنجره"
+                className="rounded-lg p-2 text-[#969387] hover:bg-white/[0.06]"
+                onClick={() => setIsOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <form action={formAction} className="space-y-5">
+              <input name="id" type="hidden" value={tenant.id} />
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">
+                  نام فروشگاه
+                </span>
+                <input
+                  className="h-12 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-4 text-sm outline-none focus:border-[#d6ad56]/70"
+                  defaultValue={tenant.name}
+                  maxLength={120}
+                  name="name"
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">
+                  دامنه اختصاصی
+                </span>
+                <input
+                  className="h-12 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-4 text-left text-sm outline-none focus:border-[#d6ad56]/70"
+                  defaultValue={domain}
+                  dir="ltr"
+                  maxLength={253}
+                  name="domain"
+                  placeholder="example.com"
+                />
+              </label>
+
+              <section className="rounded-xl border border-[#d6ad56]/20 bg-[#d6ad56]/[0.04] p-4 sm:p-5">
+                <h3 className="font-semibold text-[#e2c16d]">تنظیم دامنه</h3>
+                <ol className="mt-3 list-decimal space-y-2 pr-5 text-sm leading-6 text-[#c2bdaf]">
+                  <li>
+                    در پنل Vercel پروژه را باز کنید و در Settings → Domains،
+                    دامنه <bdi dir="ltr">{domain || "example.com"}</bdi> را اضافه
+                    کنید.
+                  </li>
+                  <li>
+                    وارد پنل ثبت‌کننده دامنه شوید و رکوردهای زیر را در DNS
+                    بسازید:
+                  </li>
+                </ol>
+                <div className="mt-4 overflow-x-auto rounded-lg border border-white/[0.08]">
+                  <table className="w-full min-w-[400px] text-left text-xs" dir="ltr">
+                    <thead className="bg-white/[0.04] text-[#aaa79b]">
+                      <tr>
+                        <th className="p-3 font-medium">Type</th>
+                        <th className="p-3 font-medium">Name / Host</th>
+                        <th className="p-3 font-medium">Value / Target</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.07]">
+                      <tr>
+                        <td className="p-3">A</td>
+                        <td className="p-3">@</td>
+                        <td className="p-3">76.76.21.21</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3">CNAME</td>
+                        <td className="p-3">www</td>
+                        <td className="p-3">cname.vercel-dns.com</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ol className="mt-3 list-decimal space-y-2 pr-5 text-sm leading-6 text-[#c2bdaf]" start={3}>
+                  <li>
+                    رکوردهای متناقض قبلی برای همین میزبان را حذف کنید، تغییرات
+                    را ذخیره کنید و برای انتشار DNS کمی زمان بدهید.
+                  </li>
+                  <li>
+                    در Vercel روی Verify بزنید؛ پس از تأیید، HTTPS به‌صورت
+                    خودکار فعال می‌شود. اگر Vercel رکورد تأیید جداگانه نشان
+                    داد، همان مقدار پنل را نیز اضافه کنید.
+                  </li>
+                </ol>
+                <p className="mt-3 text-xs leading-5 text-[#898578]">
+                  این مقادیر برای DNS استاندارد Vercel هستند. اگر مقصد
+                  متفاوتی در تنظیمات دامنه پروژه نمایش داده می‌شود، مقدار
+                  اختصاصی همان پروژه را مبنا قرار دهید.
+                </p>
+              </section>
+
+              {state.error ? (
+                <p className="rounded-xl border border-red-400/20 bg-red-400/[0.07] px-4 py-3 text-sm text-red-200" role="alert">
+                  {state.error}
+                </p>
+              ) : null}
+              {state.success ? (
+                <p className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.07] px-4 py-3 text-sm text-emerald-200" role="status">
+                  {state.success}
+                </p>
+              ) : null}
+
+              <div className="flex gap-3">
+                <button
+                  className="h-11 flex-1 rounded-xl bg-[#d6ad56] px-4 text-sm font-semibold text-[#211a0d] disabled:opacity-60"
+                  disabled={pending}
+                  type="submit"
+                >
+                  {pending ? "در حال ذخیره..." : "ذخیره اطلاعات"}
+                </button>
+                <button
+                  className="h-11 rounded-xl border border-white/10 px-4 text-sm text-[#c7c3b9] hover:bg-white/[0.05]"
+                  onClick={() => setIsOpen(false)}
+                  type="button"
+                >
+                  بستن
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
+}

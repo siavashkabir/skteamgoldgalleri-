@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
+    "db:init-storage": "node --env-file=.env.local scripts/init-storage.mjs",
     "db:seed-admin": "node --env-file=.env.local scripts/seed-admin.mjs"
   },
   "dependencies": {

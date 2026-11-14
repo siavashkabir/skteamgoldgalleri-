@@ -75,9 +75,14 @@ try {
 
   const tenantId = "team-gold-system";
   await db.execute({
-    sql: `INSERT OR IGNORE INTO tenants (id, name)
-          VALUES (?, ?)`,
-    args: [tenantId, "Team Gold System"],
+    sql: `INSERT INTO tenants (id, name)
+          VALUES (?, ?)
+          ON CONFLICT(id) DO UPDATE SET name = excluded.name`,
+    args: [tenantId, "گالری طلای امیر"],
+  });
+  await db.execute({
+    sql: "UPDATE tenants SET name = ? WHERE id = ?",
+    args: ["گالری طلای امیر", tenantId],
   });
 
   const tenantResult = await db.execute({
@@ -95,7 +100,7 @@ try {
             tenant_id = excluded.tenant_id,
             role = excluded.role,
             full_name = excluded.full_name`,
-    args: [user.id, tenantId, "super_admin", "Team Gold Super Admin"],
+    args: [user.id, tenantId, "super_admin", "مدیر ارشد گالری طلای امیر"],
   });
 
   console.log(`Seeded ${email} as super_admin.`);

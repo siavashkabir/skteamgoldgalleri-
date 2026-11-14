@@ -49,7 +49,7 @@ async function LoginPageContent() {
               <span className="text-[#d6ad56]">یک‌جا مدیریت کنید.</span>
             </h1>
             <p className="mt-5 max-w-sm text-base leading-8 text-[#b8b2a3]">
-              به پنل مدیریت تیم گلد خوش آمدید؛ جایی برای نظارت ساده‌تر و
+              به گالری طلای امیر خوش آمدید؛ تجربه‌ای ساده و حرفه‌ای برای
               حرفه‌ای‌تر بر کسب‌وکار شما.
             </p>
           </div>
@@ -73,7 +73,7 @@ async function LoginPageContent() {
                 ورود به حساب کاربری
               </h2>
               <p className="mt-3 text-sm leading-7 text-[#969387]">
-                برای ادامه، اطلاعات حساب مدیریت خود را وارد کنید.
+                برای ادامه، با حساب کاربری خود وارد شوید.
               </p>
             </div>
             <LoginForm />
@@ -96,7 +96,7 @@ function Brand() {
       </div>
       <div>
         <p className="text-sm font-semibold tracking-wide text-[#f4eddd]">
-          تیم گلد
+          گالری طلای امیر
         </p>
         <p className="mt-0.5 text-[10px] tracking-[0.18em] text-[#9c927a]">
           GALLERY MANAGEMENT

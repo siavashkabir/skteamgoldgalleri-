@@ -51,7 +51,13 @@ async function Dashboard() {
           href="/admin/orders"
           label="سفارش‌ها"
           value="—"
-          description="مدیریت سفارش‌ها به‌زودی"
+          description="مدیریت سفارش‌های ثبت‌شده"
+        />
+        <DashboardCard
+          href="/admin/custom-orders"
+          label="سفارش اختصاصی"
+          value="مشاهده"
+          description="درخواست‌های طراحی اختصاصی مشتریان"
         />
       </section>
 

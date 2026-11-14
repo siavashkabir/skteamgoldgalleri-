@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "تیم گلد | مدیریت فروشگاه‌ها",
-  description: "پنل مدیریت فروشگاه‌های تیم گلد",
+  title: "گالری طلای امیر",
+  description: "گالری طلای امیر؛ فروشگاه تخصصی طلا و سفارش‌های اختصاصی",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

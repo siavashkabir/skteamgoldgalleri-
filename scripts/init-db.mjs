@@ -49,6 +49,42 @@ const schema = [
     condition TEXT NOT NULL DEFAULT 'new' CHECK (condition IN ('new', 'used')),
     labor_percentage REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0)
   )`,
+  `CREATE TABLE IF NOT EXISTS cart_items (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    customer_id TEXT NOT NULL REFERENCES profiles(id),
+    product_id TEXT NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (tenant_id, customer_id, product_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS orders (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    customer_id TEXT NOT NULL REFERENCES profiles(id),
+    status TEXT NOT NULL DEFAULT 'pending',
+    total REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE TABLE IF NOT EXISTS order_items (
+    id TEXT PRIMARY KEY,
+    order_id TEXT NOT NULL REFERENCES orders(id),
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    customer_id TEXT NOT NULL REFERENCES profiles(id),
+    product_id TEXT NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price REAL NOT NULL CHECK (unit_price >= 0)
+  )`,
+  `CREATE TABLE IF NOT EXISTS custom_orders (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    customer_id TEXT NOT NULL REFERENCES profiles(id),
+    image_url TEXT NOT NULL,
+    description TEXT NOT NULL,
+    contact_info TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
 ];
 
 async function ensureColumn(table, column, definition) {
@@ -101,10 +137,20 @@ try {
   const result = await client.execute(
     `SELECT name FROM sqlite_master
      WHERE type = 'table'
-       AND name IN ('tenants', 'profiles', 'categories', 'products')`,
+       AND name IN ('tenants', 'profiles', 'categories', 'products',
+                    'cart_items', 'orders', 'order_items', 'custom_orders')`,
   );
   const createdTables = new Set(result.rows.map((row) => row.name));
-  const expectedTables = ["tenants", "profiles", "categories", "products"];
+  const expectedTables = [
+    "tenants",
+    "profiles",
+    "categories",
+    "products",
+    "cart_items",
+    "orders",
+    "order_items",
+    "custom_orders",
+  ];
   const missingTables = expectedTables.filter(
     (table) => !createdTables.has(table),
   );
@@ -112,6 +158,12 @@ try {
   if (missingTables.length > 0) {
     throw new Error(`Table verification failed: ${missingTables.join(", ")}`);
   }
+
+  await client.execute({
+    sql: `UPDATE tenants SET name = ?
+          WHERE id = ? AND name IN ('Team Gold System', 'Team Gold')`,
+    args: ["گالری طلای امیر", "team-gold-system"],
+  });
 
   console.log(`Verified tables: ${expectedTables.join(", ")}`);
 } finally {

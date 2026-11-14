@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { getAuthenticatedProfile } from "@/lib/admin-context";
 
 export default function Home() {
   return (
@@ -11,6 +11,12 @@ export default function Home() {
 }
 
 async function HomeRedirect() {
-  const { role } = await getTenantAdminContext();
-  return redirect(role === "super_admin" ? "/master-admin" : "/admin");
+  const { role } = await getAuthenticatedProfile();
+  return redirect(
+    role === "customer"
+      ? "/profile"
+      : role === "super_admin"
+        ? "/master-admin"
+        : "/admin",
+  );
 }
