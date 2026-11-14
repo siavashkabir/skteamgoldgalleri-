@@ -47,3 +47,10 @@ tenant's ID.
 The tenant admin panel is available at `/admin`; the central admin is available
 at `/master-admin`. Product images are uploaded to the public `products` bucket;
 supported formats are JPEG, PNG, WebP, and AVIF, up to 5 MB each.
+
+The public storefront for the default shop is available at `/skteam` (the
+tenant ID `/team-gold-system` is also accepted). Visible products and store
+categories are loaded from Turso. Customers can add products to a browser-persisted
+cart, submit shipping details at `/checkout`, and create a pending mock order;
+no online payment is performed. Run `npm run db:init` to add shipping detail
+columns to an existing `orders` table.

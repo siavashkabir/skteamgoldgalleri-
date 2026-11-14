@@ -64,6 +64,11 @@ const schema = [
     customer_id TEXT NOT NULL REFERENCES profiles(id),
     status TEXT NOT NULL DEFAULT 'pending',
     total REAL NOT NULL DEFAULT 0,
+    customer_name TEXT,
+    customer_phone TEXT,
+    customer_address TEXT,
+    shipping_city TEXT,
+    shipping_postal_code TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   `CREATE TABLE IF NOT EXISTS order_items (
@@ -116,6 +121,16 @@ try {
     ["labor_percentage", "REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0)"],
   ]) {
     await ensureColumn("products", column, definition);
+  }
+
+  for (const [column, definition] of [
+    ["customer_name", "TEXT"],
+    ["customer_phone", "TEXT"],
+    ["customer_address", "TEXT"],
+    ["shipping_city", "TEXT"],
+    ["shipping_postal_code", "TEXT"],
+  ]) {
+    await ensureColumn("orders", column, definition);
   }
 
   const productColumns = new Set(
