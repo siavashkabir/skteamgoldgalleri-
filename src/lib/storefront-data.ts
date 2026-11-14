@@ -59,11 +59,7 @@ export async function getStoreBySlug(
   return {
     id: String(row.id),
     slug: String(row.shop_slug || slug),
-    name:
-      String(row.id) === "team-gold-system" &&
-      (rawName === "Team Gold System" || rawName === "Team Gold")
-        ? "گالری طلای امیر"
-        : rawName,
+    name: String(row.id) === "team-gold-system" ? "گالری طلای امیر" : rawName,
     description: row.description === null ? "" : String(row.description),
     instagramUrl:
       row.instagram_url === null ? null : String(row.instagram_url),

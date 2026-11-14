@@ -175,8 +175,7 @@ try {
   }
 
   await client.execute({
-    sql: `UPDATE tenants SET name = ?
-          WHERE id = ? AND name IN ('Team Gold System', 'Team Gold')`,
+    sql: "UPDATE tenants SET name = ? WHERE id = ?",
     args: ["گالری طلای امیر", "team-gold-system"],
   });
 
