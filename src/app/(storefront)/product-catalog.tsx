@@ -9,6 +9,10 @@ import type {
   StorefrontProduct,
   StorefrontStore,
 } from "@/lib/storefront-types";
+import {
+  categoryFilterValue,
+  genderFilterForName,
+} from "@/lib/category-filters";
 import { useCart } from "./storefront-provider";
 
 export default function ProductCatalog({
@@ -24,12 +28,28 @@ export default function ProductCatalog({
   const pathname = usePathname();
   const router = useRouter();
   const selectedFilter = searchParams.get("category");
+  const safeCategories = useMemo(
+    () =>
+      Array.isArray(categories)
+        ? categories.filter(isStorefrontCategory)
+        : [],
+    [categories],
+  );
+  const safeProducts = useMemo(
+    () =>
+      Array.isArray(products)
+        ? products.filter(isStorefrontProduct)
+        : [],
+    [products],
+  );
   const categoryOptions = useMemo(() => {
-    const options = new Map(categories.map((category) => [category.id, category]));
-    const categoryNames = new Set(
-      categories.map((category) => normalizeCategoryName(category.name)),
+    const options = new Map(
+      safeCategories.map((category) => [category.id, category]),
     );
-    for (const product of products) {
+    const categoryNames = new Set(
+      safeCategories.map((category) => normalizeCategoryName(category.name)),
+    );
+    for (const product of safeProducts) {
       if (!product.categoryName) continue;
       const nameKey = normalizeCategoryName(product.categoryName);
       if (categoryNames.has(nameKey)) continue;
@@ -45,49 +65,58 @@ export default function ProductCatalog({
       }
     }
     return [...options.values()];
-  }, [categories, products]);
+  }, [safeCategories, safeProducts]);
   const visibleProducts = useMemo(() => {
-    if (!selectedFilter) return products;
+    if (!selectedFilter) return safeProducts;
+    if (selectedFilter === "men" || selectedFilter === "women") {
+      const included = new Set(
+        categoryOptions
+          .filter((category) => genderFilterForName(category.name) === selectedFilter)
+          .map((category) => category.id),
+      );
+      includeDescendants(categoryOptions, included);
+      const categoryById = new Map(
+        categoryOptions.map((category) => [category.id, category]),
+      );
+      return safeProducts.filter((product) => {
+        const categoryName =
+          product.categoryName ??
+          (product.categoryId ? categoryById.get(product.categoryId)?.name : null);
+        const categoryGender = categoryName
+          ? genderFilterForName(categoryName)
+          : null;
+        if (categoryGender) return categoryGender === selectedFilter;
+        return (
+          (product.categoryId !== null && included.has(product.categoryId)) ||
+          genderFilterForName(product.name) === selectedFilter
+        );
+      });
+    }
+
     const matches = categoryOptions.filter((category) => {
       if (category.id === selectedFilter || category.slug === selectedFilter) {
         return true;
       }
-      if (selectedFilter === "men") return /مرد|men/i.test(category.name) && !category.parentId;
-      if (selectedFilter === "women") return /زن|women/i.test(category.name) && !category.parentId;
       return false;
     });
     const included = new Set(matches.map((category) => category.id));
-    let found = true;
-    while (found) {
-      found = false;
-      for (const category of categoryOptions) {
-        if (category.parentId && included.has(category.parentId) && !included.has(category.id)) {
-          included.add(category.id);
-          found = true;
-        }
-      }
-    }
+    includeDescendants(categoryOptions, included);
     const includedNames = new Set(
       categoryOptions
         .filter((category) => included.has(category.id))
         .map((category) => normalizeCategoryName(category.name)),
     );
-    return products.filter(
+    return safeProducts.filter(
       (product) =>
-        (product.categoryId !== null && included.has(product.categoryId)) ||
-        (product.categoryName !== null &&
+        (typeof product.categoryId === "string" &&
+          included.has(product.categoryId)) ||
+        (typeof product.categoryName === "string" &&
           includedNames.has(normalizeCategoryName(product.categoryName))),
     );
-  }, [categoryOptions, products, selectedFilter]);
+  }, [categoryOptions, safeProducts, selectedFilter]);
 
   function selectCategory(category: StorefrontCategory | null) {
-    const filter = category
-      ? /مرد|men/i.test(category.name)
-        ? "men"
-        : /زن|women/i.test(category.name)
-          ? "women"
-          : category.slug
-      : null;
+    const filter = category ? categoryFilterValue(category) : null;
     const params = new URLSearchParams(searchParams.toString());
     if (filter) params.set("category", filter);
     else params.delete("category");
@@ -110,19 +139,24 @@ export default function ProductCatalog({
         >
           همه محصولات
         </button>
-        {categoryOptions.map((category) => (
+        {categoryOptions.map((category) => {
+          const filter = categoryFilterValue(category);
+          const active =
+            selectedFilter === category.id ||
+            selectedFilter === category.slug ||
+            selectedFilter === filter;
+          return (
           <button
-            aria-pressed={selectedFilter === category.id || selectedFilter === category.slug}
-            className={categoryClass(
-              selectedFilter === category.id || selectedFilter === category.slug,
-            )}
+            aria-pressed={active}
+            className={categoryClass(active)}
             key={category.id}
             onClick={() => selectCategory(category)}
             type="button"
           >
             {category.name}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {visibleProducts.length ? (
@@ -133,7 +167,7 @@ export default function ProductCatalog({
         </div>
       ) : (
         <div className="rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-12 text-center text-sm text-[#929085]">
-          {products.length === 0
+          {safeProducts.length === 0
             ? "هنوز محصولی در فروشگاه ثبت نشده است."
             : selectedFilter
               ? "در این دسته‌بندی محصولی ثبت نشده است."
@@ -142,6 +176,26 @@ export default function ProductCatalog({
       )}
     </>
   );
+}
+
+function includeDescendants(
+  categories: StorefrontCategory[],
+  included: Set<string>,
+) {
+  let found = true;
+  while (found) {
+    found = false;
+    for (const category of categories) {
+      if (
+        category.parentId &&
+        included.has(category.parentId) &&
+        !included.has(category.id)
+      ) {
+        included.add(category.id);
+        found = true;
+      }
+    }
+  }
 }
 
 function ProductCard({
@@ -226,13 +280,36 @@ function categoryClass(active: boolean) {
 }
 
 function categoryFilterSlug(name: string) {
-  if (/مرد|men/i.test(name)) return "men";
-  if (/زن|women/i.test(name)) return "women";
   return name.trim().toLocaleLowerCase("fa").replace(/\s+/g, "-");
 }
 
 function normalizeCategoryName(name: string) {
-  return name.trim().toLocaleLowerCase("fa");
+  return (typeof name === "string" ? name : "").trim().toLocaleLowerCase("fa");
+}
+
+function isStorefrontCategory(
+  value: unknown,
+): value is StorefrontCategory {
+  if (!value || typeof value !== "object") return false;
+  const category = value as Partial<StorefrontCategory>;
+  return (
+    typeof category.id === "string" &&
+    typeof category.name === "string" &&
+    typeof category.slug === "string" &&
+    (category.parentId === null || typeof category.parentId === "string")
+  );
+}
+
+function isStorefrontProduct(value: unknown): value is StorefrontProduct {
+  if (!value || typeof value !== "object") return false;
+  const product = value as Partial<StorefrontProduct>;
+  return (
+    typeof product.id === "string" &&
+    typeof product.name === "string" &&
+    (product.categoryId === null || typeof product.categoryId === "string") &&
+    (product.categoryName === null ||
+      typeof product.categoryName === "string")
+  );
 }
 
 function formatPrice(value: number): string {

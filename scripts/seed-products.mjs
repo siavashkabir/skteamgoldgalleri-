@@ -20,7 +20,6 @@ const products = [
     price: 42500000,
     weight: 3.2,
     description: "انگشتر طلای مردانه با طراحی ساده و کلاسیک.",
-    imageUrl: "https://placehold.co/400x400?text=Mens+Gold+Ring",
     categoryId: "team-gold-men",
   },
   {
@@ -29,7 +28,6 @@ const products = [
     price: 38500000,
     weight: 2.9,
     description: "دستبند طلای مردانه مناسب استفاده روزمره.",
-    imageUrl: "https://placehold.co/400x400?text=Mens+Gold+Bracelet",
     categoryId: "team-gold-men",
   },
   {
@@ -38,7 +36,6 @@ const products = [
     price: 51200000,
     weight: 3.8,
     description: "زنجیر طلای مردانه با بافت ظریف و ماندگار.",
-    imageUrl: "https://placehold.co/400x400?text=Mens+Gold+Chain",
     categoryId: "team-gold-men",
   },
   {
@@ -47,7 +44,6 @@ const products = [
     price: 33700000,
     weight: 2.5,
     description: "گردنبند طلای مردانه با پلاک مینیمال.",
-    imageUrl: "https://placehold.co/400x400?text=Mens+Gold+Pendant",
     categoryId: "team-gold-men",
   },
   {
@@ -56,7 +52,6 @@ const products = [
     price: 29800000,
     weight: 2.1,
     description: "انگشتر طلای زنانه با ظرافتی ساده و چشم‌نواز.",
-    imageUrl: "https://placehold.co/400x400?text=Womens+Gold+Ring",
     categoryId: "team-gold-women",
   },
   {
@@ -65,7 +60,6 @@ const products = [
     price: 31500000,
     weight: 2.3,
     description: "دستبند طلای زنانه سبک برای هر مناسبت.",
-    imageUrl: "https://placehold.co/400x400?text=Womens+Gold+Bracelet",
     categoryId: "team-gold-women",
   },
   {
@@ -74,7 +68,6 @@ const products = [
     price: 26400000,
     weight: 1.9,
     description: "زنجیر طلای زنانه با زنجیره‌ای لطیف و براق.",
-    imageUrl: "https://placehold.co/400x400?text=Womens+Gold+Chain",
     categoryId: "team-gold-women",
   },
   {
@@ -83,7 +76,6 @@ const products = [
     price: 22100000,
     weight: 1.6,
     description: "گوشواره طلای زنانه با طراحی ظریف و سبک.",
-    imageUrl: "https://placehold.co/400x400?text=Womens+Gold+Earrings",
     categoryId: "team-gold-women",
   },
 ];
@@ -152,7 +144,6 @@ try {
       price: product.price,
       weight: product.weight,
       description: product.description,
-      image_url: product.imageUrl,
       ...(productColumns.has("category") ? {
         category: categories.find((category) => category.id === product.categoryId).name,
       } : {}),
@@ -180,6 +171,12 @@ try {
           args: [tenantId, product.name, ...(shopIdColumn ? [shopId] : [])],
         };
     const updates = entries.filter(([column]) => column !== "id");
+    const updateAssignments = updates.map(([column]) => `${column} = ?`);
+    if (productColumns.has("image_url")) {
+      updateAssignments.push(
+        "image_url = CASE WHEN image_url LIKE 'https://placehold.co/%' THEN NULL ELSE image_url END",
+      );
+    }
     const insertSql = `INSERT INTO products (${entries.map(([column]) => column).join(", ")})
                        SELECT ${entries.map(() => "?").join(", ")}
                        WHERE NOT EXISTS (
@@ -187,7 +184,7 @@ try {
                        )`;
     return [
       {
-        sql: `UPDATE products SET ${updates.map(([column]) => `${column} = ?`).join(", ")}
+        sql: `UPDATE products SET ${updateAssignments.join(", ")}
               WHERE ${identity.sql}`,
         args: [...updates.map(([, value]) => value), ...identity.args],
       },

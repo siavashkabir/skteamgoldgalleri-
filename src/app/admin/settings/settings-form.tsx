@@ -68,8 +68,11 @@ export default function StoreSettingsForm({
           <input className={inputClass} defaultValue={settings.logoUrl} name="logo_url" type="url" />
         </label>
         <label className="block text-sm text-[#c5c1b6]">
-          نرخ دستی دلار (تومان)
+          نرخ بازار دلار (تومان)
           <input className={inputClass} defaultValue={settings.tomanRate} min="1" name="toman_rate" step="any" type="number" />
+          <span className="mt-1 block text-xs leading-5 text-[#858378]">
+            این نرخ برای تبدیل قیمت جهانی طلا به تومان استفاده می‌شود؛ بدون آن قیمت ۱۸ عیار نمایش داده نمی‌شود.
+          </span>
         </label>
         <label className="block text-sm text-[#c5c1b6]">
           عنوان ویترین

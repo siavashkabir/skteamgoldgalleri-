@@ -8,32 +8,46 @@ type LivePrice = {
   eighteenKPrice: number;
 };
 
-export default function LivePriceWidget() {
+export default function LivePriceWidget({ tenantId }: { tenantId: string }) {
   const [price, setPrice] = useState<LivePrice | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     async function refreshPrice() {
       try {
-        const response = await fetch("/api/prices", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Live gold price request failed.");
-        }
+        const response = await fetch(
+          `/api/live-prices?tenant=${encodeURIComponent(tenantId)}`,
+          { cache: "no-store" },
+        );
         const result: unknown = await response.json();
+        if (!response.ok) {
+          const message =
+            typeof result === "object" &&
+            result !== null &&
+            "error" in result &&
+            typeof result.error === "string"
+              ? result.error
+              : "قیمت لحظه‌ای در دسترس نیست.";
+          throw new Error(message);
+        }
         if (
           isLivePrice(result) &&
           active
         ) {
           setPrice(result);
-          setError(false);
+          setError(null);
         } else if (active) {
           throw new Error("Live gold price response was invalid.");
         }
-      } catch {
+      } catch (caughtError) {
         if (active) {
           setPrice(null);
-          setError(true);
+          setError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "قیمت لحظه‌ای در دسترس نیست.",
+          );
         }
       }
     }
@@ -43,14 +57,14 @@ export default function LivePriceWidget() {
       active = false;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [tenantId]);
 
   return (
     <div
       aria-label="قیمت‌های لحظه‌ای"
       aria-live="polite"
       className="border-t border-white/[0.06] bg-[#11110f]/80"
-      title={error ? "قیمت زنده در دسترس نیست" : "به‌روزرسانی خودکار هر ۵ دقیقه"}
+      title={error ?? "به‌روزرسانی خودکار هر ۵ دقیقه"}
     >
       <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2 px-4 py-2 sm:gap-4 sm:px-8">
         <PriceValue
@@ -81,8 +95,8 @@ function PriceValue({ label, value }: { label: string; value: string }) {
   );
 }
 
-function statusText(error: boolean) {
-  return error ? "در دسترس نیست" : "در حال دریافت...";
+function statusText(error: string | null) {
+  return error ?? "در حال دریافت...";
 }
 
 function formatCurrency(value: number, currency: string) {

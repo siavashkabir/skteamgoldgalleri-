@@ -37,13 +37,15 @@ The script uses `sk.team.it@gmail.com`, confirms the email, and assigns the
 `super_admin` role under the `گالری طلای امیر` system tenant required by the
 profiles schema. It does not store the password in the repository.
 
-Initialize the private Supabase Storage bucket for customer design requests with:
+Initialize the Supabase Storage buckets with:
 
 ```sh
 npm run db:init-storage
 ```
 
-Customer accounts with a `customer` profile role can access `/profile`, view
+This creates/verifies the public `products` bucket for storefront photos and
+the private `custom-orders` bucket for customer design requests. Customer
+accounts with a `customer` profile role can access `/profile`, view
 their account, cart, and order history, and submit a custom gold-design request.
 Shop owners can review requests at `/admin/custom-orders`. Custom-order images
 are stored privately and served with short-lived signed URLs. The customer
@@ -62,9 +64,10 @@ payment is performed. Store owners can configure storefront branding,
 contact details, nested categories, and product specifications from `/admin`.
 The master admin can edit tenant settings and the platform footer name/URL. The
 storefront filters products with `?category=...`. Its live-price widget fetches
-gold-ounce and USD/IRR rates from Gold API and ExchangeRate-API through
-`/api/prices`, displays the converted toman rate and 18k gold price, and refreshes
-every five minutes.
+the gold-ounce price from Gold API and converts it using the store's configured
+market USD rate (toman) through `/api/live-prices`; set that rate in `/admin`
+because public IRR exchange feeds do not reliably reflect Iran's free market.
+The widget refreshes every five minutes.
 
 To seed the default store with sample products and men's/women's categories, run:
 

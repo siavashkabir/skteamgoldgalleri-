@@ -53,7 +53,7 @@ export async function saveStoreSettings(
     phoneNumbers.some((phone) => phone.length > 40) ||
     (tomanRate !== null && (!Number.isFinite(tomanRate) || tomanRate <= 0))
   ) {
-    return { error: "شماره تماس یا نرخ دستی دلار معتبر نیست." };
+    return { error: "شماره تماس یا نرخ بازار دلار معتبر نیست." };
   }
 
   for (const [label, value] of [

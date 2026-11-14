@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCart } from "./storefront-provider";
 import LivePriceWidget from "./live-price-widget";
 import type { StorefrontCategory, StorefrontStore } from "@/lib/storefront-types";
+import { categoryFilterValue } from "@/lib/category-filters";
 
 export default function StorefrontHeader({
   store,
@@ -74,7 +75,7 @@ export default function StorefrontHeader({
           </Link>
         </nav>
       </div>
-      <LivePriceWidget />
+      <LivePriceWidget tenantId={store.id} />
     </header>
   );
 }
@@ -112,11 +113,7 @@ function CategoryLink({
   category: StorefrontCategory;
   store: StorefrontStore;
 }) {
-  const filter = /مرد|men/i.test(category.name)
-    ? "men"
-    : /زن|women/i.test(category.name)
-      ? "women"
-      : category.slug;
+  const filter = categoryFilterValue(category);
   return (
     <Link
       className="block rounded-lg px-3 py-2 text-xs text-[#c5c1b6] hover:bg-white/[0.05] hover:text-[#e2c16d]"

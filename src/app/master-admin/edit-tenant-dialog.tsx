@@ -95,7 +95,7 @@ export default function EditTenantDialog({ tenant }: Props) {
                   <input className={inputClass} defaultValue={tenant.logoUrl} name="logo_url" type="url" />
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
-                  نرخ دستی دلار (تومان)
+                  نرخ بازار دلار (تومان)
                   <input className={inputClass} defaultValue={tenant.tomanRate} min="1" name="toman_rate" step="any" type="number" />
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
