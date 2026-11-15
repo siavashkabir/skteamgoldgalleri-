@@ -50,7 +50,7 @@ async function StorefrontContent({
   const hasGallery = store.enabledModules.includes("gallery");
   
   // 🚨 این خط جدید: تشخیص طلا بودن
-  const isGold = store.businessType === "gold" || store.enabledModules.includes("gold_features") || store.slug === "skteam";
+  const isGold = store.businessType === "gold" || (store.enabledModules as string[]).includes("gold_features") || store.slug === "skteam";
 
   const galleryImages = catalog.products.flatMap((product) =>
     [...product.images, ...(product.imageUrl ? [product.imageUrl] : [])].map(
