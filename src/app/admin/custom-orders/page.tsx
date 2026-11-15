@@ -31,7 +31,8 @@ export default async function CustomOrdersPage() {
 
   const orders: CustomOrder[] = await Promise.all(
     result.rows.map(async (row) => {
-      const { data: image, error } = await getSupabaseAdminClient().storage
+      const supabaseAdmin = await getSupabaseAdminClient();
+      const { data: image, error } = await supabaseAdmin.storage
         .from("custom-orders")
         .createSignedUrl(String(row.image_url), 60 * 60);
       if (error) {

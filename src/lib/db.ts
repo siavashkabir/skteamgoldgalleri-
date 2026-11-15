@@ -29,9 +29,9 @@ type DatabaseClient = ReturnType<typeof createClient>;
 
 let client: DatabaseClient | undefined;
 
-export function getDbClient(): DatabaseClient {
+export async function getDbClient(): Promise<DatabaseClient> {
   if (!client) {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     client = createClient({
       url: requiredEnv("TURSO_DATABASE_URL", env.TURSO_DATABASE_URL).trim(),
       authToken: readAuthToken("TURSO_AUTH_TOKEN", env.TURSO_AUTH_TOKEN),
@@ -42,8 +42,10 @@ export function getDbClient(): DatabaseClient {
 
 export const db = new Proxy({} as DatabaseClient, {
   get(_target, property) {
-    const database = getDbClient();
-    const value = Reflect.get(database, property, database);
-    return typeof value === "function" ? value.bind(database) : value;
+    return async (...args: unknown[]) => {
+      const database = await getDbClient();
+      const method = Reflect.get(database, property, database);
+      return Reflect.apply(method, database, args);
+    };
   },
 });

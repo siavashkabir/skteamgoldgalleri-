@@ -5,7 +5,7 @@ import { getDbClient } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
-    const db = getDbClient();
+    const db = await getDbClient();
     const tenantId =
       new URL(request.url).searchParams.get("tenant") || DEFAULT_TENANT_ID;
     const tenantResult = await db.execute({

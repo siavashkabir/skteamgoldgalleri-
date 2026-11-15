@@ -109,7 +109,7 @@ export async function saveProduct(
       return { error: "حجم تصویر نباید بیشتر از ۵ مگابایت باشد." };
     }
 
-    const supabaseAdmin = getSupabaseAdminClient();
+    const supabaseAdmin = await getSupabaseAdminClient();
     const { data: bucket, error: bucketError } =
       await supabaseAdmin.storage.getBucket("products");
     if (bucketError) {

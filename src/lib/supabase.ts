@@ -15,18 +15,18 @@ function getSupabaseConfig(env: CloudflareEnv) {
   };
 }
 
-export function getSupabaseClient(): SupabaseClient {
+export async function getSupabaseClient(): Promise<SupabaseClient> {
   if (!supabaseClient) {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     const { url, anonKey } = getSupabaseConfig(env);
     supabaseClient = createClient(url, anonKey);
   }
   return supabaseClient;
 }
 
-export function getSupabaseAdminClient(): SupabaseClient {
+export async function getSupabaseAdminClient(): Promise<SupabaseClient> {
   if (!supabaseAdminClient) {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     const { url } = getSupabaseConfig(env);
     supabaseAdminClient = createClient(
       url,

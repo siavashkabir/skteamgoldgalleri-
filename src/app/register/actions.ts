@@ -41,7 +41,7 @@ export async function registerCustomer(
     return { error: "نشانی را وارد کنید (حداکثر ۱۰۰۰ نویسه)." };
   }
 
-  const supabaseAdmin = getSupabaseAdminClient();
+  const supabaseAdmin = await getSupabaseAdminClient();
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,

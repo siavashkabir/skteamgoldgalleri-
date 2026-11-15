@@ -75,7 +75,8 @@ async function CustomerDashboard() {
   const customOrders: CustomOrderRow[] = await Promise.all(
     customOrdersResult.rows.map(async (row) => {
       const imagePath = String(row.image_url);
-      const { data, error } = await getSupabaseAdminClient().storage
+      const supabaseAdmin = await getSupabaseAdminClient();
+      const { data, error } = await supabaseAdmin.storage
         .from("custom-orders")
         .createSignedUrl(imagePath, 60 * 60);
       if (error) {
