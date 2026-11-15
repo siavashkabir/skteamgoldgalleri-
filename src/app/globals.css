@@ -10,7 +10,7 @@
 }
 
 .storefront-theme {
-  --color-surface: color-mix(in srgb, var(--color-bg) 92%, white);
+  --color-surface: var(--color-card);
 }
 
 @theme inline {

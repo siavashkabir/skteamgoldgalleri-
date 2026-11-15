@@ -20,6 +20,8 @@ export type StorefrontStore = {
   socialLinks: Record<string, string>;
   tomanRate: number | null;
   themeSettings: ThemeSettings;
+  status: "active" | "trial" | "suspended";
+  expiryDate: string | null;
 };
 
 export type StorefrontCategory = {

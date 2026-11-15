@@ -22,6 +22,8 @@ type Props = {
     whatsappUrl: string;
     tomanRate: string;
     themeSettings: ThemeSettings;
+    status: "active" | "trial" | "suspended";
+    expiryDate: string;
   };
 };
 
@@ -49,7 +51,7 @@ export default function EditTenantDialog({ tenant }: Props) {
           <section
             aria-labelledby={`edit-tenant-${tenant.id}`}
             aria-modal="true"
-            className="my-auto max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#191918] p-6 shadow-2xl sm:p-8"
+            className="my-auto max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/10 bg-[#191918] p-6 shadow-2xl sm:p-8"
             role="dialog"
           >
             <div className="mb-6 flex items-start justify-between gap-4">
@@ -89,6 +91,27 @@ export default function EditTenantDialog({ tenant }: Props) {
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm text-[#c5c1b6]">
+                  وضعیت اشتراک
+                  <select
+                    className={inputClass}
+                    defaultValue={tenant.status}
+                    name="status"
+                  >
+                    <option value="active">فعال</option>
+                    <option value="trial">آزمایشی</option>
+                    <option value="suspended">تعلیق‌شده</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  تاریخ پایان اشتراک
+                  <input
+                    className={inputClass}
+                    defaultValue={tenant.expiryDate}
+                    name="expiry_date"
+                    type="date"
+                  />
+                </label>
                 <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
                   توضیحات فروشگاه
                   <textarea className={`${inputClass} min-h-24 py-3`} defaultValue={tenant.description} maxLength={5000} name="description" rows={3} />

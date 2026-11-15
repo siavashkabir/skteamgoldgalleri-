@@ -8,6 +8,7 @@ import {
 import AddTenantDialog from "./add-tenant-dialog";
 import EditTenantDialog from "./edit-tenant-dialog";
 import PlatformSettingsForm from "./platform-settings-form";
+import GlobalBannerForm from "./global-banner-form";
 import { signOut } from "./actions";
 import Link from "next/link";
 import { parseThemeSettings, type ThemeSettings } from "@/lib/theme-settings";
@@ -31,6 +32,15 @@ type Tenant = {
   whatsappUrl: string;
   tomanRate: string;
   themeSettings: ThemeSettings;
+  status: "active" | "trial" | "suspended";
+  expiryDate: string;
+};
+
+type MasterTool = {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
 };
 
 export default function MasterAdminPage() {
@@ -44,13 +54,15 @@ export default function MasterAdminPage() {
 async function MasterAdminContent() {
   const { email: accountEmail } = await getSuperAdminContext();
 
-  const [result, platformResult] = await Promise.all([
+  const [result, platformResult, masterSettingsResult, toolsResult] = await Promise.all([
     db.execute(`SELECT id, name, domain, created_at, description, logo_url, hero_title,
                        hero_subtitle, phone_numbers, address_text, location_url,
                        instagram_url, telegram_url, whatsapp_url, toman_rate,
-                       theme_settings
+                       theme_settings, status, expiry_date
                 FROM tenants ORDER BY created_at DESC`),
     db.execute("SELECT key, value FROM platform_settings"),
+    db.execute("SELECT banner_text FROM master_settings WHERE id = 'global' LIMIT 1"),
+    db.execute('SELECT id, name, url, icon FROM master_tools ORDER BY "order", name'),
   ]);
   const platformSettings = new Map(
     platformResult.rows.map((row) => [String(row.key), String(row.value)]),
@@ -72,7 +84,19 @@ async function MasterAdminContent() {
     whatsappUrl: row.whatsapp_url === null ? "" : String(row.whatsapp_url),
     tomanRate: row.toman_rate === null ? "" : String(row.toman_rate),
     themeSettings: parseThemeSettings(row.theme_settings),
+    status: row.status === "trial" || row.status === "suspended" ? row.status : "active",
+    expiryDate: row.expiry_date === null ? "" : String(row.expiry_date),
   }));
+  const tools: MasterTool[] = toolsResult.rows.map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    url: String(row.url),
+    icon: String(row.icon),
+  }));
+  const bannerText =
+    masterSettingsResult.rows[0]?.banner_text == null
+      ? ""
+      : String(masterSettingsResult.rows[0].banner_text);
   return (
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9]">
       <div className="flex min-h-screen">
@@ -107,6 +131,13 @@ async function MasterAdminContent() {
               <StoreIcon />
               فروشگاه‌ها
             </a>
+            <Link
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#9c9a90] transition hover:bg-white/[0.04] hover:text-[#f5f2e9]"
+              href="/master-admin/tools"
+            >
+              ◈
+              ابزارهای من
+            </Link>
           </nav>
 
           <div className="mt-auto rounded-2xl border border-[#d6ad56]/10 bg-[#d6ad56]/[0.04] p-4">
@@ -218,6 +249,13 @@ async function MasterAdminContent() {
               </article>
             </section>
 
+            <section aria-labelledby="global-banner-heading">
+              <h2 className="mb-3 text-base font-semibold" id="global-banner-heading">
+                بنر سراسری فروشگاه‌ها
+              </h2>
+              <GlobalBannerForm bannerText={bannerText} />
+            </section>
+
             <section aria-labelledby="platform-settings-heading">
               <h2 className="mb-3 text-base font-semibold" id="platform-settings-heading">
                 برند پلتفرم در فوتر فروشگاه‌ها
@@ -226,6 +264,44 @@ async function MasterAdminContent() {
                 name={platformSettings.get("platform_name") ?? "SK Team"}
                 url={platformSettings.get("platform_url") || "https://skteam.ir"}
               />
+            </section>
+
+            <section aria-labelledby="master-tools-heading" className="mb-8">
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-base font-semibold" id="master-tools-heading">ابزارهای من</h2>
+                  <p className="mt-1 text-xs text-[#858378]">دسترسی سریع به ابزارهای پرکاربرد پلتفرم</p>
+                </div>
+                <Link
+                  className="rounded-lg border border-[#d6ad56]/30 px-3 py-2 text-xs font-medium text-[#e2c16d] hover:bg-[#d6ad56]/[0.08]"
+                  href="/master-admin/tools"
+                >
+                  مدیریت ابزارها
+                </Link>
+              </div>
+              {tools.length ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {tools.map((tool) => (
+                    <a
+                      className="group flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-[#171716] p-5 transition hover:border-[#d6ad56]/30 hover:bg-[#1c1c1a]"
+                      href={tool.url}
+                      key={tool.id}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#d6ad56]/[0.09] text-2xl">{tool.icon}</span>
+                      <span className="min-w-0">
+                        <span className="block font-medium text-[#e8e5dc]">{tool.name}</span>
+                        <span className="mt-1 block truncate text-xs text-[#858378]" dir="ltr">{tool.url}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-white/[0.07] bg-[#171716] p-5 text-sm text-[#858378]">
+                  هنوز ابزاری اضافه نشده است.
+                </p>
+              )}
             </section>
 
             <section
@@ -252,6 +328,7 @@ async function MasterAdminContent() {
                         <th className="px-6 py-4 font-medium">نام فروشگاه</th>
                         <th className="px-6 py-4 font-medium">دامنه</th>
                         <th className="px-6 py-4 font-medium">تاریخ ثبت</th>
+                        <th className="px-6 py-4 font-medium">وضعیت</th>
                         <th className="px-6 py-4 font-medium">شناسه</th>
                         <th className="px-6 py-4 font-medium">سایت</th>
                         <th className="px-6 py-4 font-medium">تنظیمات</th>
@@ -281,6 +358,9 @@ async function MasterAdminContent() {
                           </td>
                           <td className="px-6 py-4 text-xs text-[#aaa79b]">
                             {formatDate(tenant.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-[#aaa79b]">
+                            {tenant.status === "active" ? "فعال" : tenant.status === "trial" ? "آزمایشی" : "تعلیق‌شده"}
                           </td>
                           <td
                             className="px-6 py-4 font-mono text-[11px] text-[#77766e]"

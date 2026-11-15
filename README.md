@@ -49,6 +49,14 @@ customization:
 npm run db:migrate-theme
 ```
 
+Apply the master-admin subscription, theme, banner, and tools migration before
+deploying the master panel. This migration also seeds its three default tools;
+it is safe to rerun:
+
+```sh
+npm run db:migrate-master-admin
+```
+
 To create or update the Super Admin account and its Turso profile, provide the
 password through the environment and run:
 
@@ -76,7 +84,10 @@ profile row must use the authenticated Supabase user ID and the selected
 tenant's ID.
 
 The tenant admin panel is available at `/admin`; the central admin is available
-at `/master-admin`. Product images are uploaded to the public `products` bucket;
+at `/master-admin`, with tool management at `/master-admin/tools`. Master admins
+manage tenant subscriptions, themes, and the storefront announcement banner;
+tenant admins manage catalog, orders, and store contact details. Product and
+store background images are uploaded to the public `products` bucket;
 supported formats are JPEG, PNG, WebP, and AVIF, up to 5 MB each.
 
 The public storefront for the default shop is available at `/skteam` (the

@@ -30,7 +30,9 @@ const schema = [
     instagram_url TEXT,
     telegram_url TEXT,
     whatsapp_url TEXT,
-    theme_settings TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff"}',
+    theme_settings TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff","accent":"#e2c16d","card":"#151514","bgImageUrl":null,"bgOpacity":45}',
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended')),
+    expiry_date TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   `CREATE TABLE IF NOT EXISTS profiles (
@@ -128,6 +130,17 @@ const schema = [
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS master_tools (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS master_settings (
+    id TEXT PRIMARY KEY DEFAULT 'global',
+    banner_text TEXT NOT NULL DEFAULT ''
+  )`,
 ];
 
 async function ensureColumn(table, column, definition) {
@@ -154,7 +167,9 @@ try {
     ["instagram_url", "TEXT"],
     ["telegram_url", "TEXT"],
     ["whatsapp_url", "TEXT"],
-    ["theme_settings", `TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff"}'`],
+    ["theme_settings", `TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff","accent":"#e2c16d","card":"#151514","bgImageUrl":null,"bgOpacity":45}'`],
+    ["status", "TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended'))"],
+    ["expiry_date", "TEXT"],
   ]) {
     await ensureColumn("tenants", column, definition);
   }
@@ -215,7 +230,8 @@ try {
      WHERE type = 'table'
        AND name IN ('tenants', 'profiles', 'categories', 'products',
                     'cart_items', 'orders', 'order_items', 'custom_orders',
-                    'reviews', 'wishlist', 'platform_settings')`,
+                    'reviews', 'wishlist', 'platform_settings', 'master_tools',
+                    'master_settings')`,
   );
   const createdTables = new Set(result.rows.map((row) => row.name));
   const expectedTables = [
@@ -230,6 +246,8 @@ try {
     "reviews",
     "wishlist",
     "platform_settings",
+    "master_tools",
+    "master_settings",
   ];
   const missingTables = expectedTables.filter(
     (table) => !createdTables.has(table),
@@ -243,6 +261,28 @@ try {
     sql: "UPDATE tenants SET name = ? WHERE id = ?",
     args: ["گالری طلای امیر", "team-gold-system"],
   });
+
+  await client.batch(
+    [
+      {
+        sql: `INSERT OR IGNORE INTO master_tools (id, name, url, icon, "order")
+              VALUES (?, ?, ?, ?, ?)`,
+        args: ["c772441e-8e88-4a2d-bff0-0d221ec48273", "پنل سرور", "https://server.skteam.ir", "🖥️", 1],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO master_tools (id, name, url, icon, "order")
+              VALUES (?, ?, ?, ?, ?)`,
+        args: ["f2f827d2-51f2-4c1b-92f6-26e9bc30ad2a", "ربات اینستاگرام", "https://insta-bot.sk-team-it.workers.dev/owner", "📸", 2],
+      },
+      {
+        sql: `INSERT OR IGNORE INTO master_tools (id, name, url, icon, "order")
+              VALUES (?, ?, ?, ?, ?)`,
+        args: ["b9ac4a89-0083-456d-bdc8-3da3c297dbef", "سایت اصلی", "https://skteam.ir", "🌐", 3],
+      },
+      `INSERT OR IGNORE INTO master_settings (id, banner_text) VALUES ('global', '')`,
+    ],
+    "write",
+  );
 
   console.log(`Verified tables: ${expectedTables.join(", ")}`);
 } finally {

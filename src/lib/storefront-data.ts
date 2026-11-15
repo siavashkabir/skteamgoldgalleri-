@@ -30,6 +30,8 @@ const fallbackDefaultStore: StorefrontStore = {
   socialLinks: {},
   tomanRate: null,
   themeSettings: DEFAULT_THEME_SETTINGS,
+  status: "active",
+  expiryDate: null,
 };
 
 let warnedAboutBuildFallback = false;
@@ -76,7 +78,7 @@ export async function getStoreBySlug(
                      t.telegram_url, t.whatsapp_url, t.logo_url, t.hero_title,
                      t.hero_subtitle, t.phone_numbers, t.address_text,
                      t.location_url, t.social_links, t.toman_rate,
-                     t.theme_settings
+                     t.theme_settings, t.status, t.expiry_date
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
@@ -111,7 +113,7 @@ export async function getStoreBySlug(
         sql:         `SELECT id, name, description, instagram_url, telegram_url,
                      whatsapp_url, logo_url, hero_title, hero_subtitle,
                      phone_numbers, address_text, location_url, social_links,
-                     toman_rate, theme_settings
+                     toman_rate, theme_settings, status, expiry_date
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
@@ -149,7 +151,22 @@ export async function getStoreBySlug(
     socialLinks: parseStringRecord(row.social_links),
     tomanRate: row.toman_rate === null ? null : Number(row.toman_rate),
     themeSettings: parseThemeSettings(row.theme_settings),
+    status: readTenantStatus(row.status),
+    expiryDate: row.expiry_date === null ? null : String(row.expiry_date),
   };
+}
+
+export async function getStorefrontBanner(): Promise<string> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return "";
+  }
+  const result = await db.execute(
+    "SELECT banner_text FROM master_settings WHERE id = 'global' LIMIT 1",
+  );
+  return result.rows[0]?.banner_text == null
+    ? ""
+    : String(result.rows[0].banner_text);
 }
 
 export async function getStorefrontCatalog(tenantId: string): Promise<{
@@ -354,6 +371,13 @@ function parseStringArray(value: unknown): string[] {
     throw new Error("مقدار phone_numbers در پایگاه داده معتبر نیست.");
   }
   return parsed;
+}
+
+function readTenantStatus(value: unknown): StorefrontStore["status"] {
+  if (value === "trial" || value === "suspended") {
+    return value;
+  }
+  return "active";
 }
 
 function parseStringRecord(value: unknown): Record<string, string> {
