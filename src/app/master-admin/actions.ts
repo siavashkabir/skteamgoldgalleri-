@@ -623,7 +623,7 @@ async function uploadTenantFont(formData: FormData, tenantId: string) {
 
   try {
     const { getSupabaseAdminClient } = await import("@/lib/supabase");
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseAdminClient();
     const fileExt = file.name.split('.').pop();
     const fileName = `font-${tenantId}-${Date.now()}.${fileExt}`;
     
