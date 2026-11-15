@@ -13,7 +13,7 @@ export type MarketPrice = {
   dollarPrice: number;
   eighteenKPrice: number;
   globalEighteenKPrice: number;
-  bubblePercentage: number;
+  bubblePercentage: number; euroPrice?: number; dirhamPrice?: number; liraPrice?: number;
   updatedAt: string;
 };
 
