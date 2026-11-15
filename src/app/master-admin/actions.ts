@@ -615,3 +615,27 @@ function isHttpUrl(value: string): boolean {
     return false;
   }
 }
+
+async function uploadTenantFont(formData: FormData, tenantId: string) {
+  const file = formData.get("custom_font_file") as File | null;
+  if (!file || file.size === 0) return { url: null, error: null };
+  if (file.size > 5 * 1024 * 1024) return { url: null, error: "حجم فونت نباید بیشتر از ۵ مگابایت باشد." };
+
+  try {
+    const { getSupabaseAdminClient } = await import("@/lib/supabase");
+    const supabase = getSupabaseAdminClient();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `font-${tenantId}-${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(fileName, file, { upsert: true });
+      
+    if (uploadError) return { url: null, error: "خطا در آپلود فونت" };
+    
+    const { data } = supabase.storage.from('products').getPublicUrl(fileName);
+    return { url: data.publicUrl, error: null };
+  } catch (e) {
+    return { url: null, error: "خطای غیرمنتظره در آپلود فونت" };
+  }
+}
