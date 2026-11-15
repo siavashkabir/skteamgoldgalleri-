@@ -4,6 +4,8 @@ import { getStoreBySlug } from "@/lib/storefront-data";
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
 import CustomOrderContent from "./custom-order-content";
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomOrderPage() {
   const store = await getStoreBySlug(DEFAULT_TENANT_ID);
   if (!store) {

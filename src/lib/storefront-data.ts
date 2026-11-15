@@ -1,6 +1,6 @@
 import "server-only";
 
-import { db } from "@/lib/db";
+import { getDbClient } from "@/lib/db";
 import {
   DEFAULT_STORE_SLUG,
   DEFAULT_TENANT_ID,
@@ -10,9 +10,61 @@ import {
 } from "@/lib/storefront-types";
 import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 
+type StorefrontDatabase = Awaited<ReturnType<typeof getDbClient>>;
+
+const fallbackDefaultStore: StorefrontStore = {
+  id: DEFAULT_TENANT_ID,
+  slug: DEFAULT_STORE_SLUG,
+  name: "گالری طلای امیر",
+  description: "",
+  instagramUrl: null,
+  telegramUrl: null,
+  whatsappUrl: null,
+  logoUrl: null,
+  heroTitle: null,
+  heroSubtitle: null,
+  phoneNumbers: [],
+  addressText: null,
+  locationUrl: null,
+  socialLinks: {},
+  tomanRate: null,
+};
+
+let warnedAboutBuildFallback = false;
+
+async function getStorefrontDatabase(): Promise<StorefrontDatabase | null> {
+  try {
+    return await getDbClient();
+  } catch (error) {
+    if (
+      process.env.NEXT_PHASE !== "phase-production-build" ||
+      !(error instanceof Error) ||
+      error.message !== "Missing required environment variable: TURSO_DATABASE_URL"
+    ) {
+      throw error;
+    }
+
+    if (!warnedAboutBuildFallback) {
+      console.warn(
+        "TURSO_DATABASE_URL is missing during the production build; using fallback storefront data.",
+      );
+      warnedAboutBuildFallback = true;
+    }
+    return null;
+  }
+}
+
 export async function getStoreBySlug(
   slug: string,
 ): Promise<StorefrontStore | null> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return slug.toLowerCase() === DEFAULT_TENANT_ID ||
+        slug.toLowerCase() === DEFAULT_STORE_SLUG
+      ? fallbackDefaultStore
+      : null;
+  }
+
   const shopsTable = await db.execute(
     `SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'shops'`,
   );
@@ -100,6 +152,11 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
   categories: StorefrontCategory[];
   products: StorefrontProduct[];
 }> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return { categories: [], products: [] };
+  }
+
   const [categoryResult, productColumnsResult] = await Promise.all([
     db.execute({
       sql: "SELECT id, name, parent_id FROM categories WHERE tenant_id = ? ORDER BY name",
@@ -175,6 +232,11 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
 export async function getStorefrontCategories(
   tenantId: string,
 ): Promise<StorefrontCategory[]> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return [];
+  }
+
   const result = await db.execute({
     sql: "SELECT id, name, parent_id FROM categories WHERE tenant_id = ? ORDER BY name",
     args: [tenantId],
@@ -191,6 +253,11 @@ export async function getVisibleProduct(
   tenantId: string,
   productId: string,
 ): Promise<StorefrontProduct | null> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return null;
+  }
+
   const productColumnsResult = await db.execute("PRAGMA table_info(products)");
   const columns = new Set(
     productColumnsResult.rows.map((row) => String(row.name)),
@@ -254,6 +321,11 @@ export async function getVisibleProduct(
 export async function getStorefrontCustomerState(tenantId: string): Promise<{
   wishlistedProductIds: string[];
 } | null> {
+  const db = await getStorefrontDatabase();
+  if (!db) {
+    return null;
+  }
+
   const profile = await getOptionalAuthenticatedProfile();
   if (
     !profile ||
