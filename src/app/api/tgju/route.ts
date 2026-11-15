@@ -8,7 +8,6 @@ export async function GET(request: Request) {
     const db = await getDbClient();
     const tenantId = new URL(request.url).searchParams.get("tenant") || DEFAULT_TENANT_ID;
     
-    // نرخ پشتیبان در صورتی که همه سایت‌ها خراب باشند (فقط برای محاسبه ریاضی انس)
     const tenantResult = await db.execute({
       sql: "SELECT toman_rate FROM tenants WHERE id = ?",
       args: [tenantId],
@@ -23,60 +22,47 @@ export async function GET(request: Request) {
 
     let success = false;
 
-    // ==========================================
-    // لایه 1: تلاش برای گرفتن از سایت iSignal (دقیق‌ترین برای بازار ایران)
-    // ==========================================
+    // 1. اولویت اول: اسکرپ کردن سایت iSignal
     try {
       const isignalRes = await fetch("https://isignal.ir/gold-currency/", {
         cache: "no-store",
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
       });
+      
       if (isignalRes.ok) {
         const html = await isignalRes.text();
-        // جستجوی قیمت دلار و طلا در کدهای سایت آی‌سیگنال
         const dollarMatch = html.match(/دلار[\s\S]{0,100}?([0-9,]{6,})\s*ریال/);
         const gold18Match = html.match(/طلای ۱۸ عیار[\s\S]{0,100}?([0-9,]{8,})\s*ریال/);
         
         if (dollarMatch && gold18Match) {
-          data.dollarPrice = Number(dollarMatch[1].replace(/,/g, "")) / 10; // ریال به تومان
+          data.dollarPrice = Number(dollarMatch[1].replace(/,/g, "")) / 10;
           data.eighteenKPrice = Number(gold18Match[1].replace(/,/g, "")) / 10;
           success = true;
         }
       }
-    } catch (e) {
-      console.log("iSignal failed.");
-    }
+    } catch (e) {}
 
-    // ==========================================
-    // لایه 2: اگر iSignal جواب نداد، از TGJU استفاده کن (تلاش دوم)
-    // ==========================================
+    // 2. اولویت دوم: TGJU
     if (!success) {
       try {
         const tgjuRes = await fetch("https://call2.tgju.org/ajax.json", {
-          cache: "no-store", 
-          signal: AbortSignal.timeout(4000), 
-          headers: { "User-Agent": "Mozilla/5.0" }
+          cache: "no-store", signal: AbortSignal.timeout(3000), headers: { "User-Agent": "Mozilla/5.0" }
         });
         if (tgjuRes.ok) {
           const json = await tgjuRes.json();
           if (json && json.current) {
-            data.dollarPrice = Number(json.current.price_dollar_rl?.p) / 10;
-            data.eighteenKPrice = Number(json.current.tgju_gold_irg18?.p) / 10;
+            data.dollarPrice = Number(json.current.price_dollar_rl?.p) / 10 || fallbackDollar;
+            data.eighteenKPrice = Number(json.current.tgju_gold_irg18?.p) / 10 || 0;
             data.ouncePrice = Number(json.current.ons?.p) || 0;
             data.euroPrice = Number(json.current.price_eur?.p) / 10 || 0;
             data.dirhamPrice = Number(json.current.price_aed?.p) / 10 || 0;
-            data.liraPrice = Number(json.current.price_try?.p) / 10 || 0;
-            if (data.dollarPrice > 0 && data.eighteenKPrice > 0) success = true;
+            success = true;
           }
         }
-      } catch (e) {
-        console.log("TGJU failed.");
-      }
+      } catch (e) {}
     }
 
-    // ==========================================
-    // لایه 3: گرفتن انس جهانی از API (اگر هنوز نداریم)
-    // ==========================================
+    // 3. گرفتن انس اگر صفر بود
     if (data.ouncePrice === 0) {
       try {
         const goldRes = await fetch("https://api.gold-api.com/price/XAU", { cache: "no-store" });
@@ -87,36 +73,22 @@ export async function GET(request: Request) {
       } catch (e) {}
     }
 
-    // ==========================================
-    // لایه 4: اگر سایت‌های ایرانی بلاک بودن، قیمت دلار رو از دیتابیس بگیر
-    // ==========================================
-    if (data.dollarPrice === 0) {
-      data.dollarPrice = fallbackDollar;
-    }
-
-    // محاسبه قیمت جهانی و حباب
+    // 4. محاسبات نهایی
     const global18k = data.ouncePrice > 0 && data.dollarPrice > 0 
       ? (data.ouncePrice / 31.1034768) * (18 / 24) * data.dollarPrice 
       : 0;
     
     data.globalEighteenKPrice = global18k;
-
-    if (data.eighteenKPrice === 0 && global18k > 0) {
-      data.eighteenKPrice = global18k;
-    }
-    
+    if (data.eighteenKPrice === 0) data.eighteenKPrice = global18k;
     if (data.eighteenKPrice > 0 && global18k > 0) {
       data.bubblePercentage = ((data.eighteenKPrice - global18k) / global18k) * 100;
     }
 
-    // اگر هیچ‌کدوم از ارزها نیومد، ارزهای دیگه رو با دلار حساب میکنیم
-    if (data.euroPrice === 0 && data.dollarPrice > 0) data.euroPrice = data.dollarPrice / 1.08;
-    if (data.dirhamPrice === 0 && data.dollarPrice > 0) data.dirhamPrice = data.dollarPrice / 3.67;
-    if (data.liraPrice === 0 && data.dollarPrice > 0) data.liraPrice = data.dollarPrice / 50;
-    if (data.yuanPrice === 0 && data.dollarPrice > 0) data.yuanPrice = data.dollarPrice / 7.2;
-
-    if (data.dollarPrice === 0 && data.eighteenKPrice === 0) {
-      return Response.json({ error: "در حال حاضر امکان دریافت قیمت وجود ندارد." }, { status: 503 });
+    if (data.dollarPrice > 0) {
+      if (data.euroPrice === 0) data.euroPrice = data.dollarPrice / 0.92;
+      if (data.dirhamPrice === 0) data.dirhamPrice = data.dollarPrice / 3.67;
+      if (data.liraPrice === 0) data.liraPrice = data.dollarPrice / 32;
+      if (data.yuanPrice === 0) data.yuanPrice = data.dollarPrice / 7.2;
     }
 
     return Response.json(data, { headers: { "Cache-Control": "no-store" } });
@@ -125,3 +97,4 @@ export async function GET(request: Request) {
     return Response.json({ error: "خطای سرور." }, { status: 503 });
   }
 }
+
