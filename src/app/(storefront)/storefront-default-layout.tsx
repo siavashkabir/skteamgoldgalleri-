@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import TenantFont from "@/components/tenant-font";
 import { getStoreBySlug, getStorefrontCategories } from "@/lib/storefront-data";
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
 import StorefrontFrame from "./storefront-frame";
@@ -14,5 +15,12 @@ export default async function StorefrontDefaultLayout({
   }
 
   const categories = await getStorefrontCategories(store.id);
-  return <StorefrontFrame categories={categories} store={store}>{children}</StorefrontFrame>;
+  return (
+    <>
+      <TenantFont tenantId={store.id} />
+      <StorefrontFrame categories={categories} store={store}>
+        {children}
+      </StorefrontFrame>
+    </>
+  );
 }

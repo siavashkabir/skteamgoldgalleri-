@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireTenantModule } from "@/lib/admin-context";
 import { getSupabaseAdminClient } from "@/lib/supabase";
+import { AUTO_PART_SPEC_KEYS, resolveBusinessKind } from "@/lib/tenant-features";
 import type { AdminActionState } from "../action-state";
 
 const imageTypes = new Map([
@@ -18,7 +19,9 @@ export async function saveProduct(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { tenantId, tenantName } = await requireTenantModule("ecommerce");
+  const { tenantId, tenantName, businessType, enabledModules } =
+    await requireTenantModule("ecommerce");
+  const businessKind = resolveBusinessKind(businessType, enabledModules);
   const id = readText(formData, "id");
   const name = readText(formData, "name");
   const description = readText(formData, "description");
@@ -39,7 +42,7 @@ export async function saveProduct(
   if (!Number.isFinite(price) || price <= 0) {
     return { error: "قیمت باید عددی بزرگ‌تر از صفر باشد." };
   }
-  if (!Number.isFinite(weight) || weight <= 0) {
+  if (businessKind === "gold" && (!Number.isFinite(weight) || weight <= 0)) {
     return { error: "وزن باید عددی بزرگ‌تر از صفر باشد." };
   }
   if (!Number.isFinite(laborPercentage) || laborPercentage < 0) {
@@ -77,6 +80,17 @@ export async function saveProduct(
     customFieldKeys.length > 30
   ) {
     return { error: "فیلدهای اختصاصی محصول معتبر نیستند." };
+  }
+  if (businessKind === "auto_parts") {
+    for (const [field, label] of Object.entries(AUTO_PART_SPEC_KEYS)) {
+      const value = readText(formData, field);
+      if (value.length > 300) {
+        return { error: `مقدار «${label}» نباید بیشتر از ۳۰۰ نویسه باشد.` };
+      }
+      if (value) {
+        specifications[label] = value;
+      }
+    }
   }
   const customFields: Record<string, string> = {};
   for (let index = 0; index < customFieldKeys.length; index += 1) {

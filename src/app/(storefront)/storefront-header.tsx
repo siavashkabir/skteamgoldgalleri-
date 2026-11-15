@@ -6,6 +6,7 @@ import { useCart } from "./storefront-provider";
 import LivePriceWidget from "./live-price-widget";
 import type { StorefrontCategory, StorefrontStore } from "@/lib/storefront-types";
 import { categoryFilterValue } from "@/lib/category-filters";
+import { businessTypeLabel } from "@/lib/tenant-features";
 
 export default function StorefrontHeader({
   store,
@@ -32,7 +33,7 @@ export default function StorefrontHeader({
             <Image alt="" className="h-11 w-11 rounded-xl object-cover" height={44} src={store.logoUrl} unoptimized width={44} />
           ) : (
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/[0.09] text-xl font-semibold text-[var(--color-primary)]">
-              ت
+              {Array.from(store.name.trim())[0] ?? "ت"}
             </span>
           )}
           <span className="min-w-0">
@@ -40,7 +41,7 @@ export default function StorefrontHeader({
               {store.name}
             </span>
             <span className="mt-0.5 block text-[9px] tracking-[0.12em] text-[#898578]">
-              {store.businessType ||
+              {businessTypeLabel(store.businessType) ||
                 (store.templateId === "medical"
                   ? "سلامت و درمان"
                   : store.templateId === "tourism"

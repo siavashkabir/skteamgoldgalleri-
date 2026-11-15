@@ -101,7 +101,13 @@ export default function AddTenantDialog() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm text-[#c5c1b6]">
                   نوع کسب‌وکار
-                  <input className={inputClass} maxLength={120} name="business_type" placeholder="فروشگاه، کلینیک، گردشگری..." />
+                  <select className={inputClass} defaultValue="general" name="business_type">
+                    <option value="general">فروشگاه عمومی / سایر</option>
+                    <option value="gold">طلا و جواهر</option>
+                    <option value="auto_parts">قطعات خودرو</option>
+                    <option value="clinic">کلینیک و درمان</option>
+                    <option value="tourism">گردشگری</option>
+                  </select>
                 </label>
                 <label className="text-sm text-[#c5c1b6]">
                   لوگوی فروشگاه
@@ -152,6 +158,10 @@ export default function AddTenantDialog() {
                   <input className={inputClass} name="expiry_date" type="date" />
                 </label>
               </div>
+              <label className="block text-sm text-[#c5c1b6]">
+                فونت اختصاصی ویترین (TTF یا WOFF، حداکثر ۵ مگابایت)
+                <input accept=".ttf,.woff,font/ttf,font/woff" className={`${inputClass} h-auto py-2`} name="custom_font_file" type="file" />
+              </label>
               <ThemeSettingsFields />
 
               {state.error ? (

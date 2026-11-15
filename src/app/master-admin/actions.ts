@@ -69,6 +69,8 @@ export async function createTenant(
   }
   const logoResult = await uploadTenantLogo(formData, id);
   if (logoResult.error) return { error: logoResult.error };
+  const fontResult = await uploadTenantFont(formData, id);
+  if (fontResult.error) return { error: fontResult.error };
   const kycData = readInitialKyc(formData);
   if (!kycData) {
     return { error: "اطلاعات اولیه احراز هویت معتبر نیست." };
@@ -81,8 +83,8 @@ export async function createTenant(
   await db.execute({
     sql: `INSERT INTO tenants
             (id, name, domain, owner_email, business_type, template_id,
-             enabled_modules, kyc_data, logo_url, status, expiry_date, theme_settings)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             enabled_modules, kyc_data, logo_url, custom_font_url, status, expiry_date, theme_settings)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -93,6 +95,7 @@ export async function createTenant(
       JSON.stringify(enabledModules),
       JSON.stringify(kycData),
       logoResult.url,
+      fontResult.url,
       status,
       expiryDate || null,
       JSON.stringify(themeResult.theme),
