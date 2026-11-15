@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { getEnv } from "@/lib/env";
 
 type SupabaseClient = ReturnType<typeof createClient>;
 
@@ -10,8 +9,8 @@ let supabaseAdminClient: SupabaseClient | undefined;
 
 function getSupabaseConfig() {
   return {
-    url: getEnv("NEXT_PUBLIC_SUPABASE_URL") || "https://dummy.supabase.co",
-    anonKey: getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY") || "dummy-key",
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-key",
   };
 }
 
@@ -28,7 +27,7 @@ export function getSupabaseAdminClient(): SupabaseClient {
     const { url } = getSupabaseConfig();
     supabaseAdminClient = createClient(
       url,
-      getEnv("SUPABASE_SERVICE_ROLE_KEY") || "dummy-service-role-key",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy-service-role-key",
       {
         auth: {
           autoRefreshToken: false,

@@ -1,10 +1,9 @@
 import "server-only";
 
 import { createClient } from "@libsql/client/web";
-import { getEnv } from "@/lib/env";
 
 function requiredEnv(name: string): string {
-  const value = getEnv(name);
+  const value = process.env[name];
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
