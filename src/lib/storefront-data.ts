@@ -8,6 +8,7 @@ import {
   type StorefrontProduct,
   type StorefrontStore,
 } from "@/lib/storefront-types";
+import { DEFAULT_THEME_SETTINGS, parseThemeSettings } from "@/lib/theme-settings";
 import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 
 type StorefrontDatabase = Awaited<ReturnType<typeof getDbClient>>;
@@ -28,6 +29,7 @@ const fallbackDefaultStore: StorefrontStore = {
   locationUrl: null,
   socialLinks: {},
   tomanRate: null,
+  themeSettings: DEFAULT_THEME_SETTINGS,
 };
 
 let warnedAboutBuildFallback = false;
@@ -73,7 +75,8 @@ export async function getStoreBySlug(
         sql:         `SELECT t.id, t.name, t.description, t.instagram_url,
                      t.telegram_url, t.whatsapp_url, t.logo_url, t.hero_title,
                      t.hero_subtitle, t.phone_numbers, t.address_text,
-                     t.location_url, t.social_links, t.toman_rate
+                     t.location_url, t.social_links, t.toman_rate,
+                     t.theme_settings
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
@@ -108,7 +111,7 @@ export async function getStoreBySlug(
         sql:         `SELECT id, name, description, instagram_url, telegram_url,
                      whatsapp_url, logo_url, hero_title, hero_subtitle,
                      phone_numbers, address_text, location_url, social_links,
-                     toman_rate
+                     toman_rate, theme_settings
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
@@ -145,6 +148,7 @@ export async function getStoreBySlug(
     locationUrl: row.location_url === null ? null : String(row.location_url),
     socialLinks: parseStringRecord(row.social_links),
     tomanRate: row.toman_rate === null ? null : Number(row.toman_rate),
+    themeSettings: parseThemeSettings(row.theme_settings),
   };
 }
 

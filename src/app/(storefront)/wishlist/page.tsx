@@ -32,7 +32,7 @@ export default async function WishlistPage() {
       <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-medium text-[#d6ad56]">انتخاب‌های شما</p>
+            <p className="text-xs font-medium text-[var(--color-primary)]">انتخاب‌های شما</p>
             <h1 className="mt-2 text-2xl font-semibold">علاقه‌مندی‌ها</h1>
           </div>
           <span className="text-xs text-[#858378]">
@@ -48,9 +48,9 @@ export default async function WishlistPage() {
             wishlistedProductIds={savedIds}
           />
         ) : (
-          <div className="rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-14 text-center">
+          <div className="rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] px-5 py-14 text-center">
             <p className="text-sm text-[#969387]">هنوز محصولی به علاقه‌مندی‌ها اضافه نکرده‌اید.</p>
-            <Link className="mt-5 inline-flex rounded-xl bg-[#d6ad56] px-5 py-3 text-sm font-semibold text-[#211a0d]" href={`/${store.slug}`}>
+            <Link className="mt-5 inline-flex rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-bg)]" href={`/${store.slug}`}>
               دیدن محصولات
             </Link>
           </div>

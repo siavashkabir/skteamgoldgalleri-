@@ -13,7 +13,7 @@ export default function ProductDescription({
         const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
         if (heading) {
           return (
-            <h3 className="pt-2 font-semibold text-[#e9e5db]" key={index}>
+            <h3 className="pt-2 font-semibold text-[var(--color-text)]" key={index}>
               {renderInline(heading[2])}
             </h3>
           );
@@ -22,7 +22,7 @@ export default function ProductDescription({
         if (listItem) {
           return (
             <p className="flex gap-2" key={index}>
-              <span className="text-[#d6ad56]">•</span>
+              <span className="text-[var(--color-primary)]">•</span>
               <span>{renderInline(listItem[1])}</span>
             </p>
           );
@@ -41,7 +41,7 @@ function renderInline(text: string) {
     if (part.startsWith("`") && part.endsWith("`")) {
       return (
         <code
-          className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[#e2c16d]"
+          className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[var(--color-primary)]"
           key={index}
         >
           {part.slice(1, -1)}

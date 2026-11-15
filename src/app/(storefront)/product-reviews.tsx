@@ -47,7 +47,7 @@ export default function ProductReviews({
           </p>
         </div>
         {average !== null ? (
-          <span aria-label={`امتیاز ${average} از ۵`} className="text-sm text-[#e2c16d]">
+          <span aria-label={`امتیاز ${average} از ۵`} className="text-sm text-[var(--color-primary)]">
             {"★".repeat(Math.round(average))}{"☆".repeat(5 - Math.round(average))}
           </span>
         ) : null}
@@ -56,10 +56,10 @@ export default function ProductReviews({
       {reviews.length ? (
         <ul className="mt-5 space-y-3">
           {reviews.map((review) => (
-            <li className="rounded-xl border border-white/[0.06] bg-[#10100f]/70 p-4" key={review.id}>
+            <li className="rounded-xl border border-white/[0.06] bg-[var(--color-bg)]/70 p-4" key={review.id}>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium">{review.name}</span>
-                <span aria-label={`${review.rating} ستاره`} className="text-xs text-[#e2c16d]">
+                <span aria-label={`${review.rating} ستاره`} className="text-xs text-[var(--color-primary)]">
                   {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
                 </span>
               </div>
@@ -77,7 +77,7 @@ export default function ProductReviews({
           <input name="product_id" type="hidden" value={productId} />
           <label className="block text-sm text-[#c5c1b6]">
             امتیاز
-            <select className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-[#10100f] px-3 text-sm" defaultValue="5" name="rating">
+            <select className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-[var(--color-bg)] px-3 text-sm" defaultValue="5" name="rating">
               {[5, 4, 3, 2, 1].map((rating) => (
                 <option key={rating} value={rating}>{rating} ستاره</option>
               ))}
@@ -85,9 +85,9 @@ export default function ProductReviews({
           </label>
           <label className="block text-sm text-[#c5c1b6]">
             دیدگاه شما
-            <textarea className="mt-2 min-h-24 w-full rounded-lg border border-white/10 bg-[#10100f] p-3 text-sm" maxLength={2000} name="comment" required rows={3} />
+            <textarea className="mt-2 min-h-24 w-full rounded-lg border border-white/10 bg-[var(--color-bg)] p-3 text-sm" maxLength={2000} name="comment" required rows={3} />
           </label>
-          <button className="rounded-lg bg-[#d6ad56] px-4 py-2.5 text-sm font-semibold text-[#211a0d] disabled:opacity-60" disabled={pending} type="submit">
+          <button className="rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-bg)] disabled:opacity-60" disabled={pending} type="submit">
             {pending ? "در حال ثبت..." : "ثبت دیدگاه"}
           </button>
           {state.error || state.success ? (
@@ -98,7 +98,7 @@ export default function ProductReviews({
         </form>
       ) : loginPath ? (
         <p className="mt-5 text-sm text-[#969387]">
-          <Link className="text-[#e2c16d] hover:underline" href={loginPath}>وارد حساب کاربری</Link>
+          <Link className="text-[var(--color-primary)] hover:underline" href={loginPath}>وارد حساب کاربری</Link>
           {" "}شوید؛ فقط خریداران این محصول امکان ثبت دیدگاه دارند.
         </p>
       ) : null}

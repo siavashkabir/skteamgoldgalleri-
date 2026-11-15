@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { createTenant, type TenantActionState } from "./actions";
+import ThemeSettingsFields from "./theme-settings-fields";
 
 const initialState: TenantActionState = {};
 
@@ -84,6 +85,7 @@ export default function AddTenantDialog() {
                   type="text"
                 />
               </label>
+              <ThemeSettingsFields />
 
               {state.error ? (
                 <p

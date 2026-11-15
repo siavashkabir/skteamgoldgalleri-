@@ -16,7 +16,7 @@ export default function StorefrontPage(props: PageProps<"/[tenant_slug]">) {
   return (
     <Suspense
       fallback={
-        <main className="min-h-[65vh] bg-[#10100f]" aria-busy="true" />
+        <main className="min-h-[65vh] bg-[var(--color-bg)]" aria-busy="true" />
       }
     >
       <StorefrontContent params={props.params} />
@@ -41,22 +41,22 @@ async function StorefrontContent({
 
   return (
     <div>
-      <section className="relative isolate overflow-hidden border-b border-white/[0.06] bg-[#17150f]">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_45%,rgba(214,173,86,0.19),transparent_38%),linear-gradient(130deg,#17150f_5%,#10100f_72%)]" />
-        <div className="pointer-events-none absolute -left-24 top-0 -z-10 h-[28rem] w-[28rem] rounded-full border border-[#d6ad56]/[0.08] sm:-left-4 sm:top-[-5rem]" />
-        <div className="pointer-events-none absolute -left-8 top-16 -z-10 h-[22rem] w-[22rem] rounded-full border border-[#d6ad56]/[0.1]" />
+      <section className="relative isolate overflow-hidden border-b border-white/[0.06] bg-[var(--color-surface)]">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_45%,color-mix(in_srgb,var(--color-primary)_19%,transparent),transparent_38%),linear-gradient(130deg,var(--color-surface)_5%,var(--color-bg)_72%)]" />
+        <div className="pointer-events-none absolute -left-24 top-0 -z-10 h-[28rem] w-[28rem] rounded-full border border-[var(--color-primary)]/[0.08] sm:-left-4 sm:top-[-5rem]" />
+        <div className="pointer-events-none absolute -left-8 top-16 -z-10 h-[22rem] w-[22rem] rounded-full border border-[var(--color-primary)]/[0.1]" />
         <div className="mx-auto grid min-h-[440px] max-w-7xl items-center gap-10 px-5 py-16 sm:px-8 md:grid-cols-[1.15fr_0.85fr] md:py-20 lg:min-h-[520px]">
           <div className="max-w-2xl">
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d6ad56]/20 bg-[#d6ad56]/[0.07] px-4 py-2 text-xs font-medium text-[#e2c16d]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#e2c16d]" />
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/[0.07] px-4 py-2 text-xs font-medium text-[var(--color-primary)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
               اصالت، ظرافت، ماندگاری
             </p>
-            <h1 className="text-4xl font-semibold leading-[1.5] tracking-tight text-[#f6f0df] sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-semibold leading-[1.5] tracking-tight text-[var(--color-text)] sm:text-5xl lg:text-6xl">
               {store.heroTitle || store.name}
               {store.heroSubtitle ? (
-                <span className="mt-1 block text-[#d6ad56]">{store.heroSubtitle}</span>
+                <span className="mt-1 block text-[var(--color-primary)]">{store.heroSubtitle}</span>
               ) : (
-                <span className="mt-1 block text-[#d6ad56]">زیباییِ ماندگار</span>
+                <span className="mt-1 block text-[var(--color-primary)]">زیباییِ ماندگار</span>
               )}
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-8 text-[#aaa79b] sm:text-base">
@@ -65,7 +65,7 @@ async function StorefrontContent({
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                className="rounded-xl bg-[#d6ad56] px-6 py-3.5 text-sm font-semibold text-[#211a0d] shadow-[0_12px_30px_rgba(214,173,86,0.13)] transition hover:bg-[#e2bf70]"
+                className="rounded-xl bg-[var(--color-primary)] px-6 py-3.5 text-sm font-semibold text-[var(--color-bg)] shadow-[0_12px_30px_color-mix(in_srgb,var(--color-primary)_13%,transparent)] transition hover:bg-[var(--color-primary)]"
                 href="#products"
               >
                 دیدن محصولات
@@ -77,18 +77,18 @@ async function StorefrontContent({
           </div>
 
           <div className="relative mx-auto flex h-[260px] w-full max-w-[410px] items-center justify-center sm:h-[330px]">
-            <div className="absolute h-[250px] w-[250px] rounded-full border border-[#d6ad56]/20 sm:h-[310px] sm:w-[310px]" />
-            <div className="absolute h-[205px] w-[205px] rounded-full border border-[#d6ad56]/15 sm:h-[260px] sm:w-[260px]" />
-            <div className="absolute h-[150px] w-[150px] rounded-full bg-[radial-gradient(circle,rgba(214,173,86,0.18),rgba(214,173,86,0.015)_68%,transparent_70%)] sm:h-[200px] sm:w-[200px]" />
-            <div className="relative flex h-36 w-36 rotate-45 items-center justify-center rounded-[2rem] border border-[#e2c16d]/45 bg-gradient-to-br from-[#ddbc70]/25 via-[#332819]/60 to-[#17150f] shadow-[0_20px_80px_rgba(214,173,86,0.13)] sm:h-44 sm:w-44">
-              <span className="-rotate-45 text-7xl font-extralight text-[#e4c474] sm:text-8xl">
+            <div className="absolute h-[250px] w-[250px] rounded-full border border-[var(--color-primary)]/20 sm:h-[310px] sm:w-[310px]" />
+            <div className="absolute h-[205px] w-[205px] rounded-full border border-[var(--color-primary)]/15 sm:h-[260px] sm:w-[260px]" />
+            <div className="absolute h-[150px] w-[150px] rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--color-primary)_18%,transparent),color-mix(in_srgb,var(--color-primary)_1.5%,transparent)_68%,transparent_70%)] sm:h-[200px] sm:w-[200px]" />
+            <div className="relative flex h-36 w-36 rotate-45 items-center justify-center rounded-[2rem] border border-[var(--color-primary)]/45 bg-gradient-to-br from-[var(--color-primary)]/25 via-[var(--color-surface)]/60 to-[var(--color-surface)] shadow-[0_20px_80px_color-mix(in_srgb,var(--color-primary)_13%,transparent)] sm:h-44 sm:w-44">
+              <span className="-rotate-45 text-7xl font-extralight text-[var(--color-primary)] sm:text-8xl">
                 ◈
               </span>
             </div>
-            <span className="absolute right-[13%] top-[20%] text-xl text-[#e2c16d]">
+            <span className="absolute right-[13%] top-[20%] text-xl text-[var(--color-primary)]">
               ✧
             </span>
-            <span className="absolute bottom-[18%] left-[12%] text-sm text-[#b58a36]">
+            <span className="absolute bottom-[18%] left-[12%] text-sm text-[var(--color-primary)]">
               ✦
             </span>
           </div>
@@ -108,7 +108,7 @@ async function StorefrontContent({
       >
         <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="mb-2 text-xs font-medium tracking-wide text-[#d6ad56]">
+            <p className="mb-2 text-xs font-medium tracking-wide text-[var(--color-primary)]">
               کالکشن فروشگاه
             </p>
             <h2 className="text-2xl font-semibold sm:text-3xl">محصولات منتخب</h2>
@@ -127,10 +127,10 @@ async function StorefrontContent({
         />
       </section>
 
-      <section className="border-y border-white/[0.05] bg-[#141411]">
+      <section className="border-y border-white/[0.05] bg-[var(--color-surface)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-semibold text-[#e9e5db]">
+            <p className="font-semibold text-[var(--color-text)]">
               انتخابی ارزشمند، تجربه‌ای مطمئن
             </p>
             <p className="mt-1.5 text-xs leading-6 text-[#858378]">
@@ -138,7 +138,7 @@ async function StorefrontContent({
             </p>
           </div>
           <Link
-            className="w-fit rounded-xl border border-[#d6ad56]/30 px-4 py-2.5 text-xs font-medium text-[#e2c16d] transition hover:bg-[#d6ad56]/[0.08]"
+            className="w-fit rounded-xl border border-[var(--color-primary)]/30 px-4 py-2.5 text-xs font-medium text-[var(--color-primary)] transition hover:bg-[var(--color-primary)]/[0.08]"
             href="/cart"
           >
             رفتن به سبد خرید

@@ -2,6 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { updateTenant, type TenantActionState } from "./actions";
+import ThemeSettingsFields from "./theme-settings-fields";
+import type { ThemeSettings } from "@/lib/theme-settings";
 
 type Props = {
   tenant: {
@@ -19,6 +21,7 @@ type Props = {
     telegramUrl: string;
     whatsappUrl: string;
     tomanRate: string;
+    themeSettings: ThemeSettings;
   };
 };
 
@@ -131,6 +134,7 @@ export default function EditTenantDialog({ tenant }: Props) {
                   <input className={inputClass} defaultValue={tenant.whatsappUrl} name="whatsapp_url" type="url" />
                 </label>
               </div>
+              <ThemeSettingsFields defaultValue={tenant.themeSettings} />
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">
                   دامنه اختصاصی

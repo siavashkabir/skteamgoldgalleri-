@@ -16,7 +16,7 @@ export default function ProductDetailsPage(
   return (
     <Suspense
       fallback={
-        <main className="min-h-[65vh] bg-[#10100f]" aria-busy="true" />
+        <main className="min-h-[65vh] bg-[var(--color-bg)]" aria-busy="true" />
       }
     >
       <ProductDetailsContent params={props.params} />
@@ -77,15 +77,15 @@ async function ProductDetailsContent({
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
       <nav className="mb-7 flex items-center gap-2 text-xs text-[#858378]">
-        <Link className="transition hover:text-[#e2c16d]" href={`/${store.slug}`}>
+        <Link className="transition hover:text-[var(--color-primary)]" href={`/${store.slug}`}>
           فروشگاه
         </Link>
         <span aria-hidden="true">/</span>
         <span className="truncate text-[#c5c1b6]">{product.name}</span>
       </nav>
 
-      <article className="grid overflow-hidden rounded-[1.75rem] border border-white/[0.07] bg-[#171716] md:grid-cols-2">
-        <div className="relative min-h-[320px] bg-[radial-gradient(ellipse_at_50%_45%,rgba(214,173,86,0.14),rgba(255,255,255,0.01)_65%)] sm:min-h-[460px]">
+      <article className="grid overflow-hidden rounded-[1.75rem] border border-white/[0.07] bg-[var(--color-surface)] md:grid-cols-2">
+        <div className="relative min-h-[320px] bg-[radial-gradient(ellipse_at_50%_45%,color-mix(in_srgb,var(--color-primary)_14%,transparent),color-mix(in_srgb,var(--color-text)_1%,transparent)_65%)] sm:min-h-[460px]">
           {product.imageUrl ? (
             <Image
               alt={product.name}
@@ -98,7 +98,7 @@ async function ProductDetailsContent({
             />
           ) : (
             <div className="flex min-h-[320px] h-full items-center justify-center sm:min-h-[460px]">
-              <span className="text-8xl font-extralight text-[#d6ad56]/60">
+              <span className="text-8xl font-extralight text-[var(--color-primary)]/60">
                 ◈
               </span>
             </div>
@@ -106,7 +106,7 @@ async function ProductDetailsContent({
         </div>
 
         <div className="flex flex-col p-6 sm:p-9 lg:p-12">
-          <p className="text-xs font-medium text-[#d6ad56]">
+          <p className="text-xs font-medium text-[var(--color-primary)]">
             {product.categoryName || "کالکشن گالری"}
           </p>
           <h1 className="mt-3 text-2xl font-semibold leading-relaxed sm:text-3xl">
@@ -123,7 +123,7 @@ async function ProductDetailsContent({
               طلای منتخب
             </span>
           </div>
-          <p className="mt-7 text-2xl font-semibold text-[#e2c16d]">
+          <p className="mt-7 text-2xl font-semibold text-[var(--color-primary)]">
             {product.price !== null &&
             Number.isFinite(product.price) &&
             product.price > 0
@@ -132,7 +132,7 @@ async function ProductDetailsContent({
           </p>
 
           <div className="mt-8 border-t border-white/[0.07] pt-6">
-            <h2 className="mb-4 text-sm font-semibold text-[#e9e5db]">
+            <h2 className="mb-4 text-sm font-semibold text-[var(--color-text)]">
               توضیحات محصول
             </h2>
             {product.description ? (
@@ -146,14 +146,14 @@ async function ProductDetailsContent({
 
           {Object.entries(product.specifications).length ? (
             <section className="mt-6 border-t border-white/[0.07] pt-6">
-              <h2 className="mb-3 text-sm font-semibold text-[#e9e5db]">
+              <h2 className="mb-3 text-sm font-semibold text-[var(--color-text)]">
                 مشخصات
               </h2>
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 {Object.entries(product.specifications).map(([key, value]) => (
                   <div className="rounded-lg bg-white/[0.03] px-3 py-2" key={key}>
                     <dt className="text-xs text-[#858378]">{key}</dt>
-                    <dd className="mt-1 text-[#e9e5db]">{value}</dd>
+                    <dd className="mt-1 text-[var(--color-text)]">{value}</dd>
                   </div>
                 ))}
               </dl>

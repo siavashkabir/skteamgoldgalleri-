@@ -23,7 +23,7 @@ export default function AddToCartButton({
 
   return (
     <button
-      className="w-full rounded-xl bg-[#d6ad56] px-5 py-3.5 text-sm font-semibold text-[#211a0d] transition hover:bg-[#e2bf70] disabled:cursor-not-allowed disabled:opacity-50"
+      className="w-full rounded-xl bg-[var(--color-primary)] px-5 py-3.5 text-sm font-semibold text-[var(--color-bg)] transition hover:bg-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
       disabled={!available}
       onClick={() => {
         addItem(product, store.id, store.slug);

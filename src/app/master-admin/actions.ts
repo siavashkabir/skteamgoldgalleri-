@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSuperAdminContext } from "@/lib/admin-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isThemeColor } from "@/lib/theme-settings";
 
 export type TenantActionState = {
   error?: string;
@@ -19,6 +20,7 @@ export async function createTenant(
 
   const nameEntry = formData.get("name");
   const domainEntry = formData.get("domain");
+  const theme = readThemeSettings(formData);
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
   const domain = typeof domainEntry === "string" ? domainEntry.trim() : "";
 
@@ -31,10 +33,13 @@ export async function createTenant(
   if (domain.length > 253) {
     return { error: "نشانی دامنه نباید بیشتر از ۲۵۳ نویسه باشد." };
   }
+  if (!theme) {
+    return { error: "رنگ‌های پوسته فروشگاه معتبر نیستند." };
+  }
 
   await db.execute({
-    sql: "INSERT INTO tenants (id, name, domain) VALUES (?, ?, ?)",
-    args: [crypto.randomUUID(), name, domain || null],
+    sql: "INSERT INTO tenants (id, name, domain, theme_settings) VALUES (?, ?, ?, ?)",
+    args: [crypto.randomUUID(), name, domain || null, JSON.stringify(theme)],
   });
 
   revalidatePath("/master-admin");
@@ -64,6 +69,7 @@ export async function updateTenant(
   const whatsappUrl = readText(formData, "whatsapp_url");
   const tomanRateInput = readText(formData, "toman_rate");
   const tomanRate = tomanRateInput ? Number(tomanRateInput) : null;
+  const theme = readThemeSettings(formData);
   const description = readText(formData, "description");
   const id = typeof idEntry === "string" ? idEntry.trim() : "";
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
@@ -74,6 +80,9 @@ export async function updateTenant(
   }
   if (!name || name.length > 120) {
     return { error: "نام فروشگاه را وارد کنید (حداکثر ۱۲۰ نویسه)." };
+  }
+  if (!theme) {
+    return { error: "رنگ‌های پوسته فروشگاه معتبر نیستند." };
   }
   if (
     domain.length > 253 ||
@@ -112,7 +121,7 @@ export async function updateTenant(
     sql: `UPDATE tenants SET name = ?, domain = ?, description = ?, logo_url = ?, hero_title = ?,
           hero_subtitle = ?, phone_numbers = ?, address_text = ?, location_url = ?,
           instagram_url = ?, telegram_url = ?, whatsapp_url = ?, social_links = ?,
-          toman_rate = ? WHERE id = ?`,
+          toman_rate = ?, theme_settings = ? WHERE id = ?`,
     args: [
       name,
       domain || null,
@@ -132,6 +141,7 @@ export async function updateTenant(
         whatsapp: whatsappUrl,
       }),
       tomanRate,
+      JSON.stringify(theme),
       id,
     ],
   });
@@ -140,6 +150,7 @@ export async function updateTenant(
   }
 
   revalidatePath("/master-admin");
+  revalidatePath("/", "layout");
   return { success: "اطلاعات فروشگاه ذخیره شد." };
 }
 
@@ -190,6 +201,20 @@ export async function signOut() {
 function readText(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function readThemeSettings(formData: FormData) {
+  const primary = readText(formData, "theme_primary");
+  const background = readText(formData, "theme_background");
+  const text = readText(formData, "theme_text");
+  if (
+    !isThemeColor(primary) ||
+    !isThemeColor(background) ||
+    !isThemeColor(text)
+  ) {
+    return null;
+  }
+  return { primary, background, text };
 }
 
 function isHttpUrl(value: string): boolean {

@@ -51,10 +51,10 @@ export default function PriceTrends() {
   }, [currentPrice, range]);
 
   return (
-    <section className="rounded-2xl border border-white/[0.07] bg-[#171716] p-5 sm:p-7">
+    <section className="rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] p-5 sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium text-[#d6ad56]">روند بازار</p>
+          <p className="text-xs font-medium text-[var(--color-primary)]">روند بازار</p>
           <h2 className="mt-2 text-xl font-semibold">تغییرات قیمت طلای ۱۸ عیار</h2>
           <p className="mt-1 text-xs text-[#858378]">
             نمودار نمونه؛ قیمت لحظه‌ای از TGJU دریافت می‌شود.
@@ -66,8 +66,8 @@ export default function PriceTrends() {
               aria-pressed={range === item.id}
               className={`rounded-lg px-3 py-2 text-xs transition ${
                 range === item.id
-                  ? "bg-[#d6ad56] font-semibold text-[#211a0d]"
-                  : "text-[#aaa79b] hover:text-[#e2c16d]"
+                  ? "bg-[var(--color-primary)] font-semibold text-[var(--color-bg)]"
+                  : "text-[#aaa79b] hover:text-[var(--color-primary)]"
               }`}
               key={item.id}
               onClick={() => setRange(item.id)}
@@ -99,20 +99,20 @@ export default function PriceTrends() {
             />
             <Tooltip
               contentStyle={{
-                background: "#171716",
-                border: "1px solid rgba(214,173,86,0.25)",
+                background: "var(--color-surface)",
+                border: "1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)",
                 borderRadius: 12,
-                color: "#f5f2e9",
+                color: "var(--color-text)",
               }}
               formatter={(value) => [`${Number(value).toLocaleString("fa-IR")} تومان`, "قیمت"]}
-              labelStyle={{ color: "#e2c16d" }}
+              labelStyle={{ color: "var(--color-primary)" }}
             />
             <Line
-              activeDot={{ r: 5, fill: "#e2c16d", stroke: "#171716", strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: "var(--color-primary)", stroke: "var(--color-surface)", strokeWidth: 2 }}
               dataKey="price"
               dot={false}
               isAnimationActive
-              stroke="#d6ad56"
+              stroke="var(--color-primary)"
               strokeWidth={2.5}
               type="monotone"
             />

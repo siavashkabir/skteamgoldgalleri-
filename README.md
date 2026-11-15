@@ -42,6 +42,13 @@ without changing tenant settings:
 npm run db:migrate-features
 ```
 
+Apply the tenant theme settings column migration before deploying theme
+customization:
+
+```sh
+npm run db:migrate-theme
+```
+
 To create or update the Super Admin account and its Turso profile, provide the
 password through the environment and run:
 

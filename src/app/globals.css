@@ -2,8 +2,15 @@
 
 :root {
   color-scheme: dark;
-  --background: #10100f;
-  --foreground: #f5f2e9;
+  --color-primary: #d4af37;
+  --color-bg: #0a0a0a;
+  --color-text: #ffffff;
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+}
+
+.storefront-theme {
+  --color-surface: color-mix(in srgb, var(--color-bg) 92%, white);
 }
 
 @theme inline {
@@ -25,6 +32,6 @@ input {
 }
 
 ::selection {
-  background: #d6ad56;
-  color: #17140e;
+  background: var(--color-primary);
+  color: var(--color-bg);
 }

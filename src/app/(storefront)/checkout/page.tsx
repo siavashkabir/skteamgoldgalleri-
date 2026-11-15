@@ -26,7 +26,7 @@ export default function CheckoutPage() {
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-300/[0.08] text-3xl text-emerald-300">
           ✓
         </span>
-        <p className="mt-6 text-xs font-medium text-[#d6ad56]">
+        <p className="mt-6 text-xs font-medium text-[var(--color-primary)]">
           سفارش شما ثبت شد
         </p>
         <h1 className="mt-2 text-2xl font-semibold">از خرید شما سپاسگزاریم</h1>
@@ -35,10 +35,10 @@ export default function CheckoutPage() {
           تماس خواهد گرفت.
         </p>
         <p className="mt-5 inline-flex rounded-lg border border-white/[0.08] px-4 py-2 text-xs text-[#c5c1b6]">
-          کد سفارش: <span className="mr-2 font-mono text-[#e2c16d]">{state.orderNumber}</span>
+          کد سفارش: <span className="mr-2 font-mono text-[var(--color-primary)]">{state.orderNumber}</span>
         </p>
         <Link
-          className="mx-auto mt-8 block w-fit rounded-xl bg-[#d6ad56] px-5 py-3 text-sm font-semibold text-[#211a0d] hover:bg-[#e2bf70]"
+          className="mx-auto mt-8 block w-fit rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-bg)] hover:bg-[var(--color-primary)]"
           href={`/${DEFAULT_STORE_SLUG}`}
         >
           بازگشت به فروشگاه
@@ -49,21 +49,21 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
-      <p className="text-xs font-medium text-[#d6ad56]">مرحله پایانی</p>
+      <p className="text-xs font-medium text-[var(--color-primary)]">مرحله پایانی</p>
       <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">اطلاعات ارسال</h1>
       <p className="mt-2 text-sm text-[#858378]">
         فعلاً پرداخت آنلاین فعال نیست؛ پس از ثبت سفارش با شما هماهنگ می‌کنیم.
       </p>
 
       {!canCheckout ? (
-        <div className="mt-8 rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-12 text-center">
+        <div className="mt-8 rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] px-5 py-12 text-center">
           <p className="text-sm text-[#aaa79b]">
             {items.length === 0
               ? "سبد خرید شما خالی است."
               : "ثبت هم‌زمان کالاهای چند فروشگاه امکان‌پذیر نیست؛ سبد را بررسی کنید."}
           </p>
           <Link
-            className="mt-5 inline-flex text-sm text-[#e2c16d] hover:text-[#f0d48f]"
+            className="mt-5 inline-flex text-sm text-[var(--color-primary)] hover:text-[#f0d48f]"
             href="/cart"
           >
             بازگشت به سبد خرید
@@ -73,7 +73,7 @@ export default function CheckoutPage() {
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_300px]">
           <form
             action={action}
-            className="rounded-2xl border border-white/[0.07] bg-[#171716] p-5 sm:p-7"
+            className="rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] p-5 sm:p-7"
           >
             <input
               name="items"
@@ -151,7 +151,7 @@ export default function CheckoutPage() {
               </p>
             ) : null}
             <button
-              className="mt-6 w-full rounded-xl bg-[#d6ad56] px-5 py-3.5 text-sm font-semibold text-[#211a0d] transition hover:bg-[#e2bf70] disabled:cursor-wait disabled:opacity-60"
+              className="mt-6 w-full rounded-xl bg-[var(--color-primary)] px-5 py-3.5 text-sm font-semibold text-[var(--color-bg)] transition hover:bg-[var(--color-primary)] disabled:cursor-wait disabled:opacity-60"
               disabled={pending}
               type="submit"
             >
@@ -159,7 +159,7 @@ export default function CheckoutPage() {
             </button>
           </form>
 
-          <aside className="h-fit rounded-2xl border border-[#d6ad56]/15 bg-[#171716] p-5 sm:p-6">
+          <aside className="h-fit rounded-2xl border border-[var(--color-primary)]/15 bg-[var(--color-surface)] p-5 sm:p-6">
             <h2 className="text-base font-semibold">خلاصه سفارش</h2>
             <div className="mt-4 space-y-3 border-b border-white/[0.07] pb-4">
               {items.map((item) => (
@@ -178,7 +178,7 @@ export default function CheckoutPage() {
             </div>
             <div className="mt-4 flex justify-between gap-3 text-sm">
               <span className="text-[#aaa79b]">جمع کل</span>
-              <span className="font-semibold text-[#e2c16d]">
+              <span className="font-semibold text-[var(--color-primary)]">
                 {formatPrice(totalPrice)}
               </span>
             </div>
@@ -199,7 +199,7 @@ export default function CheckoutPage() {
 }
 
 const inputClass =
-  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";
+  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]/60";
 
 function formatPrice(value: number): string {
   return `${value.toLocaleString("fa-IR")} تومان`;

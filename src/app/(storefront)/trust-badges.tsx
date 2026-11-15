@@ -18,15 +18,15 @@ const badges = [
 
 export default function TrustBadges() {
   return (
-    <section aria-label="تعهدهای فروشگاه" className="border-y border-white/[0.06] bg-[#141411]">
+    <section aria-label="تعهدهای فروشگاه" className="border-y border-white/[0.06] bg-[var(--color-surface)]">
       <div className="mx-auto grid max-w-7xl gap-3 px-5 py-6 sm:grid-cols-3 sm:px-8 sm:py-8">
         {badges.map((badge) => (
           <article className="flex items-center gap-4 rounded-xl border border-white/[0.05] bg-white/[0.015] p-4" key={badge.title}>
-            <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#d6ad56]/20 bg-[#d6ad56]/[0.07] text-xl text-[#e2c16d]">
+            <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/[0.07] text-xl text-[var(--color-primary)]">
               <TrustIcon name={badge.icon} />
             </span>
             <div>
-              <h2 className="text-sm font-semibold text-[#e9e5db]">{badge.title}</h2>
+              <h2 className="text-sm font-semibold text-[var(--color-text)]">{badge.title}</h2>
               <p className="mt-1 text-xs text-[#858378]">{badge.description}</p>
             </div>
           </article>

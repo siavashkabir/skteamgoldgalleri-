@@ -30,7 +30,7 @@ export default function WishlistButton({
   }
 
   const className =
-    "absolute left-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[#11110f]/85 text-lg text-[#e2c16d] backdrop-blur transition hover:border-[#d6ad56]/50 disabled:opacity-50";
+    "absolute left-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-[var(--color-bg)]/85 text-lg text-[var(--color-primary)] backdrop-blur transition hover:border-[var(--color-primary)]/50 disabled:opacity-50";
   const icon = (
     <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
       <path d="M20.8 8.7c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11a4.7 4.7 0 0 1 8.8-2.2 4.7 4.7 0 0 1 8.8 2.2Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.6" />

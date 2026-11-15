@@ -177,7 +177,7 @@ export default function ProductCatalog({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-12 text-center text-sm text-[#929085]">
+        <div className="rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] px-5 py-12 text-center text-sm text-[#929085]">
           {safeProducts.length === 0
             ? "هنوز محصولی در فروشگاه ثبت نشده است."
             : selectedFilter
@@ -227,7 +227,7 @@ function ProductCard({
     product.price > 0;
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#171716] transition duration-300 hover:-translate-y-1 hover:border-[#d6ad56]/25 hover:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+    <article className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] transition duration-300 hover:-translate-y-1 hover:border-[var(--color-primary)]/25 hover:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
       <WishlistButton
         isSaved={isWishlisted}
         loginPath={
@@ -240,7 +240,7 @@ function ProductCard({
         className="block"
         href={`/${store.slug}/products/${product.id}`}
       >
-        <div className="relative aspect-[4/4.5] overflow-hidden bg-[radial-gradient(ellipse_at_50%_45%,rgba(214,173,86,0.12),rgba(255,255,255,0.015)_65%)]">
+        <div className="relative aspect-[4/4.5] overflow-hidden bg-[radial-gradient(ellipse_at_50%_45%,color-mix(in_srgb,var(--color-primary)_12%,transparent),color-mix(in_srgb,var(--color-text)_1.5%,transparent)_65%)]">
           {product.imageUrl ? (
             <Image
               alt={product.name}
@@ -252,19 +252,19 @@ function ProductCard({
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-6xl font-extralight text-[#d6ad56]/60 transition duration-500 group-hover:scale-110">
+              <span className="text-6xl font-extralight text-[var(--color-primary)]/60 transition duration-500 group-hover:scale-110">
                 ◈
               </span>
             </div>
           )}
           {product.categoryName ? (
-            <span className="absolute right-3 top-3 rounded-full border border-white/[0.08] bg-[#11110f]/80 px-2.5 py-1 text-[10px] text-[#d6c9a8] backdrop-blur">
+            <span className="absolute right-3 top-3 rounded-full border border-white/[0.08] bg-[var(--color-bg)]/80 px-2.5 py-1 text-[10px] text-[#d6c9a8] backdrop-blur">
               {product.categoryName}
             </span>
           ) : null}
         </div>
         <div className="px-3.5 pt-4 sm:px-4">
-          <h3 className="line-clamp-1 min-h-6 text-sm font-medium text-[#eee9dc] transition group-hover:text-[#e2c16d]">
+          <h3 className="line-clamp-1 min-h-6 text-sm font-medium text-[var(--color-text)] transition group-hover:text-[var(--color-primary)]">
             {product.name}
           </h3>
           <p className="mt-1.5 text-[11px] text-[#858378]">
@@ -272,12 +272,12 @@ function ProductCard({
               ? "وزن ثبت نشده"
               : `${product.weight.toLocaleString("fa-IR")} گرم`}
           </p>
-          <p aria-label={product.ratingCount ? `امتیاز ${product.ratingAverage?.toFixed(1)} از ۵` : "بدون امتیاز"} className="mt-1.5 text-[11px] text-[#e2c16d]">
+          <p aria-label={product.ratingCount ? `امتیاز ${product.ratingAverage?.toFixed(1)} از ۵` : "بدون امتیاز"} className="mt-1.5 text-[11px] text-[var(--color-primary)]">
             {product.ratingCount
               ? `★ ${product.ratingAverage?.toLocaleString("fa-IR", { maximumFractionDigits: 1 })} (${product.ratingCount.toLocaleString("fa-IR")})`
               : "هنوز امتیازی ثبت نشده"}
           </p>
-          <p className="mt-3 min-h-5 text-sm font-semibold text-[#e2c16d]">
+          <p className="mt-3 min-h-5 text-sm font-semibold text-[var(--color-primary)]">
             {product.price !== null && priceAvailable
               ? formatPrice(product.price)
               : "قیمت استعلام شود"}
@@ -286,7 +286,7 @@ function ProductCard({
       </Link>
       <div className="px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4">
         <button
-          className="w-full rounded-xl border border-[#d6ad56]/25 py-2.5 text-xs font-medium text-[#e2c16d] transition hover:bg-[#d6ad56] hover:text-[#211a0d] disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-xl border border-[var(--color-primary)]/25 py-2.5 text-xs font-medium text-[var(--color-primary)] transition hover:bg-[var(--color-primary)] hover:text-[var(--color-bg)] disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!priceAvailable}
           onClick={() => addItem(product, store.id, store.slug)}
           type="button"
@@ -301,8 +301,8 @@ function ProductCard({
 function categoryClass(active: boolean) {
   return `shrink-0 rounded-full border px-4 py-2 text-xs transition ${
     active
-      ? "border-[#d6ad56] bg-[#d6ad56] font-semibold text-[#211a0d]"
-      : "border-white/[0.09] bg-[#171716] text-[#aaa79b] hover:border-[#d6ad56]/40 hover:text-[#e2c16d]"
+      ? "border-[var(--color-primary)] bg-[var(--color-primary)] font-semibold text-[var(--color-bg)]"
+      : "border-white/[0.09] bg-[var(--color-surface)] text-[#aaa79b] hover:border-[var(--color-primary)]/40 hover:text-[var(--color-primary)]"
   }`;
 }
 

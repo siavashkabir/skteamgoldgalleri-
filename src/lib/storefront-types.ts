@@ -1,3 +1,5 @@
+import type { ThemeSettings } from "@/lib/theme-settings";
+
 export const DEFAULT_TENANT_ID = "team-gold-system";
 export const DEFAULT_STORE_SLUG = "skteam";
 
@@ -17,6 +19,7 @@ export type StorefrontStore = {
   locationUrl: string | null;
   socialLinks: Record<string, string>;
   tomanRate: number | null;
+  themeSettings: ThemeSettings;
 };
 
 export type StorefrontCategory = {

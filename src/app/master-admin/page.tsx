@@ -10,6 +10,7 @@ import EditTenantDialog from "./edit-tenant-dialog";
 import PlatformSettingsForm from "./platform-settings-form";
 import { signOut } from "./actions";
 import Link from "next/link";
+import { parseThemeSettings, type ThemeSettings } from "@/lib/theme-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ type Tenant = {
   telegramUrl: string;
   whatsappUrl: string;
   tomanRate: string;
+  themeSettings: ThemeSettings;
 };
 
 export default function MasterAdminPage() {
@@ -45,7 +47,8 @@ async function MasterAdminContent() {
   const [result, platformResult] = await Promise.all([
     db.execute(`SELECT id, name, domain, created_at, description, logo_url, hero_title,
                        hero_subtitle, phone_numbers, address_text, location_url,
-                       instagram_url, telegram_url, whatsapp_url, toman_rate
+                       instagram_url, telegram_url, whatsapp_url, toman_rate,
+                       theme_settings
                 FROM tenants ORDER BY created_at DESC`),
     db.execute("SELECT key, value FROM platform_settings"),
   ]);
@@ -68,6 +71,7 @@ async function MasterAdminContent() {
     telegramUrl: row.telegram_url === null ? "" : String(row.telegram_url),
     whatsappUrl: row.whatsapp_url === null ? "" : String(row.whatsapp_url),
     tomanRate: row.toman_rate === null ? "" : String(row.toman_rate),
+    themeSettings: parseThemeSettings(row.theme_settings),
   }));
   return (
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9]">

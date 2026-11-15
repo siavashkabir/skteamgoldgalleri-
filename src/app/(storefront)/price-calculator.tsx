@@ -26,8 +26,8 @@ export default function PriceCalculator() {
   }, [goldPrice, labor, weight]);
 
   return (
-    <section className="rounded-2xl border border-[#d6ad56]/20 bg-[#171716] p-5 sm:p-7">
-      <p className="text-xs font-medium text-[#d6ad56]">برآورد سریع</p>
+    <section className="rounded-2xl border border-[var(--color-primary)]/20 bg-[var(--color-surface)] p-5 sm:p-7">
+      <p className="text-xs font-medium text-[var(--color-primary)]">برآورد سریع</p>
       <h2 className="mt-2 text-xl font-semibold">ماشین‌حساب قیمت طلا</h2>
       <p className="mt-1 text-xs leading-6 text-[#858378]">
         برآورد بر اساس نرخ لحظه‌ای هر گرم طلای ۱۸ عیار و اجرت واردشده.
@@ -58,7 +58,7 @@ export default function PriceCalculator() {
           />
         </label>
       </div>
-      <div aria-live="polite" className="mt-5 rounded-xl border border-white/[0.07] bg-[#10100f] p-4">
+      <div aria-live="polite" className="mt-5 rounded-xl border border-white/[0.07] bg-[var(--color-bg)] p-4">
         {total === null ? (
           <p className={`text-sm ${error ? "text-red-300" : "text-[#969387]"}`}>
             {error || "در حال دریافت قیمت لحظه‌ای..."}
@@ -66,7 +66,7 @@ export default function PriceCalculator() {
         ) : (
           <>
             <p className="text-xs text-[#969387]">مبلغ تقریبی</p>
-            <p className="mt-1 text-xl font-semibold text-[#e2c16d]">
+            <p className="mt-1 text-xl font-semibold text-[var(--color-primary)]">
               {Math.round(total).toLocaleString("fa-IR")} تومان
             </p>
           </>
@@ -77,4 +77,4 @@ export default function PriceCalculator() {
 }
 
 const inputClass =
-  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";
+  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]/60";

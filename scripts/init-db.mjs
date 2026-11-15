@@ -30,6 +30,7 @@ const schema = [
     instagram_url TEXT,
     telegram_url TEXT,
     whatsapp_url TEXT,
+    theme_settings TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff"}',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   `CREATE TABLE IF NOT EXISTS profiles (
@@ -153,6 +154,7 @@ try {
     ["instagram_url", "TEXT"],
     ["telegram_url", "TEXT"],
     ["whatsapp_url", "TEXT"],
+    ["theme_settings", `TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff"}'`],
   ]) {
     await ensureColumn("tenants", column, definition);
   }

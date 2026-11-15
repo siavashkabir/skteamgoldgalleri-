@@ -18,7 +18,7 @@ export default function CartContent() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-      <p className="text-xs font-medium text-[#d6ad56]">سبد خرید شما</p>
+      <p className="text-xs font-medium text-[var(--color-primary)]">سبد خرید شما</p>
       <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">مرور سفارش</h1>
       <p className="mt-2 text-sm text-[#858378]">
         {itemCount.toLocaleString("fa-IR")} عدد محصول در سبد خرید
@@ -26,14 +26,14 @@ export default function CartContent() {
 
       {items.length ? (
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
-          <section className="divide-y divide-white/[0.07] rounded-2xl border border-white/[0.07] bg-[#171716] px-4 sm:px-6">
+          <section className="divide-y divide-white/[0.07] rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] px-4 sm:px-6">
             {items.map((item) => (
               <article
                 className="flex gap-4 py-5 sm:gap-5"
                 key={`${item.tenantId}-${item.productId}`}
               >
                 <Link
-                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#211d14] sm:h-28 sm:w-28"
+                  className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[var(--color-surface)] sm:h-28 sm:w-28"
                   href={`/${item.tenantSlug}/products/${item.productId}`}
                 >
                   {item.imageUrl ? (
@@ -46,7 +46,7 @@ export default function CartContent() {
                       unoptimized
                     />
                   ) : (
-                    <span className="flex h-full items-center justify-center text-4xl text-[#d6ad56]/70">
+                    <span className="flex h-full items-center justify-center text-4xl text-[var(--color-primary)]/70">
                       ◈
                     </span>
                   )}
@@ -54,7 +54,7 @@ export default function CartContent() {
                 <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div className="min-w-0">
                     <Link
-                      className="line-clamp-1 text-sm font-semibold hover:text-[#e2c16d]"
+                      className="line-clamp-1 text-sm font-semibold hover:text-[var(--color-primary)]"
                       href={`/${item.tenantSlug}/products/${item.productId}`}
                     >
                       {item.name}
@@ -64,7 +64,7 @@ export default function CartContent() {
                         ? "وزن ثبت نشده"
                         : `${item.weight.toLocaleString("fa-IR")} گرم`}
                     </p>
-                    <p className="mt-2 text-sm font-medium text-[#e2c16d]">
+                    <p className="mt-2 text-sm font-medium text-[var(--color-primary)]">
                       {formatPrice(item.price)}
                     </p>
                   </div>
@@ -72,7 +72,7 @@ export default function CartContent() {
                     <div className="flex items-center rounded-lg border border-white/[0.09]">
                       <button
                         aria-label="کاهش تعداد"
-                        className="px-3 py-1.5 text-[#c5c1b6] hover:text-[#e2c16d]"
+                        className="px-3 py-1.5 text-[#c5c1b6] hover:text-[var(--color-primary)]"
                         onClick={() =>
                           item.quantity === 1
                             ? removeItem(item.productId)
@@ -87,7 +87,7 @@ export default function CartContent() {
                       </span>
                       <button
                         aria-label="افزایش تعداد"
-                        className="px-3 py-1.5 text-[#c5c1b6] hover:text-[#e2c16d]"
+                        className="px-3 py-1.5 text-[#c5c1b6] hover:text-[var(--color-primary)]"
                         disabled={item.quantity >= 20}
                         onClick={() =>
                           setQuantity(item.productId, item.quantity + 1)
@@ -110,7 +110,7 @@ export default function CartContent() {
             ))}
           </section>
 
-          <aside className="h-fit rounded-2xl border border-[#d6ad56]/15 bg-[#171716] p-5 sm:p-6">
+          <aside className="h-fit rounded-2xl border border-[var(--color-primary)]/15 bg-[var(--color-surface)] p-5 sm:p-6">
             <h2 className="text-base font-semibold">خلاصه سفارش</h2>
             <div className="mt-5 space-y-3 border-b border-white/[0.07] pb-5 text-sm">
               <SummaryLine label="تعداد محصولات" value={itemCount.toLocaleString("fa-IR")} />
@@ -121,20 +121,20 @@ export default function CartContent() {
             </div>
             <div className="flex items-center justify-between gap-3 py-5">
               <span className="text-sm text-[#aaa79b]">جمع کل</span>
-              <span className="text-base font-semibold text-[#e2c16d]">
+              <span className="text-base font-semibold text-[var(--color-primary)]">
                 {formatPrice(totalPrice)}
               </span>
             </div>
             <form action={continueToCheckout}>
               <button
-                className="block w-full rounded-xl bg-[#d6ad56] px-4 py-3 text-center text-sm font-semibold text-[#211a0d] transition hover:bg-[#e2bf70]"
+                className="block w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-center text-sm font-semibold text-[var(--color-bg)] transition hover:bg-[var(--color-primary)]"
                 type="submit"
               >
                 ادامه و ثبت سفارش
               </button>
             </form>
             <Link
-              className="mt-4 block text-center text-xs text-[#898578] hover:text-[#e2c16d]"
+              className="mt-4 block text-center text-xs text-[#898578] hover:text-[var(--color-primary)]"
               href={`/${items[0].tenantSlug}`}
             >
               بازگشت به فروشگاه
@@ -142,8 +142,8 @@ export default function CartContent() {
           </aside>
         </div>
       ) : (
-        <section className="mt-8 rounded-2xl border border-white/[0.07] bg-[#171716] px-5 py-16 text-center">
-          <span className="text-4xl text-[#d6ad56]/70" aria-hidden="true">
+        <section className="mt-8 rounded-2xl border border-white/[0.07] bg-[var(--color-surface)] px-5 py-16 text-center">
+          <span className="text-4xl text-[var(--color-primary)]/70" aria-hidden="true">
             ◇
           </span>
           <h2 className="mt-4 text-lg font-semibold">سبد خرید شما خالی است</h2>
@@ -151,7 +151,7 @@ export default function CartContent() {
             برای شروع، محصولات کالکشن فروشگاه را ببینید.
           </p>
           <Link
-            className="mt-6 inline-flex rounded-xl bg-[#d6ad56] px-5 py-3 text-sm font-semibold text-[#211a0d] hover:bg-[#e2bf70]"
+            className="mt-6 inline-flex rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-[var(--color-bg)] hover:bg-[var(--color-primary)]"
             href={`/${DEFAULT_STORE_SLUG}`}
           >
             مشاهده محصولات
