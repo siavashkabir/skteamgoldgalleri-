@@ -1,9 +1,9 @@
 import "server-only";
 
 import { createClient } from "@libsql/client/web";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-function requiredEnv(name: string): string {
-  const value = process.env[name];
+function requiredEnv(name: string, value: string | undefined): string {
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -15,8 +15,8 @@ function requiredEnv(name: string): string {
  * ASCII characters. JWTs never contain whitespace, so anything after the first
  * whitespace (e.g. an accidentally pasted label or note) is discarded.
  */
-function readAuthToken(name: string): string {
-  const token = requiredEnv(name).trim().split(/\s+/)[0];
+function readAuthToken(name: string, value: string | undefined): string {
+  const token = requiredEnv(name, value).trim().split(/\s+/)[0];
   if (!/^[\x21-\x7e]+$/.test(token)) {
     throw new Error(
       `Environment variable ${name} contains characters that are not allowed in an HTTP header.`,
@@ -31,9 +31,10 @@ let client: DatabaseClient | undefined;
 
 export function getDbClient(): DatabaseClient {
   if (!client) {
+    const { env } = getCloudflareContext();
     client = createClient({
-      url: requiredEnv("TURSO_DATABASE_URL").trim(),
-      authToken: readAuthToken("TURSO_AUTH_TOKEN"),
+      url: requiredEnv("TURSO_DATABASE_URL", env.TURSO_DATABASE_URL).trim(),
+      authToken: readAuthToken("TURSO_AUTH_TOKEN", env.TURSO_AUTH_TOKEN),
     });
   }
   return client;

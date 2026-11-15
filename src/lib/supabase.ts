@@ -1,22 +1,24 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 type SupabaseClient = ReturnType<typeof createClient>;
 
 let supabaseClient: SupabaseClient | undefined;
 let supabaseAdminClient: SupabaseClient | undefined;
 
-function getSupabaseConfig() {
+function getSupabaseConfig(env: CloudflareEnv) {
   return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-key",
+    url: env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
+    anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-key",
   };
 }
 
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseClient) {
-    const { url, anonKey } = getSupabaseConfig();
+    const { env } = getCloudflareContext();
+    const { url, anonKey } = getSupabaseConfig(env);
     supabaseClient = createClient(url, anonKey);
   }
   return supabaseClient;
@@ -24,10 +26,11 @@ export function getSupabaseClient(): SupabaseClient {
 
 export function getSupabaseAdminClient(): SupabaseClient {
   if (!supabaseAdminClient) {
-    const { url } = getSupabaseConfig();
+    const { env } = getCloudflareContext();
+    const { url } = getSupabaseConfig(env);
     supabaseAdminClient = createClient(
       url,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy-service-role-key",
+      env.SUPABASE_SERVICE_ROLE_KEY || "dummy-service-role-key",
       {
         auth: {
           autoRefreshToken: false,
