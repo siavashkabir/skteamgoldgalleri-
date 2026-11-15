@@ -1,111 +1,94 @@
 export const dynamic = "force-dynamic";
 
-const rialToToman = 10;
-const gramsPerTroyOunce = 31.1034768;
+import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
+import { getDbClient } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const [localGoldRial, dollarRial, ouncePrice] = await Promise.all([
-      fetchTgjuPrice("https://www.tgju.org/profile/geram18"),
-      fetchTgjuPrice("https://www.tgju.org/profile/price_dollar_rl"),
-      fetchOuncePrice(),
-    ]);
+    const db = await getDbClient();
+    const tenantId = new URL(request.url).searchParams.get("tenant") || DEFAULT_TENANT_ID;
+    const tenantResult = await db.execute({
+      sql: "SELECT toman_rate FROM tenants WHERE id = ?",
+      args: [tenantId],
+    });
+    
+    const tomanRate = tenantResult.rows[0]?.toman_rate ? Number(tenantResult.rows[0].toman_rate) : null;
 
-    const globalGoldRial =
-      (ouncePrice * dollarRial * (18 / 24)) / gramsPerTroyOunce;
-    const bubblePercentage =
-      ((localGoldRial - globalGoldRial) / globalGoldRial) * 100;
-    if (
-      !Number.isFinite(globalGoldRial) ||
-      globalGoldRial <= 0 ||
-      !Number.isFinite(bubblePercentage)
-    ) {
-      throw new Error("TGJU returned an invalid price comparison.");
+    let finalData = {
+      ouncePrice: 0,
+      dollarPrice: tomanRate || 0,
+      eighteenKPrice: 0,
+      euroPrice: 0,
+      dirhamPrice: 0,
+      liraPrice: 0,
+      bubblePercentage: 0
+    };
+
+    // 1. تلاش برای گرفتن قیمت‌ها از TGJU
+    let tgjuSuccess = false;
+    try {
+      const tgjuRes = await fetch("https://www.tgju.org/", {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(5000) // حداکثر ۵ ثانیه صبر می‌کنه
+      });
+
+      if (tgjuRes.ok) {
+        const html = await tgjuRes.text();
+        const extractPrice = (marketRow: string) => {
+          const regex = new RegExp(`data-market-row="${marketRow}"[^>]*>.*?<span[^>]*>(.*?)</span>`, "s");
+          const match = html.match(regex);
+          if (match && match[1]) {
+            return Number(match[1].replace(/,/g, "").replace(/<[^>]+>/g, "").trim());
+          }
+          return null;
+        };
+
+        const dollarRaw = extractPrice("price_dollar_rl");
+        const eighteenKRaw = extractPrice("geram18");
+        const ounceRaw = extractPrice("ons");
+        const euroRaw = extractPrice("price_eur");
+        const dirhamRaw = extractPrice("price_aed");
+        const liraRaw = extractPrice("price_try");
+
+        // اگر تونستیم قیمت دلار رو از tgju بگیریم یعنی موفق بوده
+        if (dollarRaw) {
+          finalData.dollarPrice = dollarRaw / 10;
+          finalData.eighteenKPrice = eighteenKRaw ? eighteenKRaw / 10 : 0;
+          finalData.ouncePrice = ounceRaw || 0;
+          finalData.euroPrice = euroRaw ? euroRaw / 10 : 0;
+          finalData.dirhamPrice = dirhamRaw ? dirhamRaw / 10 : 0;
+          finalData.liraPrice = liraRaw ? liraRaw / 10 : 0;
+          tgjuSuccess = true;
+        }
+      }
+    } catch (e) {
+      console.error("TGJU scraping failed, falling back to math calculation.");
     }
 
-    return Response.json(
-      {
-        ouncePrice,
-        dollarPrice: dollarRial / rialToToman,
-        eighteenKPrice: localGoldRial / rialToToman,
-        globalEighteenKPrice: globalGoldRial / rialToToman,
-        bubblePercentage,
-        updatedAt: new Date().toISOString(),
-      },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    // 2. اگر TGJU بلاک کرد یا جواب نداد، از روش قبلی (محاسبه ریاضی) استفاده کن
+    if (!tgjuSuccess && tomanRate) {
+      const goldResponse = await fetch("https://api.gold-api.com/price/XAU", { cache: "no-store" });
+      if (goldResponse.ok) {
+        const goldPayload = await goldResponse.json();
+        const ouncePrice = Number(goldPayload.price);
+        if (Number.isFinite(ouncePrice) && ouncePrice > 0) {
+          finalData.ouncePrice = ouncePrice;
+          finalData.eighteenKPrice = (ouncePrice / 31.1034768) * (18 / 24) * tomanRate;
+          finalData.dollarPrice = tomanRate;
+        }
+      }
+    }
+
+    if (finalData.dollarPrice === 0) {
+      return Response.json({ error: "قیمت لحظه‌ای در دسترس نیست." }, { status: 503 });
+    }
+
+    return Response.json(finalData, { headers: { "Cache-Control": "no-store" } });
+
   } catch (error) {
-    console.error("Could not retrieve TGJU market prices.", error);
-    return Response.json(
-      { error: "قیمت‌های بازار از منبع TGJU فعلاً در دسترس نیستند." },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
+    return Response.json({ error: "خطای سرور در دریافت قیمت." }, { status: 503 });
   }
-}
-
-async function fetchTgjuPrice(url: string): Promise<number> {
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      Accept: "text/html",
-      "User-Agent": "Mozilla/5.0 (compatible; GoldStore/1.0)",
-    },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!response.ok) {
-    throw new Error(`TGJU price request failed with status ${response.status}.`);
-  }
-
-  const html = await response.text();
-  const price = extractTgjuPrice(html);
-  if (!Number.isFinite(price) || price <= 0) {
-    throw new Error("Could not parse a valid price from the TGJU page.");
-  }
-  return price;
-}
-
-function extractTgjuPrice(html: string): number {
-  const markers = [
-    /data-col=["']info\.last_trade\.PDrCotVal["']/i,
-    /id=["']l-price["']/i,
-    /class=["'][^"']*\binfo-value\b[^"']*["']/i,
-  ];
-
-  for (const marker of markers) {
-    const match = marker.exec(html);
-    if (!match || match.index === undefined) continue;
-    const segment = html.slice(match.index, match.index + 1200);
-    const text = segment
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&nbsp;|&#160;/gi, " ");
-    const digits = text.match(/[0-9۰-۹٠-٩][0-9۰-۹٠-٩,٬.]*/)?.[0];
-    if (!digits) continue;
-    const normalized = digits
-      .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0))
-      .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
-      .replace(/[,.٬]/g, "");
-    const value = Number(normalized);
-    if (Number.isFinite(value) && value > 0) return value;
-  }
-  return NaN;
-}
-
-async function fetchOuncePrice(): Promise<number> {
-  const response = await fetch("https://api.gold-api.com/price/XAU", {
-    cache: "no-store",
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!response.ok) {
-    throw new Error("The global gold-price source returned an invalid response.");
-  }
-  const payload: unknown = await response.json();
-  const price =
-    payload && typeof payload === "object" && "price" in payload
-      ? Number(payload.price)
-      : NaN;
-  if (!Number.isFinite(price) || price <= 0) {
-    throw new Error("The global gold price was invalid.");
-  }
-  return price;
 }
