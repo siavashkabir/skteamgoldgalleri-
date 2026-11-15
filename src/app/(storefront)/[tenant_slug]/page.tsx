@@ -13,7 +13,6 @@ import PriceTrends from "../price-trends";
 import TrustBadges from "../trust-badges";
 import BookingForm from "./booking-form";
 
-
 export default function StorefrontPage(props: PageProps<"/[tenant_slug]">) {
   return (
     <Suspense
@@ -49,6 +48,10 @@ async function StorefrontContent({
     store.enabledModules.includes("booking") ||
     store.enabledModules.includes("tourism");
   const hasGallery = store.enabledModules.includes("gallery");
+  
+  // 🚨 این خط جدید: تشخیص طلا بودن
+  const isGold = store.businessType === "gold";
+
   const galleryImages = catalog.products.flatMap((product) =>
     [...product.images, ...(product.imageUrl ? [product.imageUrl] : [])].map(
       (src) => ({ src, alt: product.name }),
@@ -75,7 +78,9 @@ async function StorefrontContent({
                   ? "مقصد بعدی شما"
                   : isCorporate
                     ? "راهکارهای حرفه‌ای"
-                    : "اصالت، ظرافت، ماندگاری"}
+                    : isGold
+                      ? "اصالت، ظرافت، ماندگاری"
+                      : "کیفیت، تنوع و اعتماد"}
             </p>
             <h1 className="text-4xl font-semibold leading-[1.5] tracking-tight text-[var(--color-text)] sm:text-5xl lg:text-6xl">
               {store.heroTitle || store.name}
@@ -89,13 +94,17 @@ async function StorefrontContent({
                       ? "تجربه‌ای فراموش‌نشدنی"
                       : isCorporate
                         ? "از تخصص تا نتیجه"
-                        : "زیباییِ ماندگار"}
+                        : isGold
+                          ? "زیباییِ ماندگار"
+                          : "انتخابی هوشمندانه"}
                 </span>
               )}
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-8 text-[#aaa79b] sm:text-base">
               {store.description ||
-                "کالکشن منتخب طلا و جواهر را با دقتی درخور لحظه‌های خاص زندگی کشف کنید."}
+                (isGold 
+                  ? "کالکشن منتخب طلا و جواهر را با دقتی درخور لحظه‌های خاص زندگی کشف کنید."
+                  : "محصولات با کیفیت و متنوع را برای نیازهای خود کشف کنید.")}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -142,7 +151,7 @@ async function StorefrontContent({
                   <p className="mt-1 text-[11px]">مقصد بعدی خود را کشف کنید</p>
                 </div>
               </>
-            ) : (
+            ) : isGold ? (
               <div className="flex h-full items-center justify-center">
                 <div className="absolute h-[250px] w-[250px] rounded-full border border-[var(--color-primary)]/20 sm:h-[310px] sm:w-[310px]" />
                 <div className="absolute h-[205px] w-[205px] rounded-full border border-[var(--color-primary)]/15 sm:h-[260px] sm:w-[260px]" />
@@ -155,14 +164,14 @@ async function StorefrontContent({
                 <span className="absolute right-[13%] top-[20%] text-xl text-[var(--color-primary)]">✧</span>
                 <span className="absolute bottom-[18%] left-[12%] text-sm text-[var(--color-primary)]">✦</span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
 
       {hasEcommerce ? <TrustBadges /> : null}
 
-      {hasEcommerce ? (
+      {hasEcommerce && isGold ? (
         <section className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1.25fr_0.75fr]">
           <PriceTrends />
           <PriceCalculator />
