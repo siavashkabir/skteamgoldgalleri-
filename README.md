@@ -35,6 +35,13 @@ password recovery for both customers and tenant admins. Customer registration
 is available at `/register`; it creates the Supabase Auth account and its
 customer profile under the default system tenant.
 
+For an existing database, apply the independent reviews and wishlist migration
+without changing tenant settings:
+
+```sh
+npm run db:migrate-features
+```
+
 To create or update the Super Admin account and its Turso profile, provide the
 password through the environment and run:
 
@@ -72,11 +79,14 @@ rechecks product prices in Turso, and creates a pending mock order; no online
 payment is performed. Store owners can configure storefront branding,
 contact details, nested categories, and product specifications from `/admin`.
 The master admin can edit tenant settings and the platform footer name/URL. The
-storefront filters products with `?category=...`. Its live-price widget fetches
-the gold-ounce price from Gold API and converts it using the store's configured
-market USD rate (toman) through `/api/live-prices`; set that rate in `/admin`
-because public IRR exchange feeds do not reliably reflect Iran's free market.
-The widget refreshes every five minutes.
+storefront filters products with `?category=...`. The live-price widget and
+price calculator read local 18k gold and dollar prices from TGJU through
+`/api/tgju`, and compare the local 18k price with the ounce-and-dollar-derived
+global price. The daily, weekly, and monthly chart currently uses mock history;
+its current price is live. Customers can submit custom designs at
+`/custom-order`, see saved products at `/wishlist`, and review products after
+purchase. Store contact information and Waze, Neshan, and Balad routing links
+are shown on the contact page and storefront footer.
 
 To seed the default store with sample products and men's/women's categories, run:
 

@@ -6,7 +6,11 @@ import type { AdminActionState } from "../admin/action-state";
 
 const initialState: AdminActionState = {};
 
-export default function CustomOrderForm() {
+export default function CustomOrderForm({
+  returnPath = "/custom-order",
+}: {
+  returnPath?: string;
+}) {
   const [state, formAction, pending] = useActionState(
     submitCustomOrder,
     initialState,
@@ -14,6 +18,7 @@ export default function CustomOrderForm() {
 
   return (
     <form action={formAction} className="space-y-4">
+      <input name="return_path" type="hidden" value={returnPath} />
       <label className="block">
         <span className="mb-2 block text-sm font-medium">تصویر طرح</span>
         <input

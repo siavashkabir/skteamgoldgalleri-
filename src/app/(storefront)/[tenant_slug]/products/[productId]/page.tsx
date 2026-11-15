@@ -2,9 +2,12 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { db } from "@/lib/db";
+import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 import { getStoreBySlug, getVisibleProduct } from "@/lib/storefront-data";
 import AddToCartButton from "../../../product-actions";
 import ProductDescription from "../../../product-description";
+import ProductReviews, { type ProductReview } from "../../../product-reviews";
 
 
 export default function ProductDetailsPage(
@@ -35,6 +38,41 @@ async function ProductDetailsContent({
   if (!product) {
     notFound();
   }
+  const [reviewResult, profile] = await Promise.all([
+    db.execute({
+      sql: `SELECT r.id, r.rating, r.comment, r.created_at
+            FROM reviews r
+            WHERE r.tenant_id = ? AND r.product_id = ?
+            ORDER BY r.created_at DESC
+            LIMIT 30`,
+      args: [store.id, product.id],
+    }),
+    getOptionalAuthenticatedProfile(),
+  ]);
+  const reviews: ProductReview[] = reviewResult.rows.map((row) => ({
+    id: String(row.id),
+    name: "خریدار",
+    rating: Number(row.rating),
+    comment: String(row.comment),
+    createdAt: String(row.created_at),
+  }));
+  const customerId =
+    profile?.role === "customer" && profile.tenantId === store.id
+      ? profile.userId
+      : null;
+  const purchase = customerId
+    ? await db.execute({
+        sql: `SELECT 1 FROM orders o
+              JOIN order_items oi ON oi.order_id = o.id
+              WHERE o.tenant_id = ? AND o.customer_id = ?
+                AND oi.tenant_id = ? AND oi.product_id = ?
+              LIMIT 1`,
+        args: [store.id, customerId, store.id, product.id],
+      })
+    : null;
+  const loginPath = customerId
+    ? ""
+    : `/login?next=${encodeURIComponent(`/${store.slug}/products/${product.id}`)}`;
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
@@ -131,6 +169,14 @@ async function ProductDetailsContent({
           </div>
         </div>
       </article>
+      <ProductReviews
+        average={product.ratingAverage}
+        canReview={Boolean(purchase?.rows.length)}
+        count={product.ratingCount}
+        loginPath={loginPath}
+        productId={product.id}
+        reviews={reviews}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   type StorefrontProduct,
   type StorefrontStore,
 } from "@/lib/storefront-types";
+import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
 
 export async function getStoreBySlug(
   slug: string,
@@ -131,12 +132,19 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
                  ${imageColumn} AS image_url,
                  ${categoryIdColumn} AS category_id,
                  ${categoryNameExpression} AS category_name,
-                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications
+                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications,
+                 r.rating_average, COALESCE(r.rating_count, 0) AS rating_count
           FROM products p
           ${categoryJoin}
+          LEFT JOIN (
+            SELECT product_id, AVG(rating) AS rating_average, COUNT(*) AS rating_count
+            FROM reviews
+            WHERE tenant_id = ?
+            GROUP BY product_id
+          ) r ON r.product_id = p.id
           WHERE p.tenant_id = ? AND p.is_visible = 1
           ORDER BY p.id DESC`,
-    args: [tenantId],
+    args: [tenantId, tenantId],
   });
 
   return {
@@ -157,6 +165,9 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
       categoryName:
         row.category_name === null ? null : String(row.category_name),
       specifications: parseStringRecord(row.specifications),
+      ratingAverage:
+        row.rating_average === null ? null : Number(row.rating_average),
+      ratingCount: Number(row.rating_count),
     })),
   };
 }
@@ -206,12 +217,19 @@ export async function getVisibleProduct(
                  ${imageColumn} AS image_url,
                  ${categoryIdColumn} AS category_id,
                  ${categoryNameExpression} AS category_name,
-                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications
+                 ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications,
+                 r.rating_average, COALESCE(r.rating_count, 0) AS rating_count
           FROM products p
           ${categoryJoin}
+          LEFT JOIN (
+            SELECT product_id, AVG(rating) AS rating_average, COUNT(*) AS rating_count
+            FROM reviews
+            WHERE tenant_id = ?
+            GROUP BY product_id
+          ) r ON r.product_id = p.id
           WHERE p.tenant_id = ? AND p.id = ? AND p.is_visible = 1
           LIMIT 1`,
-    args: [tenantId, productId],
+    args: [tenantId, tenantId, productId],
   });
   const row = result.rows[0];
   return row
@@ -226,8 +244,32 @@ export async function getVisibleProduct(
         categoryName:
           row.category_name === null ? null : String(row.category_name),
         specifications: parseStringRecord(row.specifications),
+        ratingAverage:
+          row.rating_average === null ? null : Number(row.rating_average),
+        ratingCount: Number(row.rating_count),
       }
     : null;
+}
+
+export async function getStorefrontCustomerState(tenantId: string): Promise<{
+  wishlistedProductIds: string[];
+} | null> {
+  const profile = await getOptionalAuthenticatedProfile();
+  if (
+    !profile ||
+    profile.role !== "customer" ||
+    profile.tenantId !== tenantId
+  ) {
+    return null;
+  }
+
+  const result = await db.execute({
+    sql: "SELECT product_id FROM wishlist WHERE tenant_id = ? AND customer_id = ?",
+    args: [tenantId, profile.userId],
+  });
+  return {
+    wishlistedProductIds: result.rows.map((row) => String(row.product_id)),
+  };
 }
 
 function parseStringArray(value: unknown): string[] {

@@ -36,4 +36,6 @@ export type StorefrontProduct = {
   categoryId: string | null;
   categoryName: string | null;
   specifications: Record<string, string>;
+  ratingAverage: number | null;
+  ratingCount: number;
 };

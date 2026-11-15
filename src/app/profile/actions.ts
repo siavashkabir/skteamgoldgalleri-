@@ -1,8 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getCustomerContext } from "@/lib/admin-context";
+import {
+  getCustomerContext,
+  getOptionalCustomerContext,
+} from "@/lib/admin-context";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminActionState } from "../admin/action-state";
 
@@ -77,7 +81,12 @@ export async function submitCustomOrder(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { userId, tenantId } = await getCustomerContext();
+  const returnPath = safeReturnPath(readText(formData, "return_path"));
+  const customer = await getOptionalCustomerContext();
+  if (!customer) {
+    redirect(`/login?next=${encodeURIComponent(returnPath)}`);
+  }
+  const { userId, tenantId } = customer;
   const description = readText(formData, "description");
   const contactInfo = readText(formData, "contact_info");
   const image = formData.get("image");
@@ -132,7 +141,20 @@ export async function submitCustomOrder(
   });
   revalidatePath("/profile");
   revalidatePath("/admin/custom-orders");
+  revalidatePath(returnPath);
   return { success: "سفارش اختصاصی شما ثبت شد." };
+}
+
+function safeReturnPath(value: string): string {
+  if (
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\") &&
+    value.length <= 2048
+  ) {
+    return value;
+  }
+  return "/custom-order";
 }
 
 function readText(formData: FormData, key: string): string {

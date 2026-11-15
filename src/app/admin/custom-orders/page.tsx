@@ -8,6 +8,7 @@ type CustomOrder = {
   id: string;
   customerName: string;
   customerId: string;
+  customerPhone: string;
   imageUrl: string;
   description: string;
   contactInfo: string;
@@ -19,7 +20,8 @@ export default async function CustomOrdersPage() {
   const { tenantId } = await getTenantAdminContext();
   const result = await db.execute({
     sql: `SELECT co.id, co.image_url, co.description, co.contact_info,
-                 co.status, co.created_at, p.full_name, p.id AS customer_id
+                 co.status, co.created_at, p.full_name, p.id AS customer_id,
+                 p.mobile
           FROM custom_orders co
           JOIN profiles p ON p.id = co.customer_id AND p.tenant_id = co.tenant_id
           WHERE co.tenant_id = ?
@@ -39,6 +41,7 @@ export default async function CustomOrdersPage() {
         id: String(row.id),
         customerName: String(row.full_name || "مشتری"),
         customerId: String(row.customer_id),
+        customerPhone: String(row.mobile || row.contact_info || "ثبت نشده"),
         imageUrl: image.signedUrl,
         description: String(row.description),
         contactInfo: String(row.contact_info),
@@ -80,6 +83,9 @@ export default async function CustomOrdersPage() {
                     <p className="mt-1 text-xs text-[#8b897f]" dir="ltr">
                       شناسه مشتری: {order.customerId.slice(0, 8)}
                     </p>
+                    <p className="mt-1 text-sm text-[#d8d3c7]" dir="ltr">
+                      {order.customerPhone}
+                    </p>
                   </div>
                   <span className="rounded-full border border-[#d6ad56]/20 bg-[#d6ad56]/[0.07] px-3 py-1 text-xs text-[#e2c16d]">
                     {translateStatus(order.status)}
@@ -89,7 +95,7 @@ export default async function CustomOrdersPage() {
                   {order.description}
                 </p>
                 <p className="mt-3 text-sm text-[#aaa79b]">
-                  راه تماس: <span dir="auto">{order.contactInfo}</span>
+                  اطلاعات تکمیلی: <span dir="auto">{order.contactInfo}</span>
                 </p>
                 <p className="mt-2 text-xs text-[#77766e]">
                   {formatDate(order.createdAt)}

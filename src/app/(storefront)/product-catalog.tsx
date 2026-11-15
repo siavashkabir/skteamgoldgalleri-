@@ -14,15 +14,20 @@ import {
   genderFilterForName,
 } from "@/lib/category-filters";
 import { useCart } from "./storefront-provider";
+import WishlistButton from "./wishlist-button";
 
 export default function ProductCatalog({
   categories,
   products,
   store,
+  wishlistedProductIds = [],
+  isCustomer = false,
 }: {
   categories: StorefrontCategory[];
   products: StorefrontProduct[];
   store: StorefrontStore;
+  wishlistedProductIds?: string[];
+  isCustomer?: boolean;
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -162,7 +167,13 @@ export default function ProductCatalog({
       {visibleProducts.length ? (
         <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
           {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} store={store} />
+            <ProductCard
+              isCustomer={isCustomer}
+              isWishlisted={wishlistedProductIds.includes(product.id)}
+              key={product.id}
+              product={product}
+              store={store}
+            />
           ))}
         </div>
       ) : (
@@ -201,9 +212,13 @@ function includeDescendants(
 function ProductCard({
   product,
   store,
+  isCustomer,
+  isWishlisted,
 }: {
   product: StorefrontProduct;
   store: StorefrontStore;
+  isCustomer: boolean;
+  isWishlisted: boolean;
 }) {
   const { addItem } = useCart();
   const priceAvailable =
@@ -212,7 +227,14 @@ function ProductCard({
     product.price > 0;
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-white/[0.07] bg-[#171716] transition duration-300 hover:-translate-y-1 hover:border-[#d6ad56]/25 hover:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+    <article className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#171716] transition duration-300 hover:-translate-y-1 hover:border-[#d6ad56]/25 hover:shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+      <WishlistButton
+        isSaved={isWishlisted}
+        loginPath={
+          isCustomer ? "" : `/login?next=${encodeURIComponent(`/${store.slug}`)}`
+        }
+        productId={product.id}
+      />
       <Link
         aria-label={`مشاهده ${product.name}`}
         className="block"
@@ -249,6 +271,11 @@ function ProductCard({
             {product.weight === null
               ? "وزن ثبت نشده"
               : `${product.weight.toLocaleString("fa-IR")} گرم`}
+          </p>
+          <p aria-label={product.ratingCount ? `امتیاز ${product.ratingAverage?.toFixed(1)} از ۵` : "بدون امتیاز"} className="mt-1.5 text-[11px] text-[#e2c16d]">
+            {product.ratingCount
+              ? `★ ${product.ratingAverage?.toLocaleString("fa-IR", { maximumFractionDigits: 1 })} (${product.ratingCount.toLocaleString("fa-IR")})`
+              : "هنوز امتیازی ثبت نشده"}
           </p>
           <p className="mt-3 min-h-5 text-sm font-semibold text-[#e2c16d]">
             {product.price !== null && priceAvailable

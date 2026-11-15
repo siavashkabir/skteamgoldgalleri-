@@ -5,15 +5,21 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import LoginForm from "./login-form";
 
 
-export default function LoginPage() {
+export default function LoginPage(props: PageProps<"/login">) {
   return (
     <Suspense fallback={<main className="min-h-screen bg-[#10100f]" />}>
-      <LoginPageContent />
+      <LoginPageContent searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-async function LoginPageContent() {
+async function LoginPageContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const query = await searchParams;
+  const nextPath = safeNextPath(query.next);
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -25,7 +31,7 @@ async function LoginPageContent() {
     throw error;
   }
   if (!error && data?.claims?.sub) {
-    redirect("/");
+    redirect(nextPath);
   }
 
   return (
@@ -100,6 +106,16 @@ async function LoginPageContent() {
       </div>
     </main>
   );
+}
+
+function safeNextPath(value: string | string[] | undefined): string {
+  const path = Array.isArray(value) ? value[0] : value;
+  return path &&
+    path.startsWith("/") &&
+    !path.startsWith("//") &&
+    !path.includes("\\")
+    ? path
+    : "/";
 }
 
 function Brand() {

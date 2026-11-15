@@ -105,6 +105,24 @@ const schema = [
     status TEXT NOT NULL DEFAULT 'pending',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
+  `CREATE TABLE IF NOT EXISTS reviews (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    product_id TEXT NOT NULL REFERENCES products(id),
+    user_id TEXT NOT NULL REFERENCES profiles(id),
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (tenant_id, product_id, user_id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS wishlist (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    customer_id TEXT NOT NULL REFERENCES profiles(id),
+    product_id TEXT NOT NULL REFERENCES products(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (tenant_id, customer_id, product_id)
+  )`,
   `CREATE TABLE IF NOT EXISTS platform_settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -195,7 +213,7 @@ try {
      WHERE type = 'table'
        AND name IN ('tenants', 'profiles', 'categories', 'products',
                     'cart_items', 'orders', 'order_items', 'custom_orders',
-                    'platform_settings')`,
+                    'reviews', 'wishlist', 'platform_settings')`,
   );
   const createdTables = new Set(result.rows.map((row) => row.name));
   const expectedTables = [
@@ -207,6 +225,8 @@ try {
     "orders",
     "order_items",
     "custom_orders",
+    "reviews",
+    "wishlist",
     "platform_settings",
   ];
   const missingTables = expectedTables.filter(

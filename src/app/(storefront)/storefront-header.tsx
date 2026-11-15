@@ -58,6 +58,25 @@ export default function StorefrontHeader({
             محصولات
           </Link>
           <Link
+            className="hidden text-sm text-[#aaa79b] transition hover:text-[#e2c16d] sm:inline-flex"
+            href={`/${store.slug}/custom-order`}
+          >
+            سفارش اختصاصی
+          </Link>
+          <Link
+            className="hidden text-sm text-[#aaa79b] transition hover:text-[#e2c16d] lg:inline-flex"
+            href={`/${store.slug}/contact`}
+          >
+            تماس با ما
+          </Link>
+          <Link
+            aria-label="علاقه‌مندی‌ها"
+            className="hidden rounded-xl border border-white/[0.09] px-3 py-2.5 text-[#e2c16d] transition hover:border-[#d6ad56]/40 sm:inline-flex"
+            href="/wishlist"
+          >
+            ♡
+          </Link>
+          <Link
             className="flex items-center gap-2 rounded-xl border border-white/[0.09] px-3 py-2.5 text-sm text-[#e9e5db] transition hover:border-[#d6ad56]/40 hover:text-[#e2c16d] sm:px-4"
             href="/cart"
           >
@@ -75,7 +94,7 @@ export default function StorefrontHeader({
           </Link>
         </nav>
       </div>
-      <LivePriceWidget tenantId={store.id} />
+      <LivePriceWidget />
     </header>
   );
 }

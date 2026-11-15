@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:init": "node --env-file=.env.local scripts/init-db.mjs",
+    "db:migrate-features": "node --env-file=.env.local scripts/migrate-customer-features.mjs",
     "db:init-storage": "node --env-file=.env.local scripts/init-storage.mjs",
     "db:seed-admin": "node --env-file=.env.local scripts/seed-admin.mjs",
     "db:seed-products": "node --env-file=.env.local scripts/seed-products.mjs"
@@ -22,7 +23,8 @@
     "@supabase/supabase-js": "^2.119.0",
     "next": "16.4.6",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",

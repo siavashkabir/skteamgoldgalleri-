@@ -1,8 +1,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getStoreBySlug, getStorefrontCatalog } from "@/lib/storefront-data";
+import {
+  getStoreBySlug,
+  getStorefrontCatalog,
+  getStorefrontCustomerState,
+} from "@/lib/storefront-data";
 import ProductCatalog from "../product-catalog";
+import PriceCalculator from "../price-calculator";
+import PriceTrends from "../price-trends";
+import TrustBadges from "../trust-badges";
 
 
 export default function StorefrontPage(props: PageProps<"/[tenant_slug]">) {
@@ -27,7 +34,10 @@ async function StorefrontContent({
   if (!store) {
     notFound();
   }
-  const catalog = await getStorefrontCatalog(store.id);
+  const [catalog, customerState] = await Promise.all([
+    getStorefrontCatalog(store.id),
+    getStorefrontCustomerState(store.id),
+  ]);
 
   return (
     <div>
@@ -85,6 +95,13 @@ async function StorefrontContent({
         </div>
       </section>
 
+      <TrustBadges />
+
+      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1.25fr_0.75fr]">
+        <PriceTrends />
+        <PriceCalculator />
+      </section>
+
       <section
         className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16"
         id="products"
@@ -103,8 +120,10 @@ async function StorefrontContent({
 
         <ProductCatalog
           categories={catalog.categories}
+          isCustomer={Boolean(customerState)}
           products={catalog.products}
           store={store}
+          wishlistedProductIds={customerState?.wishlistedProductIds}
         />
       </section>
 

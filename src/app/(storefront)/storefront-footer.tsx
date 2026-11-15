@@ -36,6 +36,11 @@ export default async function StorefrontFooter({
             {store.description ||
               "زیبایی ماندگار طلا را با انتخابی دقیق و تجربه‌ای مطمئن همراه کنید."}
           </p>
+          <nav aria-label="پیوندهای فروشگاه" className="mt-4 flex flex-wrap gap-4 text-xs text-[#aaa79b]">
+            <Link className="hover:text-[#e2c16d]" href={`/${store.slug}/contact`}>تماس با ما</Link>
+            <Link className="hover:text-[#e2c16d]" href={`/${store.slug}/custom-order`}>سفارش اختصاصی</Link>
+            <Link className="hover:text-[#e2c16d]" href="/wishlist">علاقه‌مندی‌ها</Link>
+          </nav>
         </div>
         <div className="space-y-5 md:text-left">
           <div>

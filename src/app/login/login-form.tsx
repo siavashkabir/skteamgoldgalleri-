@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -32,7 +33,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.replace("/");
+      router.replace(safeRedirectPath(searchParams.get("next")));
       router.refresh();
     } catch {
       setErrorMessage("ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.");
@@ -125,6 +126,16 @@ export default function LoginForm() {
       </button>
     </form>
   );
+}
+
+function safeRedirectPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+    return "/";
+  }
+  const destination = new URL(value, window.location.origin);
+  return destination.origin === window.location.origin
+    ? `${destination.pathname}${destination.search}${destination.hash}`
+    : "/";
 }
 
 function MailIcon() {

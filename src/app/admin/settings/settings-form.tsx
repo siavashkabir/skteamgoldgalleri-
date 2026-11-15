@@ -91,7 +91,7 @@ export default function StoreSettingsForm({
           <textarea className={`${inputClass} min-h-20 py-3`} defaultValue={settings.addressText} maxLength={1000} name="address_text" rows={2} />
         </label>
         <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
-          لینک موقعیت نقشه
+          لینک Google Maps
           <input className={inputClass} defaultValue={settings.locationUrl} name="location_url" type="url" />
         </label>
         <label className="block text-sm text-[#c5c1b6]">
