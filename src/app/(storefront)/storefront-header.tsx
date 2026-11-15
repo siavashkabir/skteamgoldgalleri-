@@ -88,7 +88,7 @@ export default function StorefrontHeader({
           </Link>
           <Link
             className="hidden rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-bg)] transition hover:bg-[var(--color-primary)] md:inline-flex"
-            href="/login"
+            href={`/login?next=${encodeURIComponent(`/${store.slug}`)}`}
           >
             ورود / حساب
           </Link>

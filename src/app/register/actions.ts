@@ -1,8 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { SUPER_ADMIN_EMAIL } from "@/lib/admin-context";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
+import { getStoreBySlug } from "@/lib/storefront-data";
 
 export type RegistrationState = {
   error?: string;
@@ -18,6 +20,7 @@ export async function registerCustomer(
   const nationalId = normalizeDigits(readText(formData, "national_id"));
   const mobile = normalizeDigits(readText(formData, "mobile"));
   const email = readText(formData, "email").toLowerCase();
+  const tenantSlug = readText(formData, "tenant_slug");
   const passwordEntry = formData.get("password");
   const password = typeof passwordEntry === "string" ? passwordEntry : "";
   const address = readText(formData, "address");
@@ -40,6 +43,18 @@ export async function registerCustomer(
   if (!address || address.length > 1000) {
     return { error: "نشانی را وارد کنید (حداکثر ۱۰۰۰ نویسه)." };
   }
+  const tenant = tenantSlug ? await getStoreBySlug(tenantSlug) : null;
+  if (tenantSlug && !tenant) {
+    return { error: "فروشگاه انتخاب‌شده پیدا نشد." };
+  }
+  const reservedOwner = await db.execute({
+    sql: "SELECT 1 FROM tenants WHERE lower(trim(owner_email)) = ? LIMIT 1",
+    args: [email],
+  });
+  if (reservedOwner.rows.length || email === SUPER_ADMIN_EMAIL) {
+    return { error: "این ایمیل برای دسترسی مدیریتی رزرو شده و نمی‌تواند حساب مشتری باشد." };
+  }
+  const tenantId = tenant?.id ?? DEFAULT_TENANT_ID;
 
   const supabaseAdmin = await getSupabaseAdminClient();
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -66,7 +81,7 @@ export async function registerCustomer(
             VALUES (?, ?, 'customer', ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         data.user.id,
-        DEFAULT_TENANT_ID,
+        tenantId,
         `${firstName} ${lastName}`,
         firstName,
         lastName,

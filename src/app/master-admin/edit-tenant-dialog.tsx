@@ -10,6 +10,8 @@ type Props = {
     id: string;
     name: string;
     domain: string | null;
+    ownerEmail: string;
+    templateId: "luxury" | "minimal" | "classic";
     description: string;
     logoUrl: string;
     heroTitle: string;
@@ -91,6 +93,25 @@ export default function EditTenantDialog({ tenant }: Props) {
                 />
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
+                  ایمیل مالک پنل فروشگاه
+                  <input
+                    className={inputClass}
+                    defaultValue={tenant.ownerEmail}
+                    dir="ltr"
+                    name="owner_email"
+                    required
+                    type="email"
+                  />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  قالب فروشگاه
+                  <select className={inputClass} defaultValue={tenant.templateId} name="template_id">
+                    <option value="luxury">لوکس</option>
+                    <option value="minimal">مینیمال</option>
+                    <option value="classic">کلاسیک</option>
+                  </select>
+                </label>
                 <label className="block text-sm text-[#c5c1b6]">
                   وضعیت اشتراک
                   <select
@@ -174,55 +195,35 @@ export default function EditTenantDialog({ tenant }: Props) {
 
               <section className="rounded-xl border border-[#d6ad56]/20 bg-[#d6ad56]/[0.04] p-4 sm:p-5">
                 <h3 className="font-semibold text-[#e2c16d]">تنظیم دامنه</h3>
-                <ol className="mt-3 list-decimal space-y-2 pr-5 text-sm leading-6 text-[#c2bdaf]">
-                  <li>
-                    در پنل Vercel پروژه را باز کنید و در Settings → Domains،
-                    دامنه <bdi dir="ltr">{domain || "example.com"}</bdi> را اضافه
-                    کنید.
-                  </li>
-                  <li>
-                    وارد پنل ثبت‌کننده دامنه شوید و رکوردهای زیر را در DNS
-                    بسازید:
-                  </li>
-                </ol>
+                <p className="mt-3 text-sm leading-6 text-[#c2bdaf]">
+                  در داشبورد Cloudflare دامنه را به Worker متصل کنید و رکورد DNS زیر را بسازید:
+                </p>
                 <div className="mt-4 overflow-x-auto rounded-lg border border-white/[0.08]">
                   <table className="w-full min-w-[400px] text-left text-xs" dir="ltr">
                     <thead className="bg-white/[0.04] text-[#aaa79b]">
                       <tr>
                         <th className="p-3 font-medium">Type</th>
                         <th className="p-3 font-medium">Name / Host</th>
-                        <th className="p-3 font-medium">Value / Target</th>
+                        <th className="p-3 font-medium">Target</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.07]">
-                      <tr>
-                        <td className="p-3">A</td>
-                        <td className="p-3">@</td>
-                        <td className="p-3">76.76.21.21</td>
-                      </tr>
+                    <tbody>
                       <tr>
                         <td className="p-3">CNAME</td>
-                        <td className="p-3">www</td>
-                        <td className="p-3">cname.vercel-dns.com</td>
+                        <td className="p-3">{domain || "shop.example.com"}</td>
+                        <td className="p-3">skteamgoldgalleri.sk-team-it.workers.dev</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <ol className="mt-3 list-decimal space-y-2 pr-5 text-sm leading-6 text-[#c2bdaf]" start={3}>
+                <ol className="mt-3 list-decimal space-y-2 pr-5 text-sm leading-6 text-[#c2bdaf]">
                   <li>
-                    رکوردهای متناقض قبلی برای همین میزبان را حذف کنید، تغییرات
-                    را ذخیره کنید و برای انتشار DNS کمی زمان بدهید.
+                    در تنظیمات Custom Domains همان Worker، دامنه را اضافه و تأیید کنید.
                   </li>
-                  <li>
-                    در Vercel روی Verify بزنید؛ پس از تأیید، HTTPS به‌صورت
-                    خودکار فعال می‌شود. اگر Vercel رکورد تأیید جداگانه نشان
-                    داد، همان مقدار پنل را نیز اضافه کنید.
-                  </li>
+                  <li>برای دامنه ریشه، در صورت نیاز از CNAME flattening کلادفلر استفاده کنید.</li>
                 </ol>
                 <p className="mt-3 text-xs leading-5 text-[#898578]">
-                  این مقادیر برای DNS استاندارد Vercel هستند. اگر مقصد
-                  متفاوتی در تنظیمات دامنه پروژه نمایش داده می‌شود، مقدار
-                  اختصاصی همان پروژه را مبنا قرار دهید.
+                  پس از انتشار DNS، دامنه فروشگاه را در فیلد بالا ذخیره کنید.
                 </p>
               </section>
 

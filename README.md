@@ -27,8 +27,10 @@ order table, and migrates tenant branding, manual currency rates, customer
 registration details, nested categories, product specifications, and platform
 branding settings in existing databases. It also renames the seeded system tenant to
 `گالری طلای امیر`. Tenant admins and customers need a Supabase Auth user and a
-corresponding `profiles` row with their `tenant_id` and the `tenant_admin` or
-`customer` role.
+corresponding `profiles` row with their `tenant_id` and the `customer` role.
+Tenant-admin access is resolved from the authenticated email matching a
+tenant's `owner_email`; the super-admin account is identified by its configured
+email.
 
 Add `/reset-password` to the Supabase Auth redirect URL allow list to enable
 password recovery for both customers and tenant admins. Customer registration
@@ -89,6 +91,30 @@ manage tenant subscriptions, themes, and the storefront announcement banner;
 tenant admins manage catalog, orders, and store contact details. Product and
 store background images are uploaded to the public `products` bucket;
 supported formats are JPEG, PNG, WebP, and AVIF, up to 5 MB each.
+
+For an existing database, apply the tenant owner and storefront template
+migration before deploying the matching application version:
+
+```sh
+npm run db:migrate-tenant-ownership
+```
+
+The migration adds owner email, template, and subscription fields and backfills
+owner emails from existing `tenant_admin` profiles where possible. Assign an
+owner email in `/master-admin` for any tenant that could not be backfilled. The
+owner must also have a Supabase Auth account with that same email to sign in;
+the server resolves their tenant from the verified email and scopes admin
+queries to that tenant. The designated super admin can securely impersonate a
+tenant from its master-admin card. Storefront templates (`luxury`, `minimal`,
+and `classic`) and their themes are managed centrally; tenant owners cannot
+change them. Cloudflare custom domains should use a CNAME pointing to
+`skteamgoldgalleri.sk-team-it.workers.dev`.
+
+The tenant admin's `/admin/orders` page lists only that tenant's orders and
+supports updating each order's status. `/admin/customers` provides a tenant
+scoped customer list and order histories; `/admin/guide` documents the
+tenant-owner capabilities and restrictions. `/master-admin/system-guide`
+contains platform handover instructions.
 
 The public storefront for the default shop is available at `/skteam` (the
 tenant ID `/team-gold-system` is also accepted). Visible products and store categories are loaded from Turso. Customers can add

@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
 
 async function Dashboard() {
   const { tenantId, tenantName } = await getTenantAdminContext();
-  const [products, categories] = await Promise.all([
+  const [products, categories, tenantResult] = await Promise.all([
     db.execute({
       sql: "SELECT COUNT(*) AS count FROM products WHERE tenant_id = ?",
       args: [tenantId],
@@ -23,7 +23,21 @@ async function Dashboard() {
       sql: "SELECT COUNT(*) AS count FROM categories WHERE tenant_id = ?",
       args: [tenantId],
     }),
+    db.execute({
+      sql: "SELECT status, expiry_date FROM tenants WHERE id = ?",
+      args: [tenantId],
+    }),
   ]);
+  const tenant = tenantResult.rows[0];
+  if (!tenant) {
+    throw new Error("فروشگاه مرتبط با حساب کاربری پیدا نشد.");
+  }
+  const status =
+    tenant.status === "trial" || tenant.status === "suspended"
+      ? tenant.status
+      : "active";
+  const expiryDate =
+    tenant.expiry_date === null ? null : String(tenant.expiry_date);
   const productCount = Number(products.rows[0]?.count ?? 0);
   const categoryCount = Number(categories.rows[0]?.count ?? 0);
 
@@ -34,6 +48,40 @@ async function Dashboard() {
       <p className="mt-2 text-sm text-[#969387]">
         محصولات و دسته‌بندی‌های فروشگاه خود را از اینجا مدیریت کنید.
       </p>
+
+      <section className="mt-7 rounded-2xl border border-[#d6ad56]/20 bg-gradient-to-br from-[#d6ad56]/[0.09] to-[#171716] p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <p className="text-xs text-[#aaa79b]">وضعیت اشتراک فروشگاه</p>
+            <p className="mt-2 text-lg font-semibold text-[#e2c16d]">
+              {status === "active" ? "فعال" : status === "trial" ? "آزمایشی" : "تعلیق‌شده"}
+            </p>
+            <p className="mt-2 text-xs text-[#969387]">
+              {expiryDate
+                ? `تاریخ پایان: ${new Intl.DateTimeFormat("fa-IR", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${expiryDate}T00:00:00Z`))}`
+                : "تاریخ پایان اشتراک ثبت نشده است."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              className="rounded-xl bg-[#d6ad56] px-4 py-3 text-xs font-semibold text-[#211a0d] transition hover:bg-[#e2bf70]"
+              href={`https://t.me/share/url?text=${encodeURIComponent(`سلام، برای تمدید اشتراک فروشگاه ${tenantName} راهنمایی می‌خواهم.`)}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              تمدید اشتراک در تلگرام
+            </a>
+            <a
+              className="rounded-xl border border-emerald-400/25 px-4 py-3 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/[0.08]"
+              href={`https://wa.me/?text=${encodeURIComponent(`سلام، برای تمدید اشتراک فروشگاه ${tenantName} راهنمایی می‌خواهم.`)}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              تمدید اشتراک در واتساپ
+            </a>
+          </div>
+        </div>
+      </section>
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <DashboardCard

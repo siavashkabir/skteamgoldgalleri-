@@ -32,6 +32,7 @@ const fallbackDefaultStore: StorefrontStore = {
   themeSettings: DEFAULT_THEME_SETTINGS,
   status: "active",
   expiryDate: null,
+  templateId: "luxury",
 };
 
 let warnedAboutBuildFallback = false;
@@ -78,7 +79,7 @@ export async function getStoreBySlug(
                      t.telegram_url, t.whatsapp_url, t.logo_url, t.hero_title,
                      t.hero_subtitle, t.phone_numbers, t.address_text,
                      t.location_url, t.social_links, t.toman_rate,
-                     t.theme_settings, t.status, t.expiry_date
+                     t.theme_settings, t.status, t.expiry_date, t.template_id
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
@@ -113,7 +114,7 @@ export async function getStoreBySlug(
         sql:         `SELECT id, name, description, instagram_url, telegram_url,
                      whatsapp_url, logo_url, hero_title, hero_subtitle,
                      phone_numbers, address_text, location_url, social_links,
-                     toman_rate, theme_settings, status, expiry_date
+                     toman_rate, theme_settings, status, expiry_date, template_id
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
@@ -153,6 +154,7 @@ export async function getStoreBySlug(
     themeSettings: parseThemeSettings(row.theme_settings),
     status: readTenantStatus(row.status),
     expiryDate: row.expiry_date === null ? null : String(row.expiry_date),
+    templateId: readTemplateId(row.template_id),
   };
 }
 
@@ -378,6 +380,13 @@ function readTenantStatus(value: unknown): StorefrontStore["status"] {
     return value;
   }
   return "active";
+}
+
+function readTemplateId(value: unknown): StorefrontStore["templateId"] {
+  if (value === "minimal" || value === "classic") {
+    return value;
+  }
+  return "luxury";
 }
 
 function parseStringRecord(value: unknown): Record<string, string> {

@@ -98,12 +98,18 @@ export async function createMockOrder(
   }
   const tenantId = [...tenantIds][0];
   const tenantResult = await db.execute({
-    sql: "SELECT id, name FROM tenants WHERE id = ?",
+    sql: "SELECT id, name, status FROM tenants WHERE id = ?",
     args: [tenantId],
   });
   const tenant = tenantResult.rows[0];
   if (!tenant) {
     return { error: "فروشگاه این سبد خرید دیگر در دسترس نیست." };
+  }
+  if (tenant.status === "suspended") {
+    return { error: "این فروشگاه موقتاً بسته است و سفارش جدید نمی‌پذیرد." };
+  }
+  if (tenantId !== customer.tenantId) {
+    return { error: "برای ثبت سفارش، باید وارد حساب مشتری همین فروشگاه شوید." };
   }
 
   let total = 0;

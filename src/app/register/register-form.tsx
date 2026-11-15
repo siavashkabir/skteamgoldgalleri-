@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { registerCustomer } from "./actions";
 
-export default function RegisterForm() {
+export default function RegisterForm({ tenantSlug }: { tenantSlug: string }) {
   const [state, action, pending] = useActionState(registerCustomer, {});
+  const loginHref = `/login?next=${encodeURIComponent(`/${tenantSlug}`)}`;
   return (
     <form action={action} className="space-y-4">
+      <input name="tenant_slug" type="hidden" value={tenantSlug} />
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm text-[#c5c1b6]">
           نام
@@ -56,14 +58,14 @@ export default function RegisterForm() {
         </p>
       ) : null}
       {state.success ? (
-        <Link className="block text-center text-sm text-[#e2c16d]" href="/login">رفتن به صفحه ورود</Link>
+        <Link className="block text-center text-sm text-[#e2c16d]" href={loginHref}>رفتن به صفحه ورود</Link>
       ) : (
         <button className={buttonClass} disabled={pending} type="submit">
           {pending ? "در حال ساخت حساب..." : "ثبت‌نام"}
         </button>
       )}
       <p className="text-center text-sm text-[#858378]">
-        قبلاً ثبت‌نام کرده‌اید؟ <Link className="text-[#e2c16d]" href="/login">ورود</Link>
+        قبلاً ثبت‌نام کرده‌اید؟ <Link className="text-[#e2c16d]" href={loginHref}>ورود</Link>
       </p>
     </form>
   );

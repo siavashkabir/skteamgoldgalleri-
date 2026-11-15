@@ -1,6 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontCategory, StorefrontStore } from "@/lib/storefront-types";
 import { getStorefrontBanner } from "@/lib/storefront-data";
+import {
+  DEFAULT_THEME_SETTINGS,
+  type ThemeSettings,
+} from "@/lib/theme-settings";
 import StorefrontFooter from "./storefront-footer";
 import StorefrontHeader from "./storefront-header";
 import { MarketPriceProvider } from "./market-price-context";
@@ -14,15 +18,15 @@ export default async function StorefrontFrame({
   store: StorefrontStore;
   categories?: StorefrontCategory[];
 }) {
-  const { primary, background, text, accent, card, bgImageUrl, bgOpacity } =
-    store.themeSettings;
+  const { bgImageUrl, bgOpacity } = store.themeSettings;
+  const palette = getTemplatePalette(store.templateId, store.themeSettings);
   const banner = await getStorefrontBanner();
   const themeStyle = {
-    "--color-primary": primary,
-    "--color-bg": background,
-    "--color-text": text,
-    "--color-accent": accent,
-    "--color-card": card,
+    "--color-primary": palette.primary,
+    "--color-bg": palette.background,
+    "--color-text": palette.text,
+    "--color-accent": palette.accent,
+    "--color-card": palette.card,
   } as CSSProperties & {
     "--color-primary": string;
     "--color-bg": string;
@@ -35,7 +39,7 @@ export default async function StorefrontFrame({
   return (
     <MarketPriceProvider>
       <div
-        className="storefront-theme relative flex min-h-screen flex-col bg-[var(--color-bg)] text-[var(--color-text)]"
+        className={`storefront-theme template-${store.templateId} relative flex min-h-screen flex-col bg-[var(--color-bg)] text-[var(--color-text)]`}
         style={themeStyle}
       >
         {bgImageUrl ? (
@@ -87,6 +91,62 @@ export default async function StorefrontFrame({
       </div>
     </MarketPriceProvider>
   );
+}
+
+function getTemplatePalette(
+  templateId: StorefrontStore["templateId"],
+  theme: ThemeSettings,
+): ThemeSettings {
+  const presets: Record<
+    StorefrontStore["templateId"],
+    Pick<ThemeSettings, "primary" | "background" | "text" | "accent" | "card">
+  > = {
+    luxury: {
+      primary: "#d4af37",
+      background: "#0a0a0a",
+      text: "#ffffff",
+      accent: "#e2c16d",
+      card: "#151514",
+    },
+    minimal: {
+      primary: "#20242a",
+      background: "#ffffff",
+      text: "#17191c",
+      accent: "#5b626a",
+      card: "#f7f7f5",
+    },
+    classic: {
+      primary: "#6e1d2a",
+      background: "#f3ead7",
+      text: "#451a1a",
+      accent: "#a77a3b",
+      card: "#fff8e9",
+    },
+  };
+  const template = presets[templateId];
+  return {
+    ...theme,
+    primary:
+      theme.primary === DEFAULT_THEME_SETTINGS.primary
+        ? template.primary
+        : theme.primary,
+    background:
+      theme.background === DEFAULT_THEME_SETTINGS.background
+        ? template.background
+        : theme.background,
+    text:
+      theme.text === DEFAULT_THEME_SETTINGS.text
+        ? template.text
+        : theme.text,
+    accent:
+      theme.accent === DEFAULT_THEME_SETTINGS.accent
+        ? template.accent
+        : theme.accent,
+    card:
+      theme.card === DEFAULT_THEME_SETTINGS.card
+        ? template.card
+        : theme.card,
+  };
 }
 
 function getSubscriptionWarning(

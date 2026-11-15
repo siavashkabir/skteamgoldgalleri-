@@ -35,7 +35,11 @@ export async function middleware(request: NextRequest) {
   });
 
   const { error } = await supabase.auth.getClaims();
-  if (error) {
+  if (
+    error &&
+    error.status !== 401 &&
+    error.name !== "AuthSessionMissingError"
+  ) {
     throw error;
   }
 

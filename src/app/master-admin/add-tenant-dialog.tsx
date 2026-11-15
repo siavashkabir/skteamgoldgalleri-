@@ -85,6 +85,41 @@ export default function AddTenantDialog() {
                   type="text"
                 />
               </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[#e5e0d4]">
+                  ایمیل مالک پنل فروشگاه
+                </span>
+                <input
+                  autoComplete="email"
+                  className="h-12 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-4 text-left text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/70"
+                  dir="ltr"
+                  name="owner_email"
+                  required
+                  type="email"
+                />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <label className="text-sm text-[#c5c1b6]">
+                  قالب فروشگاه
+                  <select className={inputClass} defaultValue="luxury" name="template_id">
+                    <option value="luxury">لوکس</option>
+                    <option value="minimal">مینیمال</option>
+                    <option value="classic">کلاسیک</option>
+                  </select>
+                </label>
+                <label className="text-sm text-[#c5c1b6]">
+                  وضعیت اشتراک
+                  <select className={inputClass} defaultValue="active" name="status">
+                    <option value="active">فعال</option>
+                    <option value="trial">آزمایشی</option>
+                    <option value="suspended">تعلیق‌شده</option>
+                  </select>
+                </label>
+                <label className="text-sm text-[#c5c1b6]">
+                  پایان اشتراک
+                  <input className={inputClass} name="expiry_date" type="date" />
+                </label>
+              </div>
               <ThemeSettingsFields />
 
               {state.error ? (
@@ -129,6 +164,9 @@ export default function AddTenantDialog() {
     </>
   );
 }
+
+const inputClass =
+  "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";
 
 function PlusIcon() {
   return (

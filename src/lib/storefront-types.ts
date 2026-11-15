@@ -22,6 +22,7 @@ export type StorefrontStore = {
   themeSettings: ThemeSettings;
   status: "active" | "trial" | "suspended";
   expiryDate: string | null;
+  templateId: "luxury" | "minimal" | "classic";
 };
 
 export type StorefrontCategory = {

@@ -33,6 +33,8 @@ const schema = [
     theme_settings TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff","accent":"#e2c16d","card":"#151514","bgImageUrl":null,"bgOpacity":45}',
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended')),
     expiry_date TEXT,
+    owner_email TEXT,
+    template_id TEXT NOT NULL DEFAULT 'luxury',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   `CREATE TABLE IF NOT EXISTS profiles (
@@ -170,6 +172,8 @@ try {
     ["theme_settings", `TEXT NOT NULL DEFAULT '{"primary":"#d4af37","background":"#0a0a0a","text":"#ffffff","accent":"#e2c16d","card":"#151514","bgImageUrl":null,"bgOpacity":45}'`],
     ["status", "TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended'))"],
     ["expiry_date", "TEXT"],
+    ["owner_email", "TEXT"],
+    ["template_id", "TEXT NOT NULL DEFAULT 'luxury'"],
   ]) {
     await ensureColumn("tenants", column, definition);
   }
@@ -208,6 +212,36 @@ try {
   ]) {
     await ensureColumn("orders", column, definition);
   }
+
+  await client.execute(
+    `UPDATE tenants
+     SET owner_email = (
+       SELECT lower(trim(p.email))
+       FROM profiles p
+       WHERE p.tenant_id = tenants.id
+         AND p.role = 'tenant_admin'
+         AND p.email IS NOT NULL
+         AND trim(p.email) <> ''
+       ORDER BY p.rowid
+       LIMIT 1
+     )
+     WHERE owner_email IS NULL OR trim(owner_email) = ''`,
+  );
+  const duplicateOwners = await client.execute(
+    `SELECT lower(trim(owner_email)) AS normalized_email
+     FROM tenants WHERE owner_email IS NOT NULL AND trim(owner_email) <> ''
+     GROUP BY lower(trim(owner_email)) HAVING COUNT(*) > 1 LIMIT 1`,
+  );
+  if (duplicateOwners.rows.length) {
+    throw new Error(
+      "Multiple tenants share an owner email; assign distinct tenant owner emails before initializing.",
+    );
+  }
+  await client.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS tenants_owner_email_unique
+     ON tenants (lower(trim(owner_email)))
+     WHERE owner_email IS NOT NULL AND trim(owner_email) <> ''`,
+  );
 
   const productColumns = new Set(
     (await client.execute("PRAGMA table_info(products)")).rows.map(

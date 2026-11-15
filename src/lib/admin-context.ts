@@ -3,6 +3,10 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { readImpersonatedTenantId } from "@/lib/admin-impersonation";
+import { DEFAULT_TENANT_ID } from "@/lib/storefront-types";
+
+export const SUPER_ADMIN_EMAIL = "sk.team.it@gmail.com";
 
 export type TenantAdminContext = {
   userId: string;
@@ -105,26 +109,62 @@ async function getProfileForUser(
 }
 
 export async function getTenantAdminContext(): Promise<TenantAdminContext> {
-  const context = await getAuthenticatedProfile();
-  if (context.role === "tenant_admin") {
-    return {
-      userId: context.userId,
-      email: context.email,
-      tenantId: context.tenantId,
-      tenantName: context.tenantName,
-      role: "tenant_admin",
-    };
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error) {
+    if (error.status === 401 || error.name === "AuthSessionMissingError") {
+      redirect("/login?error=access_denied");
+    }
+    throw error;
   }
-  if (context.role === "super_admin") {
+  const userId = data?.claims?.sub;
+  const email =
+    typeof data?.claims?.email === "string"
+      ? data.claims.email.trim().toLowerCase()
+      : "";
+  if (typeof userId !== "string" || !email) {
+    redirect("/login?error=access_denied");
+  }
+
+  if (email === SUPER_ADMIN_EMAIL) {
+    const impersonatedTenantId = await readImpersonatedTenantId();
+    const tenantId = impersonatedTenantId ?? DEFAULT_TENANT_ID;
+    const tenant = await db.execute({
+      sql: "SELECT id, name FROM tenants WHERE id = ?",
+      args: [tenantId],
+    });
+    const row = tenant.rows[0];
+    if (!row) {
+      if (impersonatedTenantId) {
+        redirect("/master-admin");
+      }
+      throw new Error("فروشگاه پیش‌فرض پنل مدیریت پیدا نشد.");
+    }
     return {
-      userId: context.userId,
-      email: context.email,
-      tenantId: context.tenantId,
-      tenantName: context.tenantName,
+      userId,
+      email,
+      tenantId: String(row.id),
+      tenantName: String(row.name),
       role: "super_admin",
     };
   }
-  notFound();
+
+  const result = await db.execute({
+    sql: `SELECT id, name FROM tenants
+          WHERE lower(trim(owner_email)) = ? LIMIT 1`,
+    args: [email],
+  });
+  const tenant = result.rows[0];
+  if (!tenant) {
+    redirect("/login?error=access_denied");
+  }
+  return {
+    userId,
+    email,
+    tenantId: String(tenant.id),
+    tenantName: String(tenant.name),
+    role: "tenant_admin",
+  };
 }
 
 export async function getCustomerContext(): Promise<AuthenticatedProfile> {

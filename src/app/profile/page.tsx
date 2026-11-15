@@ -47,9 +47,9 @@ async function CustomerDashboard() {
       }),
       db.execute({
         sql: `SELECT id, status, total, created_at FROM orders
-              WHERE customer_id = ?
+              WHERE customer_id = ? AND tenant_id = ?
               ORDER BY created_at DESC`,
-        args: [customer.userId],
+        args: [customer.userId, customer.tenantId],
       }),
       db.execute({
         sql: `SELECT id, name, price FROM products

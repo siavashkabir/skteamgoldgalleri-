@@ -9,7 +9,7 @@ import AddTenantDialog from "./add-tenant-dialog";
 import EditTenantDialog from "./edit-tenant-dialog";
 import PlatformSettingsForm from "./platform-settings-form";
 import GlobalBannerForm from "./global-banner-form";
-import { signOut } from "./actions";
+import { impersonateTenant, signOut } from "./actions";
 import Link from "next/link";
 import { parseThemeSettings, type ThemeSettings } from "@/lib/theme-settings";
 
@@ -19,6 +19,8 @@ type Tenant = {
   id: string;
   name: string;
   domain: string | null;
+  ownerEmail: string;
+  templateId: "luxury" | "minimal" | "classic";
   createdAt: string;
   description: string;
   logoUrl: string;
@@ -55,7 +57,7 @@ async function MasterAdminContent() {
   const { email: accountEmail } = await getSuperAdminContext();
 
   const [result, platformResult, masterSettingsResult, toolsResult] = await Promise.all([
-    db.execute(`SELECT id, name, domain, created_at, description, logo_url, hero_title,
+    db.execute(`SELECT id, name, domain, owner_email, template_id, created_at, description, logo_url, hero_title,
                        hero_subtitle, phone_numbers, address_text, location_url,
                        instagram_url, telegram_url, whatsapp_url, toman_rate,
                        theme_settings, status, expiry_date
@@ -71,6 +73,8 @@ async function MasterAdminContent() {
     id: String(row.id),
     name: String(row.name),
     domain: row.domain === null ? null : String(row.domain),
+    ownerEmail: row.owner_email === null ? "" : String(row.owner_email),
+    templateId: row.template_id === "minimal" || row.template_id === "classic" ? row.template_id : "luxury",
     createdAt: String(row.created_at),
     description: row.description === null ? "" : String(row.description),
     logoUrl: row.logo_url === null ? "" : String(row.logo_url),
@@ -137,6 +141,13 @@ async function MasterAdminContent() {
             >
               ◈
               ابزارهای من
+            </Link>
+            <Link
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-[#9c9a90] transition hover:bg-white/[0.04] hover:text-[#f5f2e9]"
+              href="/master-admin/system-guide"
+            >
+              ◉
+              راهنمای سامانه
             </Link>
           </nav>
 
@@ -378,7 +389,18 @@ async function MasterAdminContent() {
                             </Link>
                           </td>
                           <td className="px-6 py-4">
-                            <EditTenantDialog tenant={tenant} />
+                            <div className="flex items-center gap-2">
+                              <EditTenantDialog tenant={tenant} />
+                              <form action={impersonateTenant}>
+                                <input name="tenant_id" type="hidden" value={tenant.id} />
+                                <button
+                                  className="whitespace-nowrap rounded-lg border border-emerald-400/20 px-3 py-2 text-xs text-emerald-200 transition hover:bg-emerald-400/[0.08]"
+                                  type="submit"
+                                >
+                                  ورود به پنل فروشگاه
+                                </button>
+                              </form>
+                            </div>
                           </td>
                         </tr>
                       ))}

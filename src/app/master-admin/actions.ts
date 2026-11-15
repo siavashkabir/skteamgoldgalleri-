@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getSuperAdminContext } from "@/lib/admin-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase";
+import { setImpersonatedTenant, clearImpersonatedTenant } from "@/lib/admin-impersonation";
 import {
   isThemeColor,
   type ThemeSettings,
@@ -24,6 +25,10 @@ export async function createTenant(
 
   const nameEntry = formData.get("name");
   const domainEntry = formData.get("domain");
+  const ownerEmail = readText(formData, "owner_email").toLowerCase();
+  const templateId = readTemplateId(formData);
+  const status = readTenantStatus(formData);
+  const expiryDate = readExpiryDate(formData);
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
   const domain = typeof domainEntry === "string" ? domainEntry.trim() : "";
   const id = crypto.randomUUID();
@@ -37,14 +42,41 @@ export async function createTenant(
   if (domain.length > 253) {
     return { error: "نشانی دامنه نباید بیشتر از ۲۵۳ نویسه باشد." };
   }
+  if (!isEmail(ownerEmail)) {
+    return { error: "ایمیل مالک فروشگاه معتبر نیست." };
+  }
+  const existingOwner = await db.execute({
+    sql: "SELECT 1 FROM tenants WHERE lower(trim(owner_email)) = ? LIMIT 1",
+    args: [ownerEmail],
+  });
+  if (existingOwner.rows.length) {
+    return { error: "این ایمیل قبلاً مالک یک فروشگاه ثبت شده است." };
+  }
+  if (await isCustomerEmail(ownerEmail)) {
+    return { error: "این ایمیل به حساب مشتری تعلق دارد؛ برای مالک فروشگاه از یک حساب مدیریتی استفاده کنید." };
+  }
+  if (!templateId || !status || expiryDate === false) {
+    return { error: "قالب یا وضعیت اشتراک معتبر نیست." };
+  }
   const themeResult = await readThemeSettings(formData, id);
   if (!themeResult.theme) {
     return { error: themeResult.error ?? "تنظیمات پوسته فروشگاه معتبر نیستند." };
   }
 
   await db.execute({
-    sql: "INSERT INTO tenants (id, name, domain, theme_settings) VALUES (?, ?, ?, ?)",
-    args: [id, name, domain || null, JSON.stringify(themeResult.theme)],
+    sql: `INSERT INTO tenants
+            (id, name, domain, owner_email, template_id, status, expiry_date, theme_settings)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      name,
+      domain || null,
+      ownerEmail,
+      templateId,
+      status,
+      expiryDate || null,
+      JSON.stringify(themeResult.theme),
+    ],
   });
 
   revalidatePath("/master-admin");
@@ -60,6 +92,8 @@ export async function updateTenant(
   const idEntry = formData.get("id");
   const nameEntry = formData.get("name");
   const domainEntry = formData.get("domain");
+  const ownerEmail = readText(formData, "owner_email").toLowerCase();
+  const templateId = readTemplateId(formData);
   const logoUrl = readText(formData, "logo_url");
   const heroTitle = readText(formData, "hero_title");
   const heroSubtitle = readText(formData, "hero_subtitle");
@@ -89,6 +123,23 @@ export async function updateTenant(
   }
   if (!status || expiryDate === false) {
     return { error: "وضعیت یا تاریخ پایان اشتراک معتبر نیست." };
+  }
+  if (!isEmail(ownerEmail)) {
+    return { error: "ایمیل مالک فروشگاه معتبر نیست." };
+  }
+  const existingOwner = await db.execute({
+    sql: `SELECT 1 FROM tenants
+          WHERE lower(trim(owner_email)) = ? AND id <> ? LIMIT 1`,
+    args: [ownerEmail, id],
+  });
+  if (existingOwner.rows.length) {
+    return { error: "این ایمیل قبلاً مالک یک فروشگاه دیگر است." };
+  }
+  if (await isCustomerEmail(ownerEmail)) {
+    return { error: "این ایمیل به حساب مشتری تعلق دارد؛ برای مالک فروشگاه از یک حساب مدیریتی استفاده کنید." };
+  }
+  if (!templateId) {
+    return { error: "قالب فروشگاه معتبر نیست." };
   }
   if (
     domain.length > 253 ||
@@ -129,13 +180,16 @@ export async function updateTenant(
   }
 
   const result = await db.execute({
-    sql: `UPDATE tenants SET name = ?, domain = ?, description = ?, logo_url = ?, hero_title = ?,
+    sql: `UPDATE tenants SET name = ?, domain = ?, owner_email = ?, template_id = ?,
+          description = ?, logo_url = ?, hero_title = ?,
           hero_subtitle = ?, phone_numbers = ?, address_text = ?, location_url = ?,
           instagram_url = ?, telegram_url = ?, whatsapp_url = ?, social_links = ?,
           toman_rate = ?, theme_settings = ?, status = ?, expiry_date = ? WHERE id = ?`,
     args: [
       name,
       domain || null,
+      ownerEmail,
+      templateId,
       description || null,
       logoUrl || null,
       heroTitle || null,
@@ -246,6 +300,29 @@ export async function deleteMasterTool(formData: FormData): Promise<void> {
   revalidatePath("/master-admin/tools");
 }
 
+export async function impersonateTenant(formData: FormData): Promise<never> {
+  await getSuperAdminContext();
+  const tenantId = readText(formData, "tenant_id");
+  if (!tenantId) {
+    throw new Error("شناسه فروشگاه معتبر نیست.");
+  }
+  const tenant = await db.execute({
+    sql: "SELECT id FROM tenants WHERE id = ?",
+    args: [tenantId],
+  });
+  if (!tenant.rows.length) {
+    throw new Error("فروشگاه پیدا نشد.");
+  }
+  await setImpersonatedTenant(tenantId);
+  redirect("/admin");
+}
+
+export async function stopImpersonatingTenant(): Promise<never> {
+  await getSuperAdminContext();
+  await clearImpersonatedTenant();
+  redirect("/master-admin");
+}
+
 export async function savePlatformSettings(
   _previousState: TenantActionState,
   formData: FormData,
@@ -280,6 +357,7 @@ export async function savePlatformSettings(
 }
 
 export async function signOut() {
+  await clearImpersonatedTenant();
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signOut();
 
@@ -371,6 +449,29 @@ function readTenantStatus(
   return status === "active" || status === "trial" || status === "suspended"
     ? status
     : null;
+}
+
+function readTemplateId(
+  formData: FormData,
+): "luxury" | "minimal" | "classic" | null {
+  const templateId = readText(formData, "template_id");
+  return templateId === "luxury" ||
+    templateId === "minimal" ||
+    templateId === "classic"
+    ? templateId
+    : null;
+}
+
+function isEmail(value: string): boolean {
+  return value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+async function isCustomerEmail(email: string): Promise<boolean> {
+  const result = await db.execute({
+    sql: "SELECT 1 FROM profiles WHERE lower(trim(email)) = ? AND role = 'customer' LIMIT 1",
+    args: [email],
+  });
+  return result.rows.length > 0;
 }
 
 function readExpiryDate(formData: FormData): string | null | false {

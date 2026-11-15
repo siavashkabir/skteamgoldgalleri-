@@ -16,10 +16,17 @@ export default function LoginPage(props: PageProps<"/login">) {
 async function LoginPageContent({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
 }) {
   const query = await searchParams;
   const nextPath = safeNextPath(query.next);
+  const tenantSlug = getTenantSlugFromPath(nextPath);
+  const registerHref = tenantSlug
+    ? `/register?tenant=${encodeURIComponent(tenantSlug)}`
+    : "/register";
+  const accessDenied =
+    (Array.isArray(query.error) ? query.error[0] : query.error) ===
+    "access_denied";
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -30,7 +37,7 @@ async function LoginPageContent({
   ) {
     throw error;
   }
-  if (!error && data?.claims?.sub) {
+  if (!error && data?.claims?.sub && !accessDenied) {
     redirect(nextPath);
   }
 
@@ -88,12 +95,20 @@ async function LoginPageContent({
                 برای ادامه، با حساب کاربری خود وارد شوید.
               </p>
             </div>
+            {accessDenied ? (
+              <p
+                className="mb-5 rounded-xl border border-red-400/20 bg-red-400/[0.07] px-4 py-3 text-sm leading-6 text-red-200"
+                role="alert"
+              >
+                دسترسی رد شد. فقط مالک فروشگاه یا مدیر کل می‌تواند وارد پنل مدیریت شود.
+              </p>
+            ) : null}
             <LoginForm />
             <div className="mt-5 flex justify-between gap-4 text-xs">
               <Link className="text-[#aaa79b] hover:text-[#e2c16d]" href="/forgot-password">
                 فراموشی رمز عبور
               </Link>
-              <Link className="text-[#e2c16d] hover:text-[#f0d48f]" href="/register">
+              <Link className="text-[#e2c16d] hover:text-[#f0d48f]" href={registerHref}>
                 ثبت‌نام مشتری
               </Link>
             </div>
@@ -106,6 +121,18 @@ async function LoginPageContent({
       </div>
     </main>
   );
+}
+
+function getTenantSlugFromPath(path: string): string | null {
+  const slug = path.split("/")[1];
+  if (
+    !slug ||
+    ["admin", "master-admin", "profile", "login", "register", "cart", "checkout", "wishlist", "contact", "custom-order"].includes(slug) ||
+    !/^[a-zA-Z0-9-]{1,120}$/.test(slug)
+  ) {
+    return null;
+  }
+  return slug;
 }
 
 function safeNextPath(value: string | string[] | undefined): string {

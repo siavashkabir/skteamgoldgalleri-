@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getTenantAdminContext } from "@/lib/admin-context";
+import { readImpersonatedTenantId } from "@/lib/admin-impersonation";
 import { signOut } from "@/app/master-admin/actions";
+import { stopImpersonatingTenant } from "@/app/master-admin/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +13,10 @@ const navigation = [
   { href: "/admin/categories", label: "مدیریت دسته‌بندی‌ها", icon: "◇" },
   { href: "/admin/products", label: "مدیریت محصولات", icon: "◈" },
   { href: "/admin/orders", label: "سفارش‌ها", icon: "▤" },
+  { href: "/admin/customers", label: "مشتریان", icon: "♙" },
   { href: "/admin/custom-orders", label: "سفارش اختصاصی", icon: "✧" },
   { href: "/admin/settings", label: "تنظیمات فروشگاه", icon: "⚙" },
+  { href: "/admin/guide", label: "راهنمای فروشگاه", icon: "ⓘ" },
 ];
 
 export default function TenantAdminLayout({
@@ -33,6 +37,7 @@ export default function TenantAdminLayout({
 
 async function TenantAdminShell({ children }: { children: React.ReactNode }) {
   const { email, tenantName } = await getTenantAdminContext();
+  const isImpersonating = (await readImpersonatedTenantId()) !== null;
 
   return (
     <div className="min-h-screen bg-[#10100f] text-[#f5f2e9] lg:flex">
@@ -88,6 +93,19 @@ async function TenantAdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </form>
         </header>
+        {isImpersonating ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-300/15 bg-amber-300/[0.07] px-5 py-3 text-xs text-amber-100 sm:px-8 lg:px-10">
+            <span>شما به‌عنوان مدیر کل در پنل این فروشگاه هستید.</span>
+            <form action={stopImpersonatingTenant}>
+              <button
+                className="rounded-lg border border-amber-200/20 px-3 py-2 hover:bg-amber-200/10"
+                type="submit"
+              >
+                بازگشت به پنل مدیریت مادر
+              </button>
+            </form>
+          </div>
+        ) : null}
         <div className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
           {children}
         </div>

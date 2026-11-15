@@ -13,6 +13,33 @@
   --color-surface: var(--color-card);
 }
 
+.template-luxury {
+  font-family: "Vazirmatn", "IRANSans", Georgia, serif;
+}
+
+.template-minimal {
+  font-family: "Vazirmatn", "IRANSans", Tahoma, Arial, sans-serif;
+}
+
+.template-minimal :is(article, section, input, button, a) {
+  border-radius: 0.5rem;
+}
+
+.template-classic {
+  font-family: "Vazirmatn", "IRANSans", Georgia, serif;
+}
+
+.template-classic::after {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 16px, color-mix(in srgb, var(--color-accent) 9%, transparent) 16px 17px),
+    repeating-linear-gradient(-45deg, transparent 0 16px, color-mix(in srgb, var(--color-accent) 7%, transparent) 16px 17px);
+  content: "";
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
