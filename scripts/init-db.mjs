@@ -34,7 +34,12 @@ const schema = [
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended')),
     expiry_date TEXT,
     owner_email TEXT,
+    business_type TEXT,
     template_id TEXT NOT NULL DEFAULT 'luxury',
+    enabled_modules TEXT NOT NULL DEFAULT '["ecommerce","gallery"]',
+    kyc_data TEXT NOT NULL DEFAULT '{}',
+    license_url TEXT,
+    legal_agreed_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
   `CREATE TABLE IF NOT EXISTS profiles (
@@ -67,7 +72,9 @@ const schema = [
     is_visible INTEGER NOT NULL DEFAULT 1 CHECK (is_visible IN (0, 1)),
     condition TEXT NOT NULL DEFAULT 'new' CHECK (condition IN ('new', 'used')),
     labor_percentage REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0),
-    specifications TEXT NOT NULL DEFAULT '{}'
+    specifications TEXT NOT NULL DEFAULT '{}',
+    custom_fields TEXT NOT NULL DEFAULT '{}',
+    images TEXT NOT NULL DEFAULT '[]'
   )`,
   `CREATE TABLE IF NOT EXISTS cart_items (
     id TEXT PRIMARY KEY,
@@ -109,6 +116,15 @@ const schema = [
     contact_info TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
+  `CREATE TABLE IF NOT EXISTS bookings (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL REFERENCES tenants(id),
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    service_id TEXT,
+    booking_date TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending'
   )`,
   `CREATE TABLE IF NOT EXISTS reviews (
     id TEXT PRIMARY KEY,
@@ -173,7 +189,12 @@ try {
     ["status", "TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'suspended'))"],
     ["expiry_date", "TEXT"],
     ["owner_email", "TEXT"],
+    ["business_type", "TEXT"],
     ["template_id", "TEXT NOT NULL DEFAULT 'luxury'"],
+    ["enabled_modules", `TEXT NOT NULL DEFAULT '["ecommerce","gallery"]'`],
+    ["kyc_data", "TEXT NOT NULL DEFAULT '{}'"],
+    ["license_url", "TEXT"],
+    ["legal_agreed_at", "TEXT"],
   ]) {
     await ensureColumn("tenants", column, definition);
   }
@@ -186,6 +207,8 @@ try {
     ["condition", "TEXT NOT NULL DEFAULT 'new' CHECK (condition IN ('new', 'used'))"],
     ["labor_percentage", "REAL NOT NULL DEFAULT 0 CHECK (labor_percentage >= 0)"],
     ["specifications", "TEXT NOT NULL DEFAULT '{}'"],
+    ["custom_fields", "TEXT NOT NULL DEFAULT '{}'"],
+    ["images", "TEXT NOT NULL DEFAULT '[]'"],
   ]) {
     await ensureColumn("products", column, definition);
   }
@@ -265,7 +288,7 @@ try {
        AND name IN ('tenants', 'profiles', 'categories', 'products',
                     'cart_items', 'orders', 'order_items', 'custom_orders',
                     'reviews', 'wishlist', 'platform_settings', 'master_tools',
-                    'master_settings')`,
+                    'master_settings', 'bookings')`,
   );
   const createdTables = new Set(result.rows.map((row) => row.name));
   const expectedTables = [
@@ -282,6 +305,7 @@ try {
     "platform_settings",
     "master_tools",
     "master_settings",
+    "bookings",
   ];
   const missingTables = expectedTables.filter(
     (table) => !createdTables.has(table),

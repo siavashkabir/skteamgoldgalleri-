@@ -1,4 +1,4 @@
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import Image from "next/image";
@@ -17,7 +17,7 @@ type CustomOrder = {
 };
 
 export default async function CustomOrdersPage() {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("gallery");
   const result = await db.execute({
     sql: `SELECT co.id, co.image_url, co.description, co.contact_info,
                  co.status, co.created_at, p.full_name, p.id AS customer_id,

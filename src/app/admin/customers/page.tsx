@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTenantAdminContext } from "@/lib/admin-context";
+import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 
 type Customer = {
@@ -12,7 +13,17 @@ type Customer = {
 };
 
 export default async function CustomersPage() {
-  const { tenantId } = await getTenantAdminContext();
+  const context = await getTenantAdminContext();
+  if (
+    context.role !== "super_admin" &&
+    !context.enabledModules.some(
+      (module) =>
+        module === "ecommerce" || module === "booking" || module === "tourism",
+    )
+  ) {
+    notFound();
+  }
+  const { tenantId } = context;
   const result = await db.execute({
     sql: `SELECT p.id, p.full_name, p.email, p.mobile,
                  COUNT(DISTINCT o.id) AS order_count,

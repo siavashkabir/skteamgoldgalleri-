@@ -13,7 +13,14 @@ export default function AdminDashboardPage() {
 }
 
 async function Dashboard() {
-  const { tenantId, tenantName } = await getTenantAdminContext();
+  const { tenantId, tenantName, enabledModules, role } =
+    await getTenantAdminContext();
+  const canUseEcommerce =
+    role === "super_admin" || enabledModules.includes("ecommerce");
+  const canUseBookings =
+    role === "super_admin" ||
+    enabledModules.includes("booking") ||
+    enabledModules.includes("tourism");
   const [products, categories, tenantResult] = await Promise.all([
     db.execute({
       sql: "SELECT COUNT(*) AS count FROM products WHERE tenant_id = ?",
@@ -84,30 +91,36 @@ async function Dashboard() {
       </section>
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <DashboardCard
+        {canUseEcommerce ? <DashboardCard
           href="/admin/products"
           label="محصولات"
           value={productCount.toLocaleString("fa-IR")}
           description="محصولات ثبت‌شده در فروشگاه"
-        />
-        <DashboardCard
+        /> : null}
+        {canUseEcommerce ? <DashboardCard
           href="/admin/categories"
           label="دسته‌بندی‌ها"
           value={categoryCount.toLocaleString("fa-IR")}
           description="دسته‌بندی‌های اصلی و زیرمجموعه"
-        />
-        <DashboardCard
+        /> : null}
+        {canUseEcommerce ? <DashboardCard
           href="/admin/orders"
           label="سفارش‌ها"
           value="—"
           description="مدیریت سفارش‌های ثبت‌شده"
-        />
-        <DashboardCard
+        /> : null}
+        {canUseBookings ? <DashboardCard
+          href="/admin/bookings"
+          label="درخواست‌های رزرو"
+          value="مشاهده"
+          description="درخواست‌های ثبت‌شده برای هماهنگی"
+        /> : null}
+        {enabledModules.includes("gallery") || role === "super_admin" ? <DashboardCard
           href="/admin/custom-orders"
           label="سفارش اختصاصی"
           value="مشاهده"
           description="درخواست‌های طراحی اختصاصی مشتریان"
-        />
+        /> : null}
       </section>
 
       <section className="mt-8 rounded-2xl border border-[#d6ad56]/15 bg-[#d6ad56]/[0.04] p-5 sm:p-6">
@@ -117,8 +130,9 @@ async function Dashboard() {
           مشخصات کامل اضافه کنید.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <QuickLink href="/admin/categories">مدیریت دسته‌بندی‌ها</QuickLink>
-          <QuickLink href="/admin/products">افزودن محصول</QuickLink>
+          {canUseEcommerce ? <QuickLink href="/admin/categories">مدیریت دسته‌بندی‌ها</QuickLink> : null}
+          {canUseEcommerce ? <QuickLink href="/admin/products">افزودن محصول</QuickLink> : null}
+          {canUseBookings ? <QuickLink href="/admin/bookings">مشاهده رزروها</QuickLink> : null}
           <QuickLink href="/admin/settings">تنظیمات فروشگاه</QuickLink>
         </div>
       </section>

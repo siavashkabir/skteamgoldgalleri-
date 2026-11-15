@@ -10,6 +10,7 @@ import {
 } from "@/lib/storefront-types";
 import { DEFAULT_THEME_SETTINGS, parseThemeSettings } from "@/lib/theme-settings";
 import { getOptionalAuthenticatedProfile } from "@/lib/admin-context";
+import { parseTenantModules } from "@/lib/tenant-modules";
 
 type StorefrontDatabase = Awaited<ReturnType<typeof getDbClient>>;
 
@@ -33,6 +34,8 @@ const fallbackDefaultStore: StorefrontStore = {
   status: "active",
   expiryDate: null,
   templateId: "luxury",
+  businessType: null,
+  enabledModules: ["ecommerce", "gallery"],
 };
 
 let warnedAboutBuildFallback = false;
@@ -79,7 +82,8 @@ export async function getStoreBySlug(
                      t.telegram_url, t.whatsapp_url, t.logo_url, t.hero_title,
                      t.hero_subtitle, t.phone_numbers, t.address_text,
                      t.location_url, t.social_links, t.toman_rate,
-                     t.theme_settings, t.status, t.expiry_date, t.template_id
+                     t.theme_settings, t.status, t.expiry_date, t.template_id,
+                     t.business_type, t.enabled_modules
               FROM tenants t
               WHERE lower(t.id) = lower(?)
                  OR lower(COALESCE(t.domain, '')) = lower(?)
@@ -114,7 +118,8 @@ export async function getStoreBySlug(
         sql:         `SELECT id, name, description, instagram_url, telegram_url,
                      whatsapp_url, logo_url, hero_title, hero_subtitle,
                      phone_numbers, address_text, location_url, social_links,
-                     toman_rate, theme_settings, status, expiry_date, template_id
+                     toman_rate, theme_settings, status, expiry_date, template_id,
+                     business_type, enabled_modules
               FROM tenants
               WHERE lower(id) = lower(?)
                  OR lower(COALESCE(domain, '')) = lower(?)
@@ -155,6 +160,9 @@ export async function getStoreBySlug(
     status: readTenantStatus(row.status),
     expiryDate: row.expiry_date === null ? null : String(row.expiry_date),
     templateId: readTemplateId(row.template_id),
+    businessType:
+      row.business_type === null ? null : String(row.business_type),
+    enabledModules: parseTenantModules(row.enabled_modules),
   };
 }
 
@@ -213,6 +221,8 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
                  ${categoryIdColumn} AS category_id,
                  ${categoryNameExpression} AS category_name,
                  ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications,
+                 ${columns.has("custom_fields") ? "p.custom_fields" : "'{}'"} AS custom_fields,
+                 ${columns.has("images") ? "p.images" : "'[]'"} AS images,
                  r.rating_average, COALESCE(r.rating_count, 0) AS rating_count
           FROM products p
           ${categoryJoin}
@@ -245,6 +255,8 @@ export async function getStorefrontCatalog(tenantId: string): Promise<{
       categoryName:
         row.category_name === null ? null : String(row.category_name),
       specifications: parseStringRecord(row.specifications),
+      customFields: parseStringRecord(row.custom_fields),
+      images: parseStringArray(row.images),
       ratingAverage:
         row.rating_average === null ? null : Number(row.rating_average),
       ratingCount: Number(row.rating_count),
@@ -308,6 +320,8 @@ export async function getVisibleProduct(
                  ${categoryIdColumn} AS category_id,
                  ${categoryNameExpression} AS category_name,
                  ${columns.has("specifications") ? "p.specifications" : "'{}'"} AS specifications,
+                 ${columns.has("custom_fields") ? "p.custom_fields" : "'{}'"} AS custom_fields,
+                 ${columns.has("images") ? "p.images" : "'[]'"} AS images,
                  r.rating_average, COALESCE(r.rating_count, 0) AS rating_count
           FROM products p
           ${categoryJoin}
@@ -334,6 +348,8 @@ export async function getVisibleProduct(
         categoryName:
           row.category_name === null ? null : String(row.category_name),
         specifications: parseStringRecord(row.specifications),
+        customFields: parseStringRecord(row.custom_fields),
+        images: parseStringArray(row.images),
         ratingAverage:
           row.rating_average === null ? null : Number(row.rating_average),
         ratingCount: Number(row.rating_count),
@@ -368,9 +384,14 @@ export async function getStorefrontCustomerState(tenantId: string): Promise<{
 }
 
 function parseStringArray(value: unknown): string[] {
-  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "[]");
+  let parsed: unknown;
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new Error("فهرست JSON ذخیره‌شده فروشگاه معتبر نیست.");
+  }
   if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
-    throw new Error("مقدار phone_numbers در پایگاه داده معتبر نیست.");
+    throw new Error("فهرست JSON ذخیره‌شده فروشگاه معتبر نیست.");
   }
   return parsed;
 }
@@ -383,14 +404,25 @@ function readTenantStatus(value: unknown): StorefrontStore["status"] {
 }
 
 function readTemplateId(value: unknown): StorefrontStore["templateId"] {
-  if (value === "minimal" || value === "classic") {
+  if (
+    value === "minimal" ||
+    value === "classic" ||
+    value === "medical" ||
+    value === "tourism" ||
+    value === "corporate"
+  ) {
     return value;
   }
   return "luxury";
 }
 
 function parseStringRecord(value: unknown): Record<string, string> {
-  const parsed: unknown = JSON.parse(typeof value === "string" ? value : "{}");
+  let parsed: unknown;
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new Error("مقدار JSON تنظیمات فروشگاه معتبر نیست.");
+  }
   if (
     !parsed ||
     typeof parsed !== "object" ||

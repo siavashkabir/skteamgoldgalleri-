@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import ProductManager, {
   type AdminProduct,
@@ -16,12 +16,12 @@ export default function ProductsPage() {
 }
 
 async function Products() {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const [productResult, categoryResult] = await Promise.all([
     db.execute({
-      sql: `SELECT id, name, price, weight, description, image_url,
+      sql: `SELECT id, name, price, weight, description, image_url, images,
                  category_id, is_visible, condition, labor_percentage,
-                 specifications
+                 specifications, custom_fields
             FROM products WHERE tenant_id = ? ORDER BY name`,
       args: [tenantId],
     }),
@@ -43,6 +43,8 @@ async function Products() {
     condition: row.condition === "used" ? "used" : "new",
     laborPercentage: Number(row.labor_percentage ?? 0),
     specifications: parseSpecifications(row.specifications),
+    customFields: parseSpecifications(row.custom_fields),
+    images: parseImages(row.images),
   }));
   const categories: AdminCategory[] = categoryResult.rows.map((row) => ({
     id: String(row.id),
@@ -71,5 +73,19 @@ function parseSpecifications(value: unknown): Record<string, string> {
   ) {
     throw new Error("مشخصات ذخیره‌شده محصول معتبر نیست.");
   }
+
   return parsed as Record<string, string>;
+}
+
+function parseImages(value: unknown): string[] {
+  let parsed: unknown;
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new Error("فهرست تصاویر ذخیره‌شده محصول معتبر نیست.");
+  }
+  if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
+    throw new Error("فهرست تصاویر ذخیره‌شده محصول معتبر نیست.");
+  }
+  return parsed;
 }

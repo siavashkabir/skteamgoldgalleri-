@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getOptionalCustomerContext } from "@/lib/admin-context";
 import type { AdminActionState } from "@/app/admin/action-state";
+import { parseTenantModules } from "@/lib/tenant-modules";
 
 export async function submitProductReview(
   _previousState: AdminActionState,
@@ -12,6 +13,18 @@ export async function submitProductReview(
   const customer = await getOptionalCustomerContext();
   if (!customer) {
     return { error: "برای ثبت دیدگاه ابتدا وارد حساب کاربری خود شوید." };
+  }
+  const tenant = await db.execute({
+    sql: "SELECT enabled_modules, template_id FROM tenants WHERE id = ?",
+    args: [customer.tenantId],
+  });
+  const tenantRow = tenant.rows[0];
+  if (
+    !tenantRow ||
+    !parseTenantModules(tenantRow.enabled_modules).includes("ecommerce") ||
+    tenantRow.template_id === "corporate"
+  ) {
+    return { error: "ثبت دیدگاه برای این فروشگاه فعال نیست." };
   }
 
   const productId = readText(formData, "product_id");

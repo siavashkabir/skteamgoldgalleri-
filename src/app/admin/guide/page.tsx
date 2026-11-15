@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTenantAdminContext } from "@/lib/admin-context";
 
 const canDo = [
   "افزودن، ویرایش و مدیریت موجودی و مشخصات محصولات",
@@ -6,6 +7,7 @@ const canDo = [
   "مشاهده سفارش‌ها و درخواست‌های اختصاصی مشتریان",
   "مشاهده فهرست مشتریان و تاریخچه سفارش‌های هر مشتری",
   "ویرایش اطلاعات تماس، نشانی و شبکه‌های اجتماعی",
+  "مدیریت درخواست‌های رزرو (در صورت فعال بودن ماژول رزرو یا گردشگری)",
 ];
 
 const cannotDo = [
@@ -14,7 +16,20 @@ const cannotDo = [
   "مدیریت فروشگاه‌ها یا ابزارهای پنل مادر",
 ];
 
-export default function TenantGuidePage() {
+export default async function TenantGuidePage() {
+  const context = await getTenantAdminContext();
+  const hasEcommerce =
+    context.role === "super_admin" ||
+    context.enabledModules.includes("ecommerce");
+  const hasBookings =
+    context.role === "super_admin" ||
+    context.enabledModules.includes("booking") ||
+    context.enabledModules.includes("tourism");
+  const destination = hasEcommerce
+    ? "/admin/products"
+    : hasBookings
+      ? "/admin/bookings"
+      : "/admin/settings";
   return (
     <section className="max-w-3xl">
       <p className="text-sm font-medium text-[#d6ad56]">راهنمای فروشگاه</p>
@@ -36,8 +51,8 @@ export default function TenantGuidePage() {
           </ul>
         </article>
       </div>
-      <Link className="mt-6 inline-flex rounded-xl bg-[#d6ad56] px-4 py-3 text-sm font-semibold text-[#211a0d]" href="/admin/products">
-        رفتن به مدیریت محصولات
+      <Link className="mt-6 inline-flex rounded-xl bg-[#d6ad56] px-4 py-3 text-sm font-semibold text-[#211a0d]" href={destination}>
+        {hasEcommerce ? "رفتن به مدیریت محصولات" : hasBookings ? "مدیریت درخواست‌های رزرو" : "تنظیمات فروشگاه"}
       </Link>
     </section>
   );

@@ -11,6 +11,10 @@ import {
   isThemeColor,
   type ThemeSettings,
 } from "@/lib/theme-settings";
+import {
+  TENANT_MODULES,
+  type TenantModule,
+} from "@/lib/tenant-modules";
 
 export type TenantActionState = {
   error?: string;
@@ -27,6 +31,8 @@ export async function createTenant(
   const domainEntry = formData.get("domain");
   const ownerEmail = readText(formData, "owner_email").toLowerCase();
   const templateId = readTemplateId(formData);
+  const businessType = readText(formData, "business_type");
+  const enabledModules = readTenantModules(formData);
   const status = readTenantStatus(formData);
   const expiryDate = readExpiryDate(formData);
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
@@ -58,6 +64,15 @@ export async function createTenant(
   if (!templateId || !status || expiryDate === false) {
     return { error: "قالب یا وضعیت اشتراک معتبر نیست." };
   }
+  if (!enabledModules || businessType.length > 120) {
+    return { error: "نوع کسب‌وکار یا ماژول‌های انتخاب‌شده معتبر نیستند." };
+  }
+  const logoResult = await uploadTenantLogo(formData, id);
+  if (logoResult.error) return { error: logoResult.error };
+  const kycData = readInitialKyc(formData);
+  if (!kycData) {
+    return { error: "اطلاعات اولیه احراز هویت معتبر نیست." };
+  }
   const themeResult = await readThemeSettings(formData, id);
   if (!themeResult.theme) {
     return { error: themeResult.error ?? "تنظیمات پوسته فروشگاه معتبر نیستند." };
@@ -65,14 +80,19 @@ export async function createTenant(
 
   await db.execute({
     sql: `INSERT INTO tenants
-            (id, name, domain, owner_email, template_id, status, expiry_date, theme_settings)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (id, name, domain, owner_email, business_type, template_id,
+             enabled_modules, kyc_data, logo_url, status, expiry_date, theme_settings)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
       domain || null,
       ownerEmail,
+      businessType || null,
       templateId,
+      JSON.stringify(enabledModules),
+      JSON.stringify(kycData),
+      logoResult.url,
       status,
       expiryDate || null,
       JSON.stringify(themeResult.theme),
@@ -94,6 +114,8 @@ export async function updateTenant(
   const domainEntry = formData.get("domain");
   const ownerEmail = readText(formData, "owner_email").toLowerCase();
   const templateId = readTemplateId(formData);
+  const businessType = readText(formData, "business_type");
+  const enabledModules = readTenantModules(formData);
   const logoUrl = readText(formData, "logo_url");
   const heroTitle = readText(formData, "hero_title");
   const heroSubtitle = readText(formData, "hero_subtitle");
@@ -141,6 +163,16 @@ export async function updateTenant(
   if (!templateId) {
     return { error: "قالب فروشگاه معتبر نیست." };
   }
+  if (!enabledModules || businessType.length > 120) {
+    return { error: "نوع کسب‌وکار یا ماژول‌های انتخاب‌شده معتبر نیستند." };
+  }
+  const initialKyc = readInitialKyc(formData);
+  if (!initialKyc) {
+    return { error: "اطلاعات احراز هویت معتبر نیست." };
+  }
+  const logoResult = await uploadTenantLogo(formData, id);
+  if (logoResult.error) return { error: logoResult.error };
+  const finalLogoUrl = logoResult.url ?? logoUrl;
   if (
     domain.length > 253 ||
     (domain !== "" &&
@@ -152,7 +184,7 @@ export async function updateTenant(
     return { error: "نام دامنه معتبر نیست؛ فقط نام میزبان را وارد کنید." };
   }
   for (const [label, value] of [
-    ["لوگو", logoUrl],
+    ["لوگو", finalLogoUrl],
     ["موقعیت مکانی", locationUrl],
     ["اینستاگرام", instagramUrl],
     ["تلگرام", telegramUrl],
@@ -180,7 +212,8 @@ export async function updateTenant(
   }
 
   const result = await db.execute({
-    sql: `UPDATE tenants SET name = ?, domain = ?, owner_email = ?, template_id = ?,
+    sql: `UPDATE tenants SET name = ?, domain = ?, owner_email = ?, business_type = ?,
+          enabled_modules = ?, kyc_data = ?, template_id = ?,
           description = ?, logo_url = ?, hero_title = ?,
           hero_subtitle = ?, phone_numbers = ?, address_text = ?, location_url = ?,
           instagram_url = ?, telegram_url = ?, whatsapp_url = ?, social_links = ?,
@@ -189,9 +222,12 @@ export async function updateTenant(
       name,
       domain || null,
       ownerEmail,
+      businessType || null,
+      JSON.stringify(enabledModules),
+      JSON.stringify(initialKyc),
       templateId,
       description || null,
-      logoUrl || null,
+      finalLogoUrl || null,
       heroTitle || null,
       heroSubtitle || null,
       JSON.stringify(phoneNumbers),
@@ -453,13 +489,92 @@ function readTenantStatus(
 
 function readTemplateId(
   formData: FormData,
-): "luxury" | "minimal" | "classic" | null {
+): "luxury" | "minimal" | "classic" | "medical" | "tourism" | "corporate" | null {
   const templateId = readText(formData, "template_id");
   return templateId === "luxury" ||
     templateId === "minimal" ||
-    templateId === "classic"
+    templateId === "classic" ||
+    templateId === "medical" ||
+    templateId === "tourism" ||
+    templateId === "corporate"
     ? templateId
     : null;
+}
+
+function readTenantModules(formData: FormData): TenantModule[] | null {
+  const values = formData.getAll("enabled_modules");
+  if (
+    !values.every(
+      (value): value is string =>
+        typeof value === "string" &&
+        TENANT_MODULES.includes(value as TenantModule),
+    )
+  ) {
+    return null;
+  }
+  return [...new Set(values)] as TenantModule[];
+}
+
+function readInitialKyc(formData: FormData): Record<string, string> | null {
+  const values = {
+    full_name: readText(formData, "kyc_full_name"),
+    national_id: readText(formData, "kyc_national_id"),
+    address: readText(formData, "kyc_address"),
+    phone: readText(formData, "kyc_phone"),
+  };
+  if (
+    Object.values(values).some((value) => value.length > 1000) ||
+    (values.phone && values.phone.length > 40) ||
+    (values.national_id && values.national_id.length > 30)
+  ) {
+    return null;
+  }
+  return values;
+}
+
+async function uploadTenantLogo(
+  formData: FormData,
+  tenantId: string,
+): Promise<{ url: string | null; error?: string }> {
+  const file = formData.get("logo_file");
+  if (!(file instanceof File) || file.size === 0) {
+    const url = readText(formData, "logo_url");
+    if (url && !isHttpUrl(url)) {
+      return { url: null, error: "نشانی لوگو باید با http یا https شروع شود." };
+    }
+    return { url: url || null };
+  }
+  const extensions = new Map([
+    ["image/jpeg", "jpg"],
+    ["image/png", "png"],
+    ["image/webp", "webp"],
+    ["image/avif", "avif"],
+  ]);
+  const extension = extensions.get(file.type);
+  if (!extension || file.size > 5 * 1024 * 1024) {
+    return { url: null, error: "لوگو باید تصویر JPEG، PNG، WebP یا AVIF و حداکثر ۵ مگابایت باشد." };
+  }
+  const supabase = await getSupabaseAdminClient();
+  const { data: bucket, error: bucketError } =
+    await supabase.storage.getBucket("products");
+  if (bucketError) {
+    throw new Error(`باکت products در Supabase Storage در دسترس نیست: ${bucketError.message}`);
+  }
+  if (!bucket.public) {
+    throw new Error("برای نمایش لوگوی فروشگاه، باکت products باید عمومی باشد.");
+  }
+  const { data, error } = await supabase.storage
+    .from("products")
+    .upload(`${tenantId}/logos/${crypto.randomUUID()}.${extension}`, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+  if (error) {
+    throw new Error(`بارگذاری لوگو انجام نشد: ${error.message}`);
+  }
+  return {
+    url: supabase.storage.from("products").getPublicUrl(data.path).data.publicUrl,
+  };
 }
 
 function isEmail(value: string): boolean {

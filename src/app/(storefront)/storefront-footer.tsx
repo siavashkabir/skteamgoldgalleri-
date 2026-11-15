@@ -21,6 +21,11 @@ export default async function StorefrontFooter({
   const mapQuery = store.addressText || store.locationUrl || "";
   const navigationQuery = encodeURIComponent(mapQuery);
   const platformUrl = safeExternalUrl(platform.url) || "https://skteam.ir";
+  const isCorporate =
+    store.templateId === "corporate" ||
+    store.enabledModules.includes("corporate");
+  const hasEcommerce =
+    store.enabledModules.includes("ecommerce") && !isCorporate;
 
   return (
     <footer className="mt-auto border-t border-white/[0.07] bg-[var(--color-surface)]">
@@ -38,8 +43,8 @@ export default async function StorefrontFooter({
           </p>
           <nav aria-label="پیوندهای فروشگاه" className="mt-4 flex flex-wrap gap-4 text-xs text-[#aaa79b]">
             <Link className="hover:text-[var(--color-primary)]" href={`/${store.slug}/contact`}>تماس با ما</Link>
-            <Link className="hover:text-[var(--color-primary)]" href={`/${store.slug}/custom-order`}>سفارش اختصاصی</Link>
-            <Link className="hover:text-[var(--color-primary)]" href="/wishlist">علاقه‌مندی‌ها</Link>
+            {store.enabledModules.includes("gallery") ? <Link className="hover:text-[var(--color-primary)]" href={`/${store.slug}/custom-order`}>سفارش اختصاصی</Link> : null}
+            {hasEcommerce ? <Link className="hover:text-[var(--color-primary)]" href="/wishlist">علاقه‌مندی‌ها</Link> : null}
           </nav>
         </div>
         <div className="space-y-5 md:text-left">

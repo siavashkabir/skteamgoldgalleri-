@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { updateTenant, type TenantActionState } from "./actions";
 import ThemeSettingsFields from "./theme-settings-fields";
 import type { ThemeSettings } from "@/lib/theme-settings";
+import type { TenantModule } from "@/lib/tenant-modules";
 
 type Props = {
   tenant: {
@@ -11,7 +12,10 @@ type Props = {
     name: string;
     domain: string | null;
     ownerEmail: string;
-    templateId: "luxury" | "minimal" | "classic";
+    templateId: "luxury" | "minimal" | "classic" | "medical" | "tourism" | "corporate";
+    businessType: string;
+    enabledModules: TenantModule[];
+    kycData: Record<string, string>;
     description: string;
     logoUrl: string;
     heroTitle: string;
@@ -78,7 +82,7 @@ export default function EditTenantDialog({ tenant }: Props) {
               </button>
             </div>
 
-            <form action={formAction} className="space-y-5">
+            <form action={formAction} className="space-y-5" encType="multipart/form-data">
               <input name="id" type="hidden" value={tenant.id} />
               <label className="block">
                 <span className="mb-2 block text-sm font-medium">
@@ -110,6 +114,9 @@ export default function EditTenantDialog({ tenant }: Props) {
                     <option value="luxury">لوکس</option>
                     <option value="minimal">مینیمال</option>
                     <option value="classic">کلاسیک</option>
+                    <option value="medical">پزشکی</option>
+                    <option value="tourism">گردشگری</option>
+                    <option value="corporate">شرکتی</option>
                   </select>
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
@@ -138,8 +145,16 @@ export default function EditTenantDialog({ tenant }: Props) {
                   <textarea className={`${inputClass} min-h-24 py-3`} defaultValue={tenant.description} maxLength={5000} name="description" rows={3} />
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
+                  نوع کسب‌وکار
+                  <input className={inputClass} defaultValue={tenant.businessType} maxLength={120} name="business_type" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
                   لوگو (URL)
                   <input className={inputClass} defaultValue={tenant.logoUrl} name="logo_url" type="url" />
+                </label>
+                <label className="block text-sm text-[#c5c1b6]">
+                  بارگذاری لوگو
+                  <input accept="image/jpeg,image/png,image/webp,image/avif" className={`${inputClass} h-auto py-2`} name="logo_file" type="file" />
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
                   نرخ بازار دلار (تومان)
@@ -177,6 +192,25 @@ export default function EditTenantDialog({ tenant }: Props) {
                   واتساپ
                   <input className={inputClass} defaultValue={tenant.whatsappUrl} name="whatsapp_url" type="url" />
                 </label>
+                <fieldset className="rounded-xl border border-white/[0.08] p-4 sm:col-span-2">
+                  <legend className="px-2 text-sm font-medium text-[#e5e0d4]">اطلاعات اولیه احراز هویت</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input className={inputClass} defaultValue={tenant.kycData.full_name} maxLength={120} name="kyc_full_name" placeholder="نام و نام خانوادگی" />
+                    <input className={inputClass} defaultValue={tenant.kycData.national_id} maxLength={30} name="kyc_national_id" placeholder="کد ملی / شناسه ملی" />
+                    <input className={inputClass} defaultValue={tenant.kycData.phone} maxLength={40} name="kyc_phone" placeholder="شماره تماس" />
+                    <input className={inputClass} defaultValue={tenant.kycData.address} maxLength={1000} name="kyc_address" placeholder="نشانی کسب‌وکار" />
+                  </div>
+                </fieldset>
+                <fieldset className="rounded-xl border border-white/[0.08] p-4 sm:col-span-2">
+                  <legend className="px-2 text-sm font-medium text-[#e5e0d4]">ماژول‌های فعال</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <ModuleOption checked={tenant.enabledModules.includes("ecommerce")} label="فروشگاه و سبد خرید" value="ecommerce" />
+                    <ModuleOption checked={tenant.enabledModules.includes("booking")} label="رزرو و نوبت‌دهی" value="booking" />
+                    <ModuleOption checked={tenant.enabledModules.includes("gallery")} label="گالری تصاویر" value="gallery" />
+                    <ModuleOption checked={tenant.enabledModules.includes("tourism")} label="گردشگری" value="tourism" />
+                    <ModuleOption checked={tenant.enabledModules.includes("corporate")} label="شرکتی" value="corporate" />
+                  </div>
+                </fieldset>
               </div>
               <ThemeSettingsFields defaultValue={tenant.themeSettings} />
               <label className="block">
@@ -264,3 +298,20 @@ export default function EditTenantDialog({ tenant }: Props) {
 
 const inputClass =
   "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";
+
+function ModuleOption({
+  value,
+  label,
+  checked,
+}: {
+  value: TenantModule;
+  label: string;
+  checked: boolean;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-[#c5c1b6]">
+      <input defaultChecked={checked} name="enabled_modules" type="checkbox" value={value} />
+      {label}
+    </label>
+  );
+}

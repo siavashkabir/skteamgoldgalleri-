@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getOptionalCustomerContext } from "@/lib/admin-context";
 import { getStoreBySlug, getStorefrontCatalog } from "@/lib/storefront-data";
 import { db } from "@/lib/db";
+import { notFound } from "next/navigation";
 import ProductCatalog from "../product-catalog";
 import StorefrontFrame from "../storefront-frame";
 
@@ -14,6 +15,13 @@ export default async function WishlistPage() {
   const store = await getStoreBySlug(customer.tenantId);
   if (!store) {
     throw new Error("فروشگاه حساب کاربری برای نمایش علاقه‌مندی‌ها پیدا نشد.");
+  }
+  if (
+    !store.enabledModules.includes("ecommerce") ||
+    store.enabledModules.includes("corporate") ||
+    store.templateId === "corporate"
+  ) {
+    notFound();
   }
   const [catalog, wishlistResult] = await Promise.all([
     getStorefrontCatalog(store.id),

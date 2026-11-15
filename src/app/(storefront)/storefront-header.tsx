@@ -15,6 +15,11 @@ export default function StorefrontHeader({
   categories: StorefrontCategory[];
 }) {
   const { itemCount } = useCart();
+  const isCorporate =
+    store.templateId === "corporate" ||
+    store.enabledModules.includes("corporate");
+  const hasEcommerce =
+    store.enabledModules.includes("ecommerce") && !isCorporate;
 
   return (
     <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[var(--color-bg)]/95 backdrop-blur-xl">
@@ -34,14 +39,19 @@ export default function StorefrontHeader({
             <span className="block truncate text-sm font-semibold text-[var(--color-text)] sm:text-base">
               {store.name}
             </span>
-            <span className="mt-0.5 block text-[9px] tracking-[0.2em] text-[#898578]">
-              GOLD · JEWELLERY
+            <span className="mt-0.5 block text-[9px] tracking-[0.12em] text-[#898578]">
+              {store.businessType ||
+                (store.templateId === "medical"
+                  ? "سلامت و درمان"
+                  : store.templateId === "tourism"
+                    ? "سفر و گردشگری"
+                    : "معرفی کسب‌وکار")}
             </span>
           </span>
         </Link>
 
         <nav className="flex shrink-0 items-center gap-2 sm:gap-4">
-          {categories.length ? (
+          {hasEcommerce && categories.length ? (
             <details className="relative hidden sm:block">
               <summary className="cursor-pointer list-none text-sm text-[#aaa79b] hover:text-[var(--color-primary)]">
                 دسته‌بندی‌ها
@@ -51,32 +61,32 @@ export default function StorefrontHeader({
               </div>
             </details>
           ) : null}
-          <Link
+          {hasEcommerce ? <Link
             className="hidden text-sm text-[#aaa79b] transition hover:text-[var(--color-primary)] sm:inline-flex"
             href={`/${store.slug}#products`}
           >
             محصولات
-          </Link>
-          <Link
+          </Link> : null}
+          {store.enabledModules.includes("gallery") ? <Link
             className="hidden text-sm text-[#aaa79b] transition hover:text-[var(--color-primary)] sm:inline-flex"
             href={`/${store.slug}/custom-order`}
           >
             سفارش اختصاصی
-          </Link>
+          </Link> : null}
           <Link
             className="hidden text-sm text-[#aaa79b] transition hover:text-[var(--color-primary)] lg:inline-flex"
             href={`/${store.slug}/contact`}
           >
             تماس با ما
           </Link>
-          <Link
+          {hasEcommerce ? <Link
             aria-label="علاقه‌مندی‌ها"
             className="hidden rounded-xl border border-white/[0.09] px-3 py-2.5 text-[var(--color-primary)] transition hover:border-[var(--color-primary)]/40 sm:inline-flex"
             href="/wishlist"
           >
             ♡
-          </Link>
-          <Link
+          </Link> : null}
+          {hasEcommerce ? <Link
             className="flex items-center gap-2 rounded-xl border border-white/[0.09] px-3 py-2.5 text-sm text-[var(--color-text)] transition hover:border-[var(--color-primary)]/40 hover:text-[var(--color-primary)] sm:px-4"
             href="/cart"
           >
@@ -85,7 +95,7 @@ export default function StorefrontHeader({
             <span className="flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-bold text-[var(--color-bg)]">
               {itemCount.toLocaleString("fa-IR")}
             </span>
-          </Link>
+          </Link> : null}
           <Link
             className="hidden rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-bg)] transition hover:bg-[var(--color-primary)] md:inline-flex"
             href={`/login?next=${encodeURIComponent(`/${store.slug}`)}`}
@@ -94,7 +104,7 @@ export default function StorefrontHeader({
           </Link>
         </nav>
       </div>
-      <LivePriceWidget />
+      {hasEcommerce ? <LivePriceWidget /> : null}
     </header>
   );
 }

@@ -76,8 +76,9 @@ Initialize the Supabase Storage buckets with:
 npm run db:init-storage
 ```
 
-This creates/verifies the public `products` bucket for storefront photos and
-the private `custom-orders` bucket for customer design requests. Customer
+This creates/verifies the public `products` bucket for storefront photos, the
+private `custom-orders` bucket for customer design requests, and the private
+`licenses` bucket for business documents. Customer
 accounts with a `customer` profile role can access `/profile`, view
 their account, cart, and order history, and submit a custom gold-design request.
 Shop owners can review requests at `/admin/custom-orders`. Custom-order images
@@ -106,9 +107,22 @@ owner must also have a Supabase Auth account with that same email to sign in;
 the server resolves their tenant from the verified email and scopes admin
 queries to that tenant. The designated super admin can securely impersonate a
 tenant from its master-admin card. Storefront templates (`luxury`, `minimal`,
-and `classic`) and their themes are managed centrally; tenant owners cannot
+`classic`, `medical`, `tourism`, and `corporate`) and their themes are managed centrally; tenant owners cannot
 change them. Cloudflare custom domains should use a CNAME pointing to
 `skteamgoldgalleri.sk-team-it.workers.dev`.
+
+Before deploying tenant onboarding, module controls, product image galleries,
+and booking requests to an existing database, run:
+
+```sh
+npm run db:migrate-modules
+```
+
+Tenant admins must complete their KYC profile and accept the responsibility
+agreement on first sign-in. Module visibility and data access are enforced by
+server-side authorization and tenant-scoped Turso queries; Turso does not
+provide native row-level security policies. Initialize storage again to create
+or verify the private `licenses` bucket.
 
 The tenant admin's `/admin/orders` page lists only that tenant's orders and
 supports updating each order's status. `/admin/customers` provides a tenant

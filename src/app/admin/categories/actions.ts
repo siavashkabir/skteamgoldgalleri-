@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import type { AdminActionState } from "../action-state";
 
 export async function saveCategory(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const id = readText(formData, "id");
   const name = readText(formData, "name");
   const parentId = readText(formData, "parent_id") || null;
@@ -76,7 +76,7 @@ export async function deleteCategory(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const id = readText(formData, "id");
   if (!id) {
     return { error: "شناسه دسته‌بندی معتبر نیست." };

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import type { AdminActionState } from "../action-state";
 
@@ -18,7 +18,7 @@ export async function saveProduct(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { tenantId, tenantName } = await getTenantAdminContext();
+  const { tenantId, tenantName } = await requireTenantModule("ecommerce");
   const id = readText(formData, "id");
   const name = readText(formData, "name");
   const description = readText(formData, "description");
@@ -30,6 +30,8 @@ export async function saveProduct(
   const isVisible = formData.get("is_visible") === "on";
   const specificationKeys = formData.getAll("specification_keys");
   const specificationValues = formData.getAll("specification_values");
+  const customFieldKeys = formData.getAll("custom_field_keys");
+  const customFieldValues = formData.getAll("custom_field_values");
 
   if (!name || name.length > 160) {
     return { error: "نام محصول را وارد کنید (حداکثر ۱۶۰ نویسه)." };
@@ -70,6 +72,25 @@ export async function saveProduct(
     }
     specifications[key] = value;
   }
+  if (
+    customFieldKeys.length !== customFieldValues.length ||
+    customFieldKeys.length > 30
+  ) {
+    return { error: "فیلدهای اختصاصی محصول معتبر نیستند." };
+  }
+  const customFields: Record<string, string> = {};
+  for (let index = 0; index < customFieldKeys.length; index += 1) {
+    const key = String(customFieldKeys[index]).trim();
+    const value = String(customFieldValues[index]).trim();
+    if (!key && !value) continue;
+    if (!key || !value || key.length > 80 || value.length > 300) {
+      return { error: "نام و مقدار هر فیلد اختصاصی را کامل و کوتاه وارد کنید." };
+    }
+    if (customFields[key]) {
+      return { error: "نام فیلدهای اختصاصی نباید تکراری باشد." };
+    }
+    customFields[key] = value;
+  }
 
   if (categoryId) {
     const category = await db.execute({
@@ -81,34 +102,41 @@ export async function saveProduct(
     }
   }
 
-  let existingImageUrl = readText(formData, "existing_image_url") || null;
+  let images: string[] = [];
   if (id) {
     const existing = await db.execute({
-      sql: "SELECT image_url FROM products WHERE id = ? AND tenant_id = ?",
+      sql: "SELECT image_url, images FROM products WHERE id = ? AND tenant_id = ?",
       args: [id, tenantId],
     });
     if (existing.rows.length === 0) {
       return { error: "محصول پیدا نشد." };
     }
-    existingImageUrl =
-      existing.rows[0].image_url === null
-        ? null
-        : String(existing.rows[0].image_url);
+    images = parseImageArray(existing.rows[0].images);
+    if (!images.length && existing.rows[0].image_url !== null) {
+      images = [String(existing.rows[0].image_url)];
+    }
   }
-  if (formData.get("clear_image") === "on") {
-    existingImageUrl = null;
+  if (formData.get("clear_images") === "on") {
+    images = [];
   }
 
-  const imageEntry = formData.get("image");
-  if (imageEntry instanceof File && imageEntry.size > 0) {
-    const extension = imageTypes.get(imageEntry.type);
-    if (!extension) {
-      return { error: "فرمت تصویر باید JPEG، PNG، WebP یا AVIF باشد." };
+  const imageEntries = [
+    ...formData.getAll("images"),
+    formData.get("image"),
+  ].filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  if (imageEntries.length > 5 || imageEntries.reduce((sum, image) => sum + image.size, 0) > maximumImageSize) {
+    return { error: "حداکثر ۵ تصویر با مجموع حجم ۵ مگابایت می‌توانید بارگذاری کنید." };
+  }
+  if (images.length + imageEntries.length > 5) {
+    return { error: "هر محصول حداکثر می‌تواند ۵ تصویر داشته باشد؛ تصاویر قبلی را حذف کنید." };
+  }
+  if (imageEntries.length) {
+    for (const imageEntry of imageEntries) {
+      const extension = imageTypes.get(imageEntry.type);
+      if (!extension) {
+        return { error: "فرمت تصاویر باید JPEG، PNG، WebP یا AVIF باشد." };
+      }
     }
-    if (imageEntry.size > maximumImageSize) {
-      return { error: "حجم تصویر نباید بیشتر از ۵ مگابایت باشد." };
-    }
-
     const supabaseAdmin = await getSupabaseAdminClient();
     const { data: bucket, error: bucketError } =
       await supabaseAdmin.storage.getBucket("products");
@@ -118,20 +146,28 @@ export async function saveProduct(
     if (!bucket.public) {
       return { error: "برای نمایش تصویر محصول، باکت products باید عمومی باشد." };
     }
-
-    const objectPath = `${tenantId}/${crypto.randomUUID()}.${extension}`;
-    const { data, error } = await supabaseAdmin.storage
-      .from("products")
-      .upload(objectPath, imageEntry, {
-        contentType: imageEntry.type,
-        upsert: false,
-      });
-    if (error) {
-      return { error: `بارگذاری تصویر انجام نشد: ${error.message}` };
+    for (const imageEntry of imageEntries) {
+      const extension = imageTypes.get(imageEntry.type);
+      if (!extension) {
+        throw new Error("فرمت تصویر پس از اعتبارسنجی تغییر کرده است.");
+      }
+      const objectPath = `${tenantId}/${crypto.randomUUID()}.${extension}`;
+      const { data, error } = await supabaseAdmin.storage
+        .from("products")
+        .upload(objectPath, imageEntry, {
+          contentType: imageEntry.type,
+          upsert: false,
+        });
+      if (error) {
+        throw new Error(`بارگذاری تصویر انجام نشد: ${error.message}`);
+      }
+      images.push(
+        supabaseAdmin.storage.from("products").getPublicUrl(data.path).data.publicUrl,
+      );
     }
-    existingImageUrl = supabaseAdmin.storage
-      .from("products")
-      .getPublicUrl(data.path).data.publicUrl;
+  }
+  if (images.length > 5) {
+    return { error: "هر محصول حداکثر می‌تواند ۵ تصویر داشته باشد." };
   }
 
   const result = await db.execute("PRAGMA table_info(products)");
@@ -145,7 +181,9 @@ export async function saveProduct(
     price,
     weight,
     description: description || null,
-    image_url: existingImageUrl,
+    image_url: images[0] ?? null,
+    images: JSON.stringify(images),
+    custom_fields: JSON.stringify(customFields),
     category_id: categoryId,
     is_visible: Number(isVisible),
     is_active: Number(isVisible),
@@ -208,7 +246,7 @@ export async function deleteProduct(
   _previousState: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const id = readText(formData, "id");
   if (!id) {
     return { error: "شناسه محصول معتبر نیست." };
@@ -245,4 +283,20 @@ export async function deleteProduct(
 function readText(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function parseImageArray(value: unknown): string[] {
+  let parsed: unknown;
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new Error("فهرست تصاویر ذخیره‌شده محصول معتبر نیست.");
+  }
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every((item) => typeof item === "string")
+  ) {
+    throw new Error("فهرست تصاویر ذخیره‌شده محصول معتبر نیست.");
+  }
+  return parsed;
 }

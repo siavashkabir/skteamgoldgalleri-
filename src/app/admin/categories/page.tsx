@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import CategoryManager, { type AdminCategory } from "./category-manager";
 
@@ -13,7 +13,7 @@ export default function CategoriesPage() {
 }
 
 async function Categories() {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const result = await db.execute({
     sql: `SELECT id, name, parent_id FROM categories
           WHERE tenant_id = ? ORDER BY name`,

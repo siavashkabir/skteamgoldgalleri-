@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCustomerContext } from "@/lib/admin-context";
+import { parseTenantModules } from "@/lib/tenant-modules";
 
 export async function setWishlistState(
   productId: string,
@@ -11,6 +12,18 @@ export async function setWishlistState(
   const customer = await getCustomerContext();
   if (!productId || productId.length > 64 || typeof shouldSave !== "boolean") {
     throw new Error("محصول انتخاب‌شده معتبر نیست.");
+  }
+  const tenant = await db.execute({
+    sql: "SELECT enabled_modules, template_id FROM tenants WHERE id = ?",
+    args: [customer.tenantId],
+  });
+  const tenantRow = tenant.rows[0];
+  if (
+    !tenantRow ||
+    !parseTenantModules(tenantRow.enabled_modules).includes("ecommerce") ||
+    tenantRow.template_id === "corporate"
+  ) {
+    throw new Error("علاقه‌مندی‌ها برای این فروشگاه فعال نیست.");
   }
 
   const product = await db.execute({

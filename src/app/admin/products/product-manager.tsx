@@ -18,6 +18,8 @@ export type AdminProduct = {
   condition: "new" | "used";
   laborPercentage: number;
   specifications: Record<string, string>;
+  customFields: Record<string, string>;
+  images: string[];
 };
 
 export default function ProductManager({
@@ -71,6 +73,9 @@ function ProductForm({
   const [specifications, setSpecifications] = useState(
     () => Object.entries(product?.specifications ?? {}).map(([key, value]) => ({ key, value })),
   );
+  const [customFields, setCustomFields] = useState(
+    () => Object.entries(product?.customFields ?? {}).map(([key, value]) => ({ key, value })),
+  );
 
   return (
     <form
@@ -81,12 +86,6 @@ function ProductForm({
         {product ? "ویرایش محصول" : "افزودن محصول"}
       </h2>
       {product ? <input name="id" type="hidden" value={product.id} /> : null}
-      <input
-        name="existing_image_url"
-        type="hidden"
-        value={product?.imageUrl ?? ""}
-      />
-
       <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
         <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
           نام محصول
@@ -135,6 +134,22 @@ function ProductForm({
             type="button"
           >
             افزودن مشخصه
+          </button>
+        </fieldset>
+
+        <fieldset className="space-y-3 sm:col-span-2">
+          <legend className="text-sm text-[#c5c1b6]">فیلدهای اختصاصی</legend>
+          {customFields.map((field, index) => (
+            <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" key={index}>
+              <input aria-label="نام فیلد اختصاصی" className={inputClass} defaultValue={field.key} maxLength={80} name="custom_field_keys" placeholder="مثلاً رنگ" />
+              <input aria-label="مقدار فیلد اختصاصی" className={inputClass} defaultValue={field.value} maxLength={300} name="custom_field_values" placeholder="مثلاً آبی" />
+              <button className="rounded-xl border border-white/[0.1] px-3 text-xs text-red-300" onClick={() => setCustomFields((current) => current.filter((_, itemIndex) => itemIndex !== index))} type="button">
+                حذف
+              </button>
+            </div>
+          ))}
+          <button className="text-xs text-[#e2c16d]" onClick={() => setCustomFields((current) => [...current, { key: "", value: "" }])} type="button">
+            افزودن فیلد اختصاصی
           </button>
         </fieldset>
 
@@ -195,20 +210,28 @@ function ProductForm({
           />
         </label>
         <label className="block text-sm text-[#c5c1b6]">
-          تصویر محصول (حداکثر ۵ مگابایت)
+          تصاویر محصول (حداکثر ۵ تصویر، مجموعاً ۵ مگابایت)
           <input
             accept="image/jpeg,image/png,image/webp,image/avif"
             className={`${inputClass} h-auto py-2`}
-            name="image"
+            multiple
+            name="images"
             type="file"
           />
         </label>
 
-        {product?.imageUrl ? (
+        {product?.images.length || product?.imageUrl ? (
           <label className="flex items-center gap-2 text-xs text-[#aaa79b] sm:col-span-2">
-            <input name="clear_image" type="checkbox" />
-            حذف تصویر فعلی
+            <input name="clear_images" type="checkbox" />
+            حذف تصاویر فعلی
           </label>
+        ) : null}
+        {product?.images.length ? (
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
+            {product.images.map((image, index) => (
+              <Image alt={`تصویر ${index + 1} ${product.name}`} className="h-16 w-16 rounded-lg object-cover" height={64} key={image} src={image} unoptimized width={64} />
+            ))}
+          </div>
         ) : null}
 
         <label className="block text-sm text-[#c5c1b6] sm:col-span-2">
@@ -320,6 +343,11 @@ function ProductCard({
             {Object.keys(product.specifications).length ? (
               <p className="mt-2 text-xs text-[#858378]">
                 {Object.entries(product.specifications).map(([key, value]) => `${key}: ${value}`).join(" · ")}
+              </p>
+            ) : null}
+            {Object.keys(product.customFields).length ? (
+              <p className="mt-2 text-xs text-[#858378]">
+                {Object.entries(product.customFields).map(([key, value]) => `${key}: ${value}`).join(" · ")}
               </p>
             ) : null}
             <div className="mt-4 flex gap-4">

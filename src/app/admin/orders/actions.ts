@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 
 const orderStatuses = ["pending", "processing", "completed", "cancelled"] as const;
 
 export async function updateOrderStatus(formData: FormData): Promise<void> {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const orderId = formData.get("order_id");
   const status = formData.get("status");
 

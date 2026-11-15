@@ -12,6 +12,7 @@ import GlobalBannerForm from "./global-banner-form";
 import { impersonateTenant, signOut } from "./actions";
 import Link from "next/link";
 import { parseThemeSettings, type ThemeSettings } from "@/lib/theme-settings";
+import { parseTenantModules, type TenantModule } from "@/lib/tenant-modules";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,10 @@ type Tenant = {
   name: string;
   domain: string | null;
   ownerEmail: string;
-  templateId: "luxury" | "minimal" | "classic";
+  templateId: "luxury" | "minimal" | "classic" | "medical" | "tourism" | "corporate";
+  businessType: string;
+  enabledModules: TenantModule[];
+  kycData: Record<string, string>;
   createdAt: string;
   description: string;
   logoUrl: string;
@@ -60,7 +64,8 @@ async function MasterAdminContent() {
     db.execute(`SELECT id, name, domain, owner_email, template_id, created_at, description, logo_url, hero_title,
                        hero_subtitle, phone_numbers, address_text, location_url,
                        instagram_url, telegram_url, whatsapp_url, toman_rate,
-                       theme_settings, status, expiry_date
+                       theme_settings, status, expiry_date, business_type,
+                       enabled_modules, kyc_data
                 FROM tenants ORDER BY created_at DESC`),
     db.execute("SELECT key, value FROM platform_settings"),
     db.execute("SELECT banner_text FROM master_settings WHERE id = 'global' LIMIT 1"),
@@ -74,7 +79,16 @@ async function MasterAdminContent() {
     name: String(row.name),
     domain: row.domain === null ? null : String(row.domain),
     ownerEmail: row.owner_email === null ? "" : String(row.owner_email),
-    templateId: row.template_id === "minimal" || row.template_id === "classic" ? row.template_id : "luxury",
+    templateId: row.template_id === "minimal" ||
+      row.template_id === "classic" ||
+      row.template_id === "medical" ||
+      row.template_id === "tourism" ||
+      row.template_id === "corporate"
+      ? row.template_id
+      : "luxury",
+    businessType: row.business_type === null ? "" : String(row.business_type),
+    enabledModules: parseTenantModules(row.enabled_modules),
+    kycData: parseKycData(row.kyc_data),
     createdAt: String(row.created_at),
     description: row.description === null ? "" : String(row.description),
     logoUrl: row.logo_url === null ? "" : String(row.logo_url),
@@ -358,6 +372,9 @@ async function MasterAdminContent() {
                               </span>
                               <span className="font-medium text-[#e8e5dc]">
                                 {tenant.name}
+                                <span className="mt-1 block text-[11px] text-[#858378]" dir="ltr">
+                                  {tenant.ownerEmail}
+                                </span>
                               </span>
                             </span>
                           </td>
@@ -443,6 +460,24 @@ function parsePhoneNumbers(value: unknown): string[] {
     throw new Error("شماره‌های تماس ذخیره‌شده معتبر نیستند.");
   }
   return parsed;
+}
+
+function parseKycData(value: unknown): Record<string, string> {
+  let parsed: unknown;
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    throw new Error("اطلاعات احراز هویت ذخیره‌شده معتبر نیست.");
+  }
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    Array.isArray(parsed) ||
+    !Object.values(parsed).every((item) => typeof item === "string")
+  ) {
+    throw new Error("اطلاعات احراز هویت ذخیره‌شده معتبر نیست.");
+  }
+  return parsed as Record<string, string>;
 }
 
 function formatDate(value: string) {

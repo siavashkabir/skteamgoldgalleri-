@@ -5,19 +5,22 @@ import { getTenantAdminContext } from "@/lib/admin-context";
 import { readImpersonatedTenantId } from "@/lib/admin-impersonation";
 import { signOut } from "@/app/master-admin/actions";
 import { stopImpersonatingTenant } from "@/app/master-admin/actions";
+import OnboardingForm from "./onboarding-form";
+import type { TenantModule } from "@/lib/tenant-modules";
 
 export const dynamic = "force-dynamic";
 
 const navigation = [
   { href: "/admin", label: "داشبورد", icon: "⌂" },
-  { href: "/admin/categories", label: "مدیریت دسته‌بندی‌ها", icon: "◇" },
-  { href: "/admin/products", label: "مدیریت محصولات", icon: "◈" },
-  { href: "/admin/orders", label: "سفارش‌ها", icon: "▤" },
-  { href: "/admin/customers", label: "مشتریان", icon: "♙" },
-  { href: "/admin/custom-orders", label: "سفارش اختصاصی", icon: "✧" },
+  { href: "/admin/categories", label: "مدیریت دسته‌بندی‌ها", icon: "◇", module: "ecommerce" },
+  { href: "/admin/products", label: "مدیریت محصولات", icon: "◈", module: "ecommerce" },
+  { href: "/admin/orders", label: "سفارش‌ها", icon: "▤", module: "ecommerce" },
+  { href: "/admin/bookings", label: "درخواست‌های رزرو", icon: "◷", module: "booking" },
+  { href: "/admin/customers", label: "مشتریان", icon: "♙", module: "ecommerce" },
+  { href: "/admin/custom-orders", label: "سفارش اختصاصی", icon: "✧", module: "gallery" },
   { href: "/admin/settings", label: "تنظیمات فروشگاه", icon: "⚙" },
   { href: "/admin/guide", label: "راهنمای فروشگاه", icon: "ⓘ" },
-];
+] satisfies Array<{ href: string; label: string; icon: string; module?: TenantModule }>;
 
 export default function TenantAdminLayout({
   children,
@@ -36,7 +39,24 @@ export default function TenantAdminLayout({
 }
 
 async function TenantAdminShell({ children }: { children: React.ReactNode }) {
-  const { email, tenantName } = await getTenantAdminContext();
+  const context = await getTenantAdminContext({ allowIncompleteProfile: true });
+  const { email, tenantName, enabledModules } = context;
+  if (
+    context.role === "tenant_admin" &&
+    (!context.kycData.full_name ||
+      !context.kycData.national_id ||
+      !context.kycData.address ||
+      !context.kycData.phone ||
+      !context.legalAgreedAt)
+  ) {
+    return (
+      <OnboardingForm
+        businessType={context.businessType}
+        tenantName={tenantName}
+        values={context.kycData}
+      />
+    );
+  }
   const isImpersonating = (await readImpersonatedTenantId()) !== null;
 
   return (
@@ -55,7 +75,14 @@ async function TenantAdminShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav aria-label="منوی مدیریت فروشگاه" className="flex gap-2 overflow-x-auto lg:block lg:space-y-1">
-          {navigation.map((item) => (
+          {navigation.filter((item) =>
+            !item.module ||
+            context.role === "super_admin" ||
+            enabledModules.includes(item.module) ||
+            (item.href === "/admin/bookings" && enabledModules.includes("tourism")) ||
+            (item.href === "/admin/customers" &&
+              (enabledModules.includes("booking") || enabledModules.includes("tourism"))),
+          ).map((item) => (
             <Link
               className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[#aaa79b] transition hover:bg-white/[0.05] hover:text-[#f5f2e9] lg:py-3"
               href={item.href}

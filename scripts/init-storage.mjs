@@ -47,3 +47,25 @@ async function ensureBucket(name, isPublic) {
 
 await ensureBucket("products", true);
 await ensureBucket("custom-orders", false);
+
+const { data: licenseBucket, error: licenseBucketError } =
+  await supabase.storage.getBucket("licenses");
+if (licenseBucket) {
+  if (licenseBucket.public) {
+    throw new Error("The licenses bucket must be private.");
+  }
+} else if (licenseBucketError?.message.toLowerCase().includes("not found")) {
+  const { error } = await supabase.storage.createBucket("licenses", {
+    public: false,
+    fileSizeLimit: "5MB",
+    allowedMimeTypes: [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ],
+  });
+  if (error) throw error;
+} else {
+  throw licenseBucketError ?? new Error("Could not verify the licenses bucket.");
+}

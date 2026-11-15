@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { getTenantAdminContext } from "@/lib/admin-context";
+import { requireTenantModule } from "@/lib/admin-context";
 import { db } from "@/lib/db";
 import { updateOrderStatus } from "./actions";
 
@@ -23,7 +23,7 @@ const statuses = [
 ] as const;
 
 export default async function OrdersPage() {
-  const { tenantId } = await getTenantAdminContext();
+  const { tenantId } = await requireTenantModule("ecommerce");
   const [ordersResult, itemsResult] = await Promise.all([
     db.execute({
       sql: `SELECT id, customer_id, customer_name, customer_phone, status, total, created_at

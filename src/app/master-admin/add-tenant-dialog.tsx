@@ -57,7 +57,7 @@ export default function AddTenantDialog() {
               </button>
             </div>
 
-            <form action={formAction} className="space-y-5">
+            <form action={formAction} className="max-h-[70vh] space-y-5 overflow-y-auto" encType="multipart/form-data">
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-[#e5e0d4]">
                   نام فروشگاه
@@ -98,6 +98,35 @@ export default function AddTenantDialog() {
                   type="email"
                 />
               </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm text-[#c5c1b6]">
+                  نوع کسب‌وکار
+                  <input className={inputClass} maxLength={120} name="business_type" placeholder="فروشگاه، کلینیک، گردشگری..." />
+                </label>
+                <label className="text-sm text-[#c5c1b6]">
+                  لوگوی فروشگاه
+                  <input accept="image/jpeg,image/png,image/webp,image/avif" className={`${inputClass} h-auto py-2`} name="logo_file" type="file" />
+                </label>
+              </div>
+              <fieldset className="rounded-xl border border-white/[0.08] p-4">
+                <legend className="px-2 text-sm font-medium text-[#e5e0d4]">اطلاعات اولیه احراز هویت</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input className={inputClass} maxLength={120} name="kyc_full_name" placeholder="نام و نام خانوادگی" />
+                  <input className={inputClass} maxLength={30} name="kyc_national_id" placeholder="کد ملی / شناسه ملی" />
+                  <input className={inputClass} maxLength={40} name="kyc_phone" placeholder="شماره تماس" />
+                  <input className={inputClass} maxLength={1000} name="kyc_address" placeholder="نشانی کسب‌وکار" />
+                </div>
+              </fieldset>
+              <fieldset className="rounded-xl border border-white/[0.08] p-4">
+                <legend className="px-2 text-sm font-medium text-[#e5e0d4]">ماژول‌های فعال</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <ModuleOption defaultChecked label="فروشگاه و سبد خرید" value="ecommerce" />
+                  <ModuleOption label="رزرو و نوبت‌دهی" value="booking" />
+                  <ModuleOption defaultChecked label="گالری تصاویر" value="gallery" />
+                  <ModuleOption label="گردشگری" value="tourism" />
+                  <ModuleOption label="شرکتی" value="corporate" />
+                </div>
+              </fieldset>
               <div className="grid gap-4 sm:grid-cols-3">
                 <label className="text-sm text-[#c5c1b6]">
                   قالب فروشگاه
@@ -105,6 +134,9 @@ export default function AddTenantDialog() {
                     <option value="luxury">لوکس</option>
                     <option value="minimal">مینیمال</option>
                     <option value="classic">کلاسیک</option>
+                    <option value="medical">پزشکی</option>
+                    <option value="tourism">گردشگری</option>
+                    <option value="corporate">شرکتی</option>
                   </select>
                 </label>
                 <label className="text-sm text-[#c5c1b6]">
@@ -167,6 +199,23 @@ export default function AddTenantDialog() {
 
 const inputClass =
   "mt-2 h-11 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-3 text-sm text-[#f5f2e9] outline-none focus:border-[#d6ad56]/60";
+
+function ModuleOption({
+  value,
+  label,
+  defaultChecked = false,
+}: {
+  value: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-[#c5c1b6]">
+      <input defaultChecked={defaultChecked} name="enabled_modules" type="checkbox" value={value} />
+      {label}
+    </label>
+  );
+}
 
 function PlusIcon() {
   return (

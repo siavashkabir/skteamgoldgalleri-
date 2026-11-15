@@ -34,6 +34,13 @@ async function ProductDetailsContent({
   if (!store) {
     notFound();
   }
+  if (
+    !store.enabledModules.includes("ecommerce") ||
+    store.enabledModules.includes("corporate") ||
+    store.templateId === "corporate"
+  ) {
+    notFound();
+  }
   const product = await getVisibleProduct(store.id, productId);
   if (!product) {
     notFound();
@@ -103,6 +110,21 @@ async function ProductDetailsContent({
               </span>
             </div>
           )}
+          {product.images.length > 1 ? (
+            <div className="absolute inset-x-0 bottom-0 flex gap-2 overflow-x-auto p-4">
+              {product.images.map((image, index) => (
+                <Image
+                  alt={`${product.name} - تصویر ${index + 1}`}
+                  className="h-20 w-20 shrink-0 rounded-lg object-cover"
+                  height={80}
+                  key={image}
+                  src={image}
+                  unoptimized
+                  width={80}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col p-6 sm:p-9 lg:p-12">
@@ -158,6 +180,16 @@ async function ProductDetailsContent({
                 ))}
               </dl>
             </section>
+          ) : null}
+          {Object.entries(product.customFields).length ? (
+            <dl className="mt-5 grid gap-2 sm:grid-cols-2">
+              {Object.entries(product.customFields).map(([key, value]) => (
+                <div className="rounded-lg bg-[var(--color-bg)]/50 p-3 text-sm" key={key}>
+                  <dt className="text-xs text-[#858378]">{key}</dt>
+                  <dd className="mt-1">{value}</dd>
+                </div>
+              ))}
+            </dl>
           ) : null}
 
           <div className="mt-auto pt-8">

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getOptionalCustomerContext } from "@/lib/admin-context";
+import { parseTenantModules } from "@/lib/tenant-modules";
 
 type CheckoutState = {
   error?: string;
@@ -24,7 +25,20 @@ type Column = {
 
 export async function continueToCheckout(): Promise<never> {
   const customer = await getOptionalCustomerContext();
-  redirect(customer ? "/checkout" : "/login");
+  if (!customer) redirect("/login");
+  const tenant = await db.execute({
+    sql: "SELECT enabled_modules, template_id FROM tenants WHERE id = ?",
+    args: [customer.tenantId],
+  });
+  const row = tenant.rows[0];
+  if (
+    !row ||
+    !parseTenantModules(row.enabled_modules).includes("ecommerce") ||
+    row.template_id === "corporate"
+  ) {
+    redirect(`/${customer.tenantId}`);
+  }
+  redirect("/checkout");
 }
 
 export async function createMockOrder(
@@ -98,7 +112,7 @@ export async function createMockOrder(
   }
   const tenantId = [...tenantIds][0];
   const tenantResult = await db.execute({
-    sql: "SELECT id, name, status FROM tenants WHERE id = ?",
+    sql: "SELECT id, name, status, enabled_modules, template_id FROM tenants WHERE id = ?",
     args: [tenantId],
   });
   const tenant = tenantResult.rows[0];
@@ -107,6 +121,12 @@ export async function createMockOrder(
   }
   if (tenant.status === "suspended") {
     return { error: "این فروشگاه موقتاً بسته است و سفارش جدید نمی‌پذیرد." };
+  }
+  if (
+    !parseTenantModules(tenant.enabled_modules).includes("ecommerce") ||
+    tenant.template_id === "corporate"
+  ) {
+    return { error: "ثبت سفارش اینترنتی برای این فروشگاه فعال نیست." };
   }
   if (tenantId !== customer.tenantId) {
     return { error: "برای ثبت سفارش، باید وارد حساب مشتری همین فروشگاه شوید." };

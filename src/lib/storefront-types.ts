@@ -1,4 +1,5 @@
 import type { ThemeSettings } from "@/lib/theme-settings";
+import type { TenantModule } from "@/lib/tenant-modules";
 
 export const DEFAULT_TENANT_ID = "team-gold-system";
 export const DEFAULT_STORE_SLUG = "skteam";
@@ -22,7 +23,9 @@ export type StorefrontStore = {
   themeSettings: ThemeSettings;
   status: "active" | "trial" | "suspended";
   expiryDate: string | null;
-  templateId: "luxury" | "minimal" | "classic";
+  templateId: "luxury" | "minimal" | "classic" | "medical" | "tourism" | "corporate";
+  businessType: string | null;
+  enabledModules: TenantModule[];
 };
 
 export type StorefrontCategory = {
@@ -42,6 +45,8 @@ export type StorefrontProduct = {
   categoryId: string | null;
   categoryName: string | null;
   specifications: Record<string, string>;
+  customFields: Record<string, string>;
+  images: string[];
   ratingAverage: number | null;
   ratingCount: number;
 };

@@ -122,6 +122,27 @@ function getTemplatePalette(
       accent: "#a77a3b",
       card: "#fff8e9",
     },
+    medical: {
+      primary: "#247a9b",
+      background: "#f1f8fb",
+      text: "#153342",
+      accent: "#5bb8c7",
+      card: "#ffffff",
+    },
+    tourism: {
+      primary: "#e46b36",
+      background: "#fff7eb",
+      text: "#28251f",
+      accent: "#1d9a8a",
+      card: "#ffffff",
+    },
+    corporate: {
+      primary: "#183b66",
+      background: "#f4f6f9",
+      text: "#172333",
+      accent: "#4878aa",
+      card: "#ffffff",
+    },
   };
   const template = presets[templateId];
   return {

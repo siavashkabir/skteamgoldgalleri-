@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@supabase/supabase-js"],
     serverActions: {
-      bodySizeLimit: "6mb",
+      bodySizeLimit: "11mb",
       ...(codespacesOrigin ? { allowedOrigins: [codespacesOrigin] } : {}),
     },
   },
