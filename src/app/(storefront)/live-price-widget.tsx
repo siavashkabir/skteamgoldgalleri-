@@ -3,7 +3,7 @@
 import { useMarketPrice } from "./market-price-context";
 import { resolveBusinessKind } from "@/lib/tenant-features";
 
-export default function LivePriceWidget({ businessType }: { businessType?: string }) {
+export default function LivePriceWidget({ businessType }: { businessType?: string | null }) {
   const { price, error } = useMarketPrice();
 
   const kind = resolveBusinessKind(businessType, ["gold_features"]); // اگر ماژول طلا بود، طلا حساب میشه
