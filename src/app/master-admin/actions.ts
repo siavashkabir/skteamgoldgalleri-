@@ -7,6 +7,7 @@ import { getSuperAdminContext } from "@/lib/admin-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 import { setImpersonatedTenant, clearImpersonatedTenant } from "@/lib/admin-impersonation";
+import { addDomainToCloudflare } from "@/lib/cloudflare";
 import {
   isThemeColor,
   type ThemeSettings,
@@ -212,6 +213,11 @@ export async function updateTenant(
   const themeResult = await readThemeSettings(formData, id);
   if (!themeResult.theme) {
     return { error: themeResult.error ?? "تنظیمات پوسته فروشگاه معتبر نیستند." };
+  }
+
+  // 🚀 اتصال خودکار دامنه به کلودفلر در زمان ویرایش
+  if (domain) {
+    await addDomainToCloudflare(domain);
   }
 
   const result = await db.execute({
