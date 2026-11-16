@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
 import { SESSION_COOKIE, encodeSession, isSessionExpired, parseSession, sessionMaxAge } from "@/lib/session-policy";
 
-export const runtime = "experimental-edge";
 
 const REFRESH_AFTER_MS = 60_000;
 
