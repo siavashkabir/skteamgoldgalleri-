@@ -1,56 +1,40 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
+import { db } from "@/lib/db";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.headers.get("host") || "";
+  
+  // گرفتن مسیر دامنه بدون پورت (مثلا برای localhost:3000)
+  const cleanHostname = hostname.split(":")[0];
 
-  // 🚀 سیستم مسیریابی داینامیک (بدون تغییر آدرس کاربر)
-  if ((pathname === "/" || pathname === "") && !hostname.includes("localhost") && !hostname.includes("127.0.0.1")) {
-    // 1. ایجاد کلاینت Supabase
-    let response = NextResponse.next({ request });
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    });
+  // 🚀 1. سیستم مسیریابی داینامیک بر اساس دامنه (فقط برای صفحه اصلی)
+  if ((pathname === "/" || pathname === "") && !cleanHostname.includes("localhost") && !cleanHostname.includes("127.0.0.1")) {
+    try {
+      // خواندن دامنه از دیتابیس Turso
+      const result = await db.execute({
+        sql: "SELECT slug FROM tenants WHERE domain = ? LIMIT 1",
+        args: [cleanHostname],
+      });
 
-    // 2. جستجوی دامنه در دیتابیس
-    const { data: store } = await supabase
-      .from("stores")
-      .select("slug")
-      .eq("domain", hostname)
-      .single();
-
-    // 3. اگر فروشگاهی با این دامنه پیدا شد، آدرس را به صورت داخلی rewrite کن
-    // (بدون اینکه کاربر متوجه شود و آدرس سایت تغییر کند)
-    if (store && store.slug) {
-      return NextResponse.rewrite(new URL(`/${store.slug}`, request.url));
+      if (result.rows.length > 0) {
+        const slug = String(result.rows[0].slug);
+        // بازنویسی (Rewrite) آدرس بدون اینکه کاربر متوجه بشه
+        return NextResponse.rewrite(new URL(`/${slug}`, request.url));
+      }
+    } catch (error) {
+      console.error("Domain routing DB error:", error);
     }
   }
-  }
 
-  const hostname = request.headers.get("host") || "";
-
-  // 1. تشخیص دامنه لوازم یدکی (اگر آدرس دامنه originalcar بود و توی مسیر اصلی بودیم)
-  if (hostname.includes("originalcar.skteam.ir") && pathname === "/") {
-    return NextResponse.redirect(new URL("/originalcar", request.url));
-  }
-
-  // 2. تشخیص دامنه طلا (اگر آدرس دامنه اصلی بود و توی مسیر اصلی بودیم)
-  if (hostname.includes("amirgoldglr.ir") && pathname === "/") {
-    return NextResponse.redirect(new URL("/skteam", request.url));
-  }
-
+  // 🚀 2. محافظت از صفحات ادمین و پروفایل
   const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
-  const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
-  if (!isProtectedRoute) return NextResponse.next({ request });
+  
+  if (!isProtectedRoute) {
+    return NextResponse.next({ request });
+  }
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -65,7 +49,7 @@ export async function middleware(request: NextRequest) {
   });
 
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   if (!session) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
@@ -77,4 +61,6 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*"] };
+export const config = {
+  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*", "/"],
+};
