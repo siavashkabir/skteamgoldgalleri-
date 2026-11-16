@@ -6,6 +6,7 @@ import type { AdminActionState } from "../action-state";
 import type { AdminCategory } from "../categories/category-manager";
 import { AUTO_PART_SPEC_KEYS, type BusinessKind } from "@/lib/tenant-features";
 import { deleteProduct, saveProduct } from "./actions";
+import { DirectImageUpload } from "./direct-image-upload";
 
 export type AdminProduct = {
   id: string;
@@ -88,6 +89,7 @@ function ProductForm({
   onCancel?: () => void;
 }) {
   const [state, action, pending] = useActionState(saveProduct, {});
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const isGold = businessKind === "gold";
   const isAutoParts = businessKind === "auto_parts";
   const managedSpecificationKeys: string[] = isAutoParts
@@ -281,13 +283,15 @@ function ProductForm({
         </label>
         <label className="block text-sm text-[#c5c1b6]">
           تصاویر محصول (حداکثر ۵ تصویر، مجموعاً ۵ مگابایت)
-          <input
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            className={`${inputClass} h-auto py-2`}
-            multiple
-            name="images"
-            type="file"
+          <DirectImageUpload
+            uploadedImages={uploadedImages}
+            setUploadedImages={setUploadedImages}
+            maxImages={5 - (product?.images.length ?? 0)}
+            bucket="products"
           />
+          {uploadedImages.map((url, i) => (
+            <input key={i} name="uploaded_images" type="hidden" value={url} />
+          ))}
         </label>
 
         {product?.images.length || product?.imageUrl ? (

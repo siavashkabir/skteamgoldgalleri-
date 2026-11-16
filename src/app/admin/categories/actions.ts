@@ -13,6 +13,7 @@ export async function saveCategory(
   const id = readText(formData, "id");
   const name = readText(formData, "name");
   const parentId = readText(formData, "parent_id") || null;
+  const sortOrder = Number(readText(formData, "sort_order")) || 0;
 
   if (!name || name.length > 100) {
     return { error: "نام دسته‌بندی را وارد کنید (حداکثر ۱۰۰ نویسه)." };
@@ -55,15 +56,15 @@ export async function saveCategory(
 
   if (id) {
     await db.execute({
-      sql: `UPDATE categories SET name = ?, parent_id = ?
+      sql: `UPDATE categories SET name = ?, parent_id = ?, sort_order = ?
             WHERE id = ? AND tenant_id = ?`,
-      args: [name, parentId, id, tenantId],
+      args: [name, parentId, sortOrder, id, tenantId],
     });
   } else {
     await db.execute({
-      sql: `INSERT INTO categories (id, tenant_id, name, parent_id)
-            VALUES (?, ?, ?, ?)`,
-      args: [crypto.randomUUID(), tenantId, name, parentId],
+      sql: `INSERT INTO categories (id, tenant_id, name, parent_id, sort_order)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [crypto.randomUUID(), tenantId, name, parentId, sortOrder],
     });
   }
 

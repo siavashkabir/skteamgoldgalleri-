@@ -134,52 +134,13 @@ export async function saveProduct(
     images = [];
   }
 
-  const imageEntries = [
-    ...formData.getAll("images"),
-    formData.get("image"),
-  ].filter((entry): entry is File => entry instanceof File && entry.size > 0);
-  if (imageEntries.length > 5 || imageEntries.reduce((sum, image) => sum + image.size, 0) > maximumImageSize) {
-    return { error: "حداکثر ۵ تصویر با مجموع حجم ۵ مگابایت می‌توانید بارگذاری کنید." };
-  }
-  if (images.length + imageEntries.length > 5) {
+  const uploadedUrls = formData.getAll("uploaded_images")
+    .map((entry) => (typeof entry === "string" ? entry : ""))
+    .filter(Boolean);
+  if (images.length + uploadedUrls.length > 5) {
     return { error: "هر محصول حداکثر می‌تواند ۵ تصویر داشته باشد؛ تصاویر قبلی را حذف کنید." };
   }
-  if (imageEntries.length) {
-    for (const imageEntry of imageEntries) {
-      const extension = imageTypes.get(imageEntry.type);
-      if (!extension) {
-        return { error: "فرمت تصاویر باید JPEG، PNG، WebP یا AVIF باشد." };
-      }
-    }
-    const supabaseAdmin = await getSupabaseAdminClient();
-    const { data: bucket, error: bucketError } =
-      await supabaseAdmin.storage.getBucket("products");
-    if (bucketError) {
-      return { error: "باکت products در Supabase Storage در دسترس نیست." };
-    }
-    if (!bucket.public) {
-      return { error: "برای نمایش تصویر محصول، باکت products باید عمومی باشد." };
-    }
-    for (const imageEntry of imageEntries) {
-      const extension = imageTypes.get(imageEntry.type);
-      if (!extension) {
-        throw new Error("فرمت تصویر پس از اعتبارسنجی تغییر کرده است.");
-      }
-      const objectPath = `${tenantId}/${crypto.randomUUID()}.${extension}`;
-      const { data, error } = await supabaseAdmin.storage
-        .from("products")
-        .upload(objectPath, imageEntry, {
-          contentType: imageEntry.type,
-          upsert: false,
-        });
-      if (error) {
-        throw new Error(`بارگذاری تصویر انجام نشد: ${error.message}`);
-      }
-      images.push(
-        supabaseAdmin.storage.from("products").getPublicUrl(data.path).data.publicUrl,
-      );
-    }
-  }
+  images.push(...uploadedUrls);
   if (images.length > 5) {
     return { error: "هر محصول حداکثر می‌تواند ۵ تصویر داشته باشد." };
   }

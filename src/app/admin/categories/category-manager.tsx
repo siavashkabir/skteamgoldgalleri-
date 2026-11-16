@@ -8,6 +8,7 @@ export type AdminCategory = {
   id: string;
   name: string;
   parentId: string | null;
+  sortOrder?: number;
 };
 
 type NestedCategory = AdminCategory & { depth: number };
@@ -28,7 +29,7 @@ export default function CategoryManager({
         className="rounded-2xl border border-white/[0.08] bg-[#171716] p-5 sm:p-6"
       >
         <h2 className="mb-4 text-base font-semibold">افزودن دسته‌بندی</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <label className="block text-sm text-[#c5c1b6]">
             نام دسته‌بندی
             <input
@@ -42,6 +43,10 @@ export default function CategoryManager({
           <label className="block text-sm text-[#c5c1b6]">
             دسته‌بندی والد
             <ParentSelect categories={categories} />
+          </label>
+          <label className="block text-sm text-[#c5c1b6]">
+            ترتیب نمایش
+            <input className={inputClass} defaultValue={0} name="sort_order" type="number" required />
           </label>
         </div>
         <SubmitButton pending={pending} label="افزودن دسته‌بندی" />
@@ -94,7 +99,7 @@ function CategoryRow({
   return (
     <div className="px-5 py-4" style={{ paddingRight: `${20 + category.depth * 22}px` }}>
       {editing ? (
-        <form action={saveAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <form action={saveAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
           <input name="id" type="hidden" value={category.id} />
           <input
             className={inputClass}

@@ -15,14 +15,15 @@ export default function CategoriesPage() {
 async function Categories() {
   const { tenantId } = await requireTenantModule("ecommerce");
   const result = await db.execute({
-    sql: `SELECT id, name, parent_id FROM categories
-          WHERE tenant_id = ? ORDER BY name`,
+    sql: `SELECT id, name, parent_id, sort_order FROM categories
+          WHERE tenant_id = ? ORDER BY sort_order ASC, name ASC`,
     args: [tenantId],
   });
   const categories: AdminCategory[] = result.rows.map((row) => ({
     id: String(row.id),
     name: String(row.name),
     parentId: row.parent_id === null ? null : String(row.parent_id),
+    sortOrder: Number(row.sort_order) || 0,
   }));
   const categoryMap = new Map(categories.map((category) => [category.id, category]));
   const children = new Map<string | null, AdminCategory[]>();
