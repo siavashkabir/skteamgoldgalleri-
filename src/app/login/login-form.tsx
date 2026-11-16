@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { buildSessionCookie } from "@/lib/session-policy";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function LoginForm() {
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
+    const remember = formData.get("remember") === "on";
 
     try {
       const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
@@ -33,6 +35,11 @@ export default function LoginForm() {
         return;
       }
 
+      document.cookie = buildSessionCookie(
+        remember,
+        Date.now(),
+        window.location.protocol === "https:",
+      );
       router.replace(safeRedirectPath(searchParams.get("next")));
       router.refresh();
     } catch {
@@ -89,6 +96,15 @@ export default function LoginForm() {
             <EyeIcon crossed={!showPassword} />
           </button>
         </span>
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-[#c5c1b6]">
+        <input
+          className="h-4 w-4 accent-[#d6ad56]"
+          name="remember"
+          type="checkbox"
+        />
+        مرا به خاطر بسپار
       </label>
 
       {errorMessage ? (

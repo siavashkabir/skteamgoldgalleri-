@@ -16,7 +16,11 @@ export default function LoginPage(props: PageProps<"/login">) {
 async function LoginPageContent({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
+  searchParams: Promise<{
+    next?: string | string[];
+    error?: string | string[];
+    expired?: string | string[];
+  }>;
 }) {
   const query = await searchParams;
   const nextPath = safeNextPath(query.next);
@@ -27,6 +31,9 @@ async function LoginPageContent({
   const accessDenied =
     (Array.isArray(query.error) ? query.error[0] : query.error) ===
     "access_denied";
+  const expired = Boolean(
+    Array.isArray(query.expired) ? query.expired[0] : query.expired,
+  );
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
 
@@ -37,7 +44,7 @@ async function LoginPageContent({
   ) {
     throw error;
   }
-  if (!error && data?.claims?.sub && !accessDenied) {
+  if (!error && data?.claims?.sub && !accessDenied && !expired) {
     redirect(nextPath);
   }
 
@@ -101,6 +108,14 @@ async function LoginPageContent({
                 role="alert"
               >
                 دسترسی رد شد. فقط مالک فروشگاه یا مدیر کل می‌تواند وارد پنل مدیریت شود.
+              </p>
+            ) : null}
+            {expired ? (
+              <p
+                className="mb-5 rounded-xl border border-[#d6ad56]/20 bg-[#d6ad56]/[0.07] px-4 py-3 text-sm leading-6 text-[#e2c16d]"
+                role="status"
+              >
+                نشست شما به پایان رسید. لطفاً دوباره وارد شوید.
               </p>
             ) : null}
             <LoginForm />
