@@ -6,9 +6,9 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.headers.get("host") || "";
 
-  // اگر کاربر در روت اصلی است و وارد یک دامنه شده (نه localhost)
-  if ((pathname === "/" || pathname === "") && !hostname.includes("localhost")) {
-    // 1. ایجاد کلاینت Supabase برای خواندن دیتابیس
+  // 🚀 سیستم مسیریابی داینامیک (بدون تغییر آدرس کاربر)
+  if ((pathname === "/" || pathname === "") && !hostname.includes("localhost") && !hostname.includes("127.0.0.1")) {
+    // 1. ایجاد کلاینت Supabase
     let response = NextResponse.next({ request });
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
@@ -22,17 +22,18 @@ export async function middleware(request: NextRequest) {
     });
 
     // 2. جستجوی دامنه در دیتابیس
-    // فرض بر این است که ستون دامنه در جدول stores اسمش domain است
     const { data: store } = await supabase
       .from("stores")
       .select("slug")
       .eq("domain", hostname)
       .single();
 
-    // 3. اگر فروشگاهی با این دامنه پیدا شد، ریدایرکت کن
+    // 3. اگر فروشگاهی با این دامنه پیدا شد، آدرس را به صورت داخلی rewrite کن
+    // (بدون اینکه کاربر متوجه شود و آدرس سایت تغییر کند)
     if (store && store.slug) {
-      return NextResponse.redirect(new URL(`/${store.slug}`, request.url));
+      return NextResponse.rewrite(new URL(`/${store.slug}`, request.url));
     }
+  }
   }
 
   const hostname = request.headers.get("host") || "";
