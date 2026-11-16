@@ -4,6 +4,19 @@ import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const hostname = request.headers.get("host") || "";
+
+  // 1. تشخیص دامنه لوازم یدکی (اگر آدرس دامنه originalcar بود و توی مسیر اصلی بودیم)
+  if (hostname.includes("originalcar.skteam.ir") && pathname === "/") {
+    return NextResponse.redirect(new URL("/originalcar", request.url));
+  }
+
+  // 2. تشخیص دامنه طلا (اگر آدرس دامنه اصلی بود و توی مسیر اصلی بودیم)
+  if (hostname.includes("amirgoldglr.ir") && pathname === "/") {
+    return NextResponse.redirect(new URL("/skteam", request.url));
+  }
+
+  const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
   const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
   if (!isProtectedRoute) return NextResponse.next({ request });
 
