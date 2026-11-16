@@ -31,14 +31,39 @@ async function StorefrontContent({
   params: Promise<{ tenant_slug: string }>;
 }) {
   const { tenant_slug: slug } = await params;
-  const store = await getStoreBySlug(slug);
-  if (!store) {
-    notFound();
+  
+  let store;
+  let catalog = { products: [], categories: [] };
+  let customerState = null;
+
+  try {
+    store = await getStoreBySlug(slug);
+    if (!store) {
+      notFound();
+    }
+    
+    const [fetchedCatalog, fetchedCustomerState] = await Promise.all([
+      getStorefrontCatalog(store.id),
+      getStorefrontCustomerState(store.id),
+    ]);
+    catalog = fetchedCatalog;
+    customerState = fetchedCustomerState;
+  } catch (error) {
+    console.error("Error loading storefront data:", error);
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4 text-center">
+        <div>
+          <h1 className="mb-4 text-2xl font-semibold text-[var(--color-text)]">خطا در بارگذاری فروشگاه</h1>
+          <p className="text-sm text-[#929085]">لطفاً چند لحظه دیگر دوباره تلاش کنید.</p>
+          <a href="/" className="mt-6 inline-block rounded-xl bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-bg)]">
+            بازگشت به صفحه اصلی
+          </a>
+        </div>
+      </div>
+    );
   }
-  const [catalog, customerState] = await Promise.all([
-    getStorefrontCatalog(store.id),
-    getStorefrontCustomerState(store.id),
-  ]);
+
+  const isCorporate =
   const isCorporate =
     store.templateId === "corporate" ||
     store.enabledModules.includes("corporate");
