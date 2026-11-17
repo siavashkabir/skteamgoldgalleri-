@@ -5,6 +5,7 @@ import { DEFAULT_THEME_SETTINGS, type ThemeSettings } from "@/lib/theme-settings
 
 type Props = {
   defaultValue?: ThemeSettings;
+  defaultCurrencies?: string[];
 };
 
 type PreviewStyle = CSSProperties & {
@@ -22,12 +23,30 @@ const colorFields = [
   { name: "theme_card", label: "رنگ کارت", key: "card" },
 ] as const;
 
+const availableCurrencies = [
+  { id: "USD", label: "دلار آمریکا" },
+  { id: "EUR", label: "یورو" },
+  { id: "AED", label: "درهم امارات" },
+  { id: "TRY", label: "لیر ترکیه" },
+  { id: "CNY", label: "یوان چین" },
+  { id: "GBP", label: "پوند انگلیس" },
+  { id: "XAU", label: "انس جهانی طلا" },
+  { id: "18K", label: "طلای ۱۸ عیار" },
+  { id: "BUBBLE", label: "حباب بازار" },
+  { id: "BTC", label: "بیت‌کوین" },
+  { id: "USDT", label: "تتر" },
+  { id: "ETH", label: "اتریوم" },
+];
+
 export default function ThemeSettingsFields({
   defaultValue = DEFAULT_THEME_SETTINGS,
+  defaultCurrencies = ["USD", "XAU", "18K", "BUBBLE"],
 }: Props) {
   const [theme, setTheme] = useState(defaultValue);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [clearImage, setClearImage] = useState(false);
+  const [currencies, setCurrencies] = useState<string[]>(defaultCurrencies);
+  
   const imageUrl = clearImage ? null : selectedImageUrl ?? theme.bgImageUrl;
   const previewStyle: PreviewStyle = {
     "--color-primary": theme.primary,
@@ -37,6 +56,10 @@ export default function ThemeSettingsFields({
     backgroundColor: theme.background,
     color: theme.text,
     ...(imageUrl ? { backgroundImage: `linear-gradient(rgba(0,0,0,${theme.bgOpacity / 100}), rgba(0,0,0,${theme.bgOpacity / 100})), url("${imageUrl}")`, backgroundPosition: "center", backgroundSize: "cover" } : {}),
+  };
+
+  const toggleCurrency = (id: string) => {
+    setCurrencies(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
   };
 
   return (
@@ -58,13 +81,7 @@ export default function ThemeSettingsFields({
             <input accept="image/jpeg,image/png,image/webp,image/avif" className="mt-2 block w-full text-xs text-[#aaa79b] file:ml-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-[#eee]" name="theme_bg_image" onChange={(event) => { const file = event.target.files?.[0]; setSelectedImageUrl(file ? URL.createObjectURL(file) : null); setClearImage(false); }} type="file" />
             <input name="theme_bg_image_url" type="hidden" value={theme.bgImageUrl ?? ""} />
           </label>
-          {theme.bgImageUrl ? (<label className="flex items-center gap-2 text-xs text-[#aaa79b]"><input checked={clearImage} name="theme_bg_image_clear" onChange={(event) => setClearImage(event.target.checked)} type="checkbox" value="on" />حذف تصویر فعلی</label>) : null}
-          <label className="block pt-1 text-sm text-[#c5c1b6]">
-            تیرگی لایه روی تصویر: {theme.bgOpacity}٪
-            <input className="mt-2 w-full accent-[#d6ad56]" max={100} min={0} name="theme_bg_opacity" onChange={(event) => setTheme((current) => ({ ...current, bgOpacity: Number(event.target.value) }))} type="range" value={theme.bgOpacity} />
-          </label>
           
-          {/* 🚀 تنظیمات نمایش نمودار */}
           <div className="border-t border-white/10 pt-4 mt-4 space-y-3">
             <h4 className="text-sm font-semibold text-[#e2c16d]">تنظیمات نمایش قیمت‌ها</h4>
             <label className="flex items-center gap-2 text-sm text-[#c5c1b6]">
@@ -78,7 +95,6 @@ export default function ThemeSettingsFields({
               <select name="chart_type" className="mt-2 h-10 w-full rounded-lg border border-white/10 bg-[#10100f] px-3 text-sm text-[#f5f2e9]">
                 <option value="line">خطی (Line)</option>
                 <option value="bar">میله‌ای (Bar)</option>
-                <option value="area">مساحت (Area)</option>
               </select>
             </label>
             <label className="flex items-center justify-between gap-4 text-sm text-[#c5c1b6]">
@@ -87,13 +103,24 @@ export default function ThemeSettingsFields({
             </label>
           </div>
         </div>
-        <div aria-label="پیش‌نمایش پوسته" className="min-h-52 rounded-xl border border-white/10 p-4" dir="rtl" style={previewStyle}>
-          <p className="text-xs font-medium text-[var(--color-accent)]">پیش‌نمایش فروشگاه</p>
-          <h4 className="mt-2 text-lg font-semibold">گالری طلا</h4>
-          <p className="mt-1 text-xs opacity-75">نمونه‌ای از نمایش رنگ‌های انتخاب‌شده</p>
-          <div className="mt-4 rounded-lg bg-[var(--color-card)] p-3">
-            <span className="text-xs">کارت محصول</span>
-            <button className="mr-3 rounded-lg px-3 py-2 text-xs font-semibold" style={{ backgroundColor: theme.primary, color: theme.background }} type="button">مشاهده محصولات</button>
+
+        <div className="space-y-3">
+          <div className="border rounded-xl border-white/[0.08] p-4">
+            <h4 className="mb-3 text-sm font-semibold text-[#e2c16d]">ارزها و دارایی‌های قابل نمایش</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {availableCurrencies.map((c) => (
+                <label key={c.id} className="flex items-center gap-2 text-xs text-[#c5c1b6]">
+                  <input type="checkbox" checked={currencies.includes(c.id)} onChange={() => toggleCurrency(c.id)} />
+                  {c.label}
+                </label>
+              ))}
+            </div>
+            <input type="hidden" name="enabled_currencies" value={JSON.stringify(currencies)} />
+          </div>
+
+          <div aria-label="پیش‌نمایش پوسته" className="min-h-40 rounded-xl border border-white/10 p-4" dir="rtl" style={previewStyle}>
+            <p className="text-xs font-medium text-[var(--color-accent)]">پیش‌نمایش فروشگاه</p>
+            <h4 className="mt-2 text-lg font-semibold">گالری طلا</h4>
           </div>
         </div>
       </div>

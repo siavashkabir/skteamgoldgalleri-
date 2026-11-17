@@ -104,6 +104,7 @@ export async function updateTenant(
   const showChart = formData.get("show_chart") === "on";
   const chartType = readText(formData, "chart_type") || "line";
   const chartColor = readText(formData, "chart_color") || "#d4af37";
+  const enabledCurrencies = readText(formData, "enabled_currencies") || '["USD","XAU","18K","BUBBLE"]';
 
   const id = typeof idEntry === "string" ? idEntry.trim() : "";
   const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
@@ -152,7 +153,7 @@ export async function updateTenant(
           hero_subtitle = ?, phone_numbers = ?, address_text = ?, location_url = ?,
           instagram_url = ?, telegram_url = ?, whatsapp_url = ?, social_links = ?,
           toman_rate = ?, theme_settings = ?, status = ?, expiry_date = ?,
-          show_header_widget = ?, show_chart = ?, chart_type = ?, chart_color = ?
+          show_header_widget = ?, show_chart = ?, chart_type = ?, chart_color = ?, enabled_currencies = ?
           WHERE id = ?`,
     args: [
       name, domain || null, ownerEmail, businessType || null,
@@ -162,7 +163,7 @@ export async function updateTenant(
       instagramUrl || null, telegramUrl || null, whatsappUrl || null,
       JSON.stringify({ instagram: instagramUrl, telegram: telegramUrl, whatsapp: whatsappUrl }),
       tomanRate, JSON.stringify(themeResult.theme), status, expiryDate || null,
-      showHeader ? 1 : 0, showChart ? 1 : 0, chartType, chartColor,
+      showHeader ? 1 : 0, showChart ? 1 : 0, chartType, chartColor, enabledCurrencies,
       id,
     ],
   });

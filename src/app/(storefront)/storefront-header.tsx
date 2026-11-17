@@ -105,7 +105,7 @@ export default function StorefrontHeader({
           </Link>
         </nav>
       </div>
-      {hasEcommerce ? <LivePriceWidget businessType={store.businessType} showWidget={store.show_header_widget !== 0 && store.show_header_widget !== false} /> : null}
+      {hasEcommerce ? <LivePriceWidget enabledCurrencies={store.enabled_currencies} showWidget={store.show_header_widget !== 0 && store.show_header_widget !== false} /> : null}
     </header>
   );
 }
