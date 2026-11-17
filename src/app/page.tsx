@@ -11,9 +11,7 @@ export default async function Home() {
     redirect("/skteam");
   }
 
-  // 🚀 خواندن داینامیک از دیتابیس
   try {
-    // جستجوی دقیق‌تر (حذف فاصله‌ها و حروف بزرگ/کوچک)
     const result = await db.execute({
       sql: "SELECT slug FROM tenants WHERE lower(trim(domain)) = ? LIMIT 1",
       args: [cleanHostname],
@@ -23,13 +21,11 @@ export default async function Home() {
       const slug = String(result.rows[0].slug);
       redirect(`/${slug}`);
     } else {
-      // اگر توی دیتابیس نبود، سعی کن از خود دامنه استفاده کنی (مثلاً originalcar)
       const domainPrefix = cleanHostname.split('.')[0];
-      redirect(`/${domainPrefix}`); 
+      redirect(`/${domainPrefix}`);
     }
   } catch (error) {
     console.error("Domain routing error:", error);
-    // در صورت خطای دیتابیس، برو به طلا
     redirect("/skteam");
   }
 }

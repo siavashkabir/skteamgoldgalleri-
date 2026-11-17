@@ -18,12 +18,9 @@ export async function middleware(request: NextRequest) {
       if (result.rows.length > 0) {
         const slug = String(result.rows[0].slug);
         return NextResponse.rewrite(new URL(`/${slug}`, request.url));
-      } else {
-        return NextResponse.rewrite(new URL(`/skteam`, request.url));
       }
     } catch (error) {
       console.error("Domain routing DB error:", error);
-      return NextResponse.rewrite(new URL(`/skteam`, request.url));
     }
   }
 
