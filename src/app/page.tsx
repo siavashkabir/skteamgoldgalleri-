@@ -1,19 +1,30 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { db } from "@/lib/db";
 
 export default async function Home() {
   const headersList = await headers();
   const hostname = headersList.get("host") || "";
   const cleanHostname = hostname.split(":")[0].toLowerCase();
 
-  // 🚀 نقشه دامنه‌ها به اسلاگ فروشگاه
-  const domainMap: Record<string, string> = {
-    "amirgoldglr.ir": "skteam",
-    "www.amirgoldglr.ir": "skteam",
-    "originalcar.skteam.ir": "originalcar",
-  };
+  if (cleanHostname.includes("localhost") || cleanHostname.includes("127.0.0.1")) {
+    redirect("/skteam");
+  }
 
-  const slug = domainMap[cleanHostname] || "skteam"; // پیش‌فرض
+  try {
+    const result = await db.execute({
+      sql: "SELECT slug FROM tenants WHERE lower(trim(domain)) = ? LIMIT 1",
+      args: [cleanHostname],
+    });
 
-  redirect(`/${slug}`);
+    if (result.rows.length > 0) {
+      const slug = String(result.rows[0].slug);
+      redirect(`/${slug}`);
+    }
+  } catch (error) {
+    console.error("Domain routing error in page.tsx:", error);
+  }
+
+  // 🚀 فال‌بک به دامنه مادر
+  redirect("/skteam");
 }
