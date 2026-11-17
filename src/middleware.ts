@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
+import { db } from "@/lib/db";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -18,11 +19,11 @@ export async function middleware(request: NextRequest) {
         const slug = String(result.rows[0].slug);
         return NextResponse.rewrite(new URL(`/${slug}`, request.url));
       } else {
-        return NextResponse.rewrite(new URL(`/skteam`, request.url)); // فال‌بک
+        return NextResponse.rewrite(new URL(`/skteam`, request.url));
       }
     } catch (error) {
       console.error("Domain routing DB error:", error);
-      return NextResponse.rewrite(new URL(`/skteam`, request.url)); // فال‌بک در صورت خطا
+      return NextResponse.rewrite(new URL(`/skteam`, request.url));
     }
   }
 
@@ -58,5 +59,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*"],
+  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*", "/"],
 };

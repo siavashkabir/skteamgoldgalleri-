@@ -25,6 +25,5 @@ export default async function Home() {
     console.error("Domain routing error in page.tsx:", error);
   }
 
-  // 🚀 فال‌بک به دامنه مادر
   redirect("/skteam");
 }
