@@ -1,87 +1,34 @@
 "use client";
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type MarketPrice = {
-  ouncePrice: number;
-  dollarPrice: number;
-  eighteenKPrice: number;
-  globalEighteenKPrice: number;
-  bubblePercentage: number;
-  euroPrice?: number;
-  dirhamPrice?: number;
-  liraPrice?: number;
-  yuanPrice?: number;
-  updatedAt: string;
+  ouncePrice: number; dollarPrice: number; eighteenKPrice: number; globalEighteenKPrice: number;
+  bubblePercentage: number; euroPrice?: number; dirhamPrice?: number; liraPrice?: number; yuanPrice?: number;
+  updatedAt: string; source?: string; isApproximate?: boolean;
 };
-
-type MarketPriceState = {
-  price: MarketPrice | null;
-  error: string | null;
-};
-
-const MarketPriceContext = createContext<MarketPriceState>({
-  price: null,
-  error: null,
-});
+type MarketPriceState = { price: MarketPrice | null; error: string | null; };
+const MarketPriceContext = createContext<MarketPriceState>({ price: null, error: null });
 
 export function MarketPriceProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<MarketPriceState>({
-    price: null,
-    error: null,
-  });
-  
+  const [state, setState] = useState<MarketPriceState>({ price: null, error: null });
+
   useEffect(() => {
     let active = true;
     async function refreshPrice() {
       try {
-        const response = await fetch("/api/tgju", { cache: "no-store" });
+        const response = await fetch("/api/live-prices", { cache: "no-store" });
         const result: unknown = await response.json();
-        if (!response.ok) {
-          const message = result && typeof result === "object" && "error" in result && typeof result.error === "string" ? result.error : "قیمت لحظه‌ای در دسترس نیست.";
-          throw new Error(message);
-        }
-        
-        if (active) {
-          setState({ 
-            price: {
-              ...(result as any),
-              updatedAt: new Date().toISOString()
-            }, 
-            error: null 
-          });
-        }
-      } catch (caughtError) {
-        if (active) {
-          setState({
-            price: null,
-            error: caughtError instanceof Error ? caughtError.message : "قیمت لحظه‌ای در دسترس نیست.",
-          });
-        }
+        if (!response.ok) throw new Error((result as any).error || "قیمت در دسترس نیست.");
+        if (active) setState({ price: { ...(result as any), updatedAt: new Date().toISOString() }, error: null });
+      } catch (err) {
+        if (active) setState({ price: null, error: err instanceof Error ? err.message : "خطا" });
       }
     }
-
     void refreshPrice();
     const intervalId = window.setInterval(() => void refreshPrice(), 5 * 60 * 1000);
-    return () => {
-      active = false;
-      window.clearInterval(intervalId);
-    };
+    return () => { active = false; window.clearInterval(intervalId); };
   }, []);
 
-  return (
-    <MarketPriceContext.Provider value={state}>
-      {children}
-    </MarketPriceContext.Provider>
-  );
+  return <MarketPriceContext.Provider value={state}>{children}</MarketPriceContext.Provider>;
 }
-
-export function useMarketPrice() {
-  return useContext(MarketPriceContext);
-}
+export function useMarketPrice() { return useContext(MarketPriceContext); }
