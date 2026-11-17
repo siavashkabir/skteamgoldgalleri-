@@ -33,7 +33,8 @@ async function StorefrontContent({
   const { tenant_slug: slug } = await params;
   
   let store;
-  let catalog = { products: [], categories: [] };
+  type CatalogType = Awaited<ReturnType<typeof getStorefrontCatalog>>;
+  let catalog: CatalogType = { products: [], categories: [] };
   let customerState = null;
 
   try {
