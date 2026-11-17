@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export type MarketPrice = {
   ouncePrice: number; dollarPrice: number; eighteenKPrice: number; globalEighteenKPrice: number;
   bubblePercentage: number; euroPrice?: number; dirhamPrice?: number; liraPrice?: number; yuanPrice?: number;
-  updatedAt: string; source?: string; isApproximate?: boolean;
+  updatedAt: string; source?: string; isApproximate?: boolean; isCached?: boolean; cacheUpdatedAt?: string;
 };
 type MarketPriceState = { price: MarketPrice | null; error: string | null; };
 const MarketPriceContext = createContext<MarketPriceState>({ price: null, error: null });

@@ -7,25 +7,19 @@ export default function LivePriceWidget({ businessType, showWidget }: { business
   if (!showWidget) return null;
 
   const kind = resolveBusinessKind(businessType, ["gold_features"]);
-  const formatNum = (num: number | undefined) => num ? `${Math.round(num).toLocaleString("fa-IR")} تومان` : statusText(error);
-  const formatUSD = (num: number | undefined) => num ? `$${Math.round(num).toLocaleString("en-US")}` : statusText(error);
-  const statusText = (err: string | null) => err ?? "در حال دریافت...";
+  
+  const formatNum = (num: number | undefined) => (num !== undefined && num !== null && num > 0) ? `${Math.round(num).toLocaleString("fa-IR")} تومان` : "نامشخص";
+  const formatUSD = (num: number | undefined) => (num !== undefined && num !== null && num > 0) ? `$${Math.round(num).toLocaleString("en-US")}` : "نامشخص";
+  const formatPercent = (num: number | undefined) => (num !== undefined && num !== null) ? `${num > 0 ? "+" : ""}${num.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}٪` : "-";
 
   let items: { label: string; value: string }[] = [];
 
-  if (price?.source === "global") {
-    items = [
-      { label: "انس جهانی", value: formatUSD(price.ouncePrice) },
-      { label: "دلار (نامشخص)", value: "نامشخص" },
-      { label: "طلای ۱۸ عیار", value: "نامشخص" },
-      { label: "حباب بازار", value: "-" },
-    ];
-  } else if (kind === "gold") {
+  if (kind === "gold") {
     items = [
       { label: "انس جهانی", value: formatUSD(price?.ouncePrice) },
       { label: "دلار", value: formatNum(price?.dollarPrice) },
       { label: "طلای ۱۸ عیار", value: formatNum(price?.eighteenKPrice) },
-      { label: "حباب بازار", value: price ? `${price.bubblePercentage > 0 ? "+" : ""}${price.bubblePercentage.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}٪` : statusText(error) },
+      { label: "حباب بازار", value: formatPercent(price?.bubblePercentage) },
     ];
   } else {
     items = [
@@ -34,6 +28,13 @@ export default function LivePriceWidget({ businessType, showWidget }: { business
       { label: "درهم", value: formatNum(price?.dirhamPrice) },
       { label: "لیر", value: formatNum(price?.liraPrice) },
     ];
+  }
+
+  // فرمت کردن تاریخ کش برای نمایش
+  let cacheInfo = null;
+  if (price?.isCached && price.cacheUpdatedAt) {
+    const date = new Date(price.cacheUpdatedAt);
+    cacheInfo = date.toLocaleString("fa-IR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
   const gridClass = items.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2";
@@ -47,6 +48,11 @@ export default function LivePriceWidget({ businessType, showWidget }: { business
           </div>
         ))}
       </div>
+      {cacheInfo && (
+        <div className="text-center text-[10px] text-yellow-500/80 pb-1 bg-[var(--color-bg)]/80">
+          آخرین قیمت ثبت‌شده: {cacheInfo} (در حال تلاش برای دریافت لحظه‌ای...)
+        </div>
+      )}
     </div>
   );
 }
