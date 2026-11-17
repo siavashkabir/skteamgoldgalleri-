@@ -64,7 +64,6 @@ async function StorefrontContent({
   }
 
   const isCorporate =
-  const isCorporate =
     store.templateId === "corporate" ||
     store.enabledModules.includes("corporate");
   const hasEcommerce =
