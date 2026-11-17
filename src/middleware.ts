@@ -6,14 +6,11 @@ import { db } from "@/lib/db";
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.headers.get("host") || "";
-  
-  // گرفتن مسیر دامنه بدون پورت (مثلا برای localhost:3000)
   const cleanHostname = hostname.split(":")[0];
 
-  // 🚀 1. سیستم مسیریابی داینامیک بر اساس دامنه (فقط برای صفحه اصلی)
+  // 🚀 سیستم مسیریابی داینامیک (بدون تغییر آدرس کاربر)
   if ((pathname === "/" || pathname === "") && !cleanHostname.includes("localhost") && !cleanHostname.includes("127.0.0.1")) {
     try {
-      // خواندن دامنه از دیتابیس Turso
       const result = await db.execute({
         sql: "SELECT slug FROM tenants WHERE domain = ? LIMIT 1",
         args: [cleanHostname],
@@ -21,7 +18,6 @@ export async function middleware(request: NextRequest) {
 
       if (result.rows.length > 0) {
         const slug = String(result.rows[0].slug);
-        // بازنویسی (Rewrite) آدرس بدون اینکه کاربر متوجه بشه
         return NextResponse.rewrite(new URL(`/${slug}`, request.url));
       }
     } catch (error) {
@@ -29,7 +25,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 🚀 2. محافظت از صفحات ادمین و پروفایل
+  // 🚀 محافظت از صفحات ادمین و پروفایل
   const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
   
   if (!isProtectedRoute) {
