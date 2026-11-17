@@ -198,7 +198,7 @@ async function StorefrontContent({
 
       {hasEcommerce && isGold ? (
         <section className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[1.25fr_0.75fr]">
-          <PriceTrends />
+          <PriceTrends showChart={store.show_chart !== 0 && store.show_chart !== false} chartType={store.chart_type || "line"} chartColor={store.chart_color || "#d4af37"} />
           <PriceCalculator />
         </section>
       ) : null}
