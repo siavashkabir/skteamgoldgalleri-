@@ -1,31 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
-import { db } from "@/lib/db";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const hostname = request.headers.get("host") || "";
-  const cleanHostname = hostname.split(":")[0];
-
-  // 🚀 سیستم مسیریابی داینامیک (بدون تغییر آدرس کاربر)
-  if ((pathname === "/" || pathname === "") && !cleanHostname.includes("localhost") && !cleanHostname.includes("127.0.0.1")) {
-    try {
-      const result = await db.execute({
-        sql: "SELECT slug FROM tenants WHERE domain = ? LIMIT 1",
-        args: [cleanHostname],
-      });
-
-      if (result.rows.length > 0) {
-        const slug = String(result.rows[0].slug);
-        return NextResponse.rewrite(new URL(`/${slug}`, request.url));
-      }
-    } catch (error) {
-      console.error("Domain routing DB error:", error);
-    }
-  }
-
-  // 🚀 محافظت از صفحات ادمین و پروفایل
   const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
   
   if (!isProtectedRoute) {
@@ -58,5 +36,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*", "/"],
+  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*"],
 };
