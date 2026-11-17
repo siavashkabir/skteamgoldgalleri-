@@ -5,6 +5,10 @@ export const DEFAULT_TENANT_ID = "team-gold-system";
 export const DEFAULT_STORE_SLUG = "skteam";
 
 export type StorefrontStore = {
+  show_header_widget?: number | boolean | null;
+  show_chart?: number | boolean | null;
+  chart_type?: string | null;
+  chart_color?: string | null;
   id: string;
   slug: string;
   name: string;
