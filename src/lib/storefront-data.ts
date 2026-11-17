@@ -15,6 +15,10 @@ import { parseTenantModules } from "@/lib/tenant-modules";
 type StorefrontDatabase = Awaited<ReturnType<typeof getDbClient>>;
 
 const fallbackDefaultStore: StorefrontStore = {
+  show_header_widget?: number | boolean | null;
+  show_chart?: number | boolean | null;
+  chart_type?: string | null;
+  chart_color?: string | null;
   id: DEFAULT_TENANT_ID,
   slug: DEFAULT_STORE_SLUG,
   name: "گالری طلای امیر",
