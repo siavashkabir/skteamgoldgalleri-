@@ -1,40 +1,26 @@
 "use client";
 import { useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 
 export default function MasterLogin() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        setError(error.message === "Invalid login credentials" ? "ایمیل یا رمز عبور اشتباه است." : error.message);
-        setLoading(false);
-        return;
-      }
-      
-      if (data.session) {
-        router.push("/master-admin");
-        router.refresh();
-      }
-    } catch (err) {
-      setError("خطا در ارتباط با سرور.");
+    // رمز عبور و نام کاربری موقت
+    if (username === "skteam" && password === "123456") {
+      // ذخیره یک کوکی ساده برای احراز هویت موقت
+      document.cookie = "master_auth=true; path=/";
+      router.push("/master-admin");
+    } else {
+      setError("نام کاربری یا رمز عبور اشتباه است.");
       setLoading(false);
     }
   };
@@ -55,10 +41,10 @@ export default function MasterLogin() {
 
         <div className="space-y-3">
           <input 
-            type="email" 
-            placeholder="ایمیل مدیر کل" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
+            type="text" 
+            placeholder="نام کاربری" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
             className="w-full rounded-xl border border-white/10 bg-[#10100f] p-4 text-white outline-none focus:border-[#d6ad56]" 
             dir="ltr"
             required 
@@ -83,6 +69,11 @@ export default function MasterLogin() {
         >
           {loading ? "در حال ورود..." : "ورود"}
         </button>
+        
+        <div className="text-center text-xs text-gray-500">
+          <p>نام کاربری: skteam</p>
+          <p>رمز عبور: 123456</p>
+        </div>
       </form>
     </div>
   );
