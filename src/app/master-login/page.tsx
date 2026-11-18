@@ -16,11 +16,7 @@ export default function MasterLogin() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return setError("ایمیل یا رمز عبور اشتباه است.");
     
-    // چک کردن نقش سوپر ادمین
-    if (data.user.app_metadata?.role !== "super_admin") {
-       await supabase.auth.signOut();
-       return setError("شما دسترسی به پنل مدیریت پلتفرم را ندارید.");
-    }
+
     router.push("/master-admin");
   };
 
