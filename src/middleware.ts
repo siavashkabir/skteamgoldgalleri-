@@ -10,51 +10,34 @@ export async function middleware(request: NextRequest) {
 
   if ((pathname === "/" || pathname === "") && !cleanHostname.includes("localhost") && !cleanHostname.includes("127.0.0.1")) {
     try {
-      const result = await db.execute({
-        sql: "SELECT slug FROM tenants WHERE lower(trim(domain)) = ? LIMIT 1",
-        args: [cleanHostname],
-      });
-
+      const result = await db.execute({ sql: "SELECT slug FROM tenants WHERE lower(trim(domain)) = ? LIMIT 1", args: [cleanHostname] });
       if (result.rows.length > 0) {
-        const slug = String(result.rows[0].slug);
-        return NextResponse.rewrite(new URL(`/${slug}`, request.url));
+        return NextResponse.rewrite(new URL(`/${result.rows[0].slug}`, request.url));
       }
-    } catch (error) {
-      console.error("Domain routing DB error:", error);
-    }
+    } catch (e) { console.error("Domain routing error:", e); }
   }
 
-  const isProtectedRoute = pathname.startsWith("/admin") || pathname.startsWith("/master-admin") || pathname.startsWith("/profile");
+  const isMasterRoute = pathname.startsWith("/master-admin");
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/profile");
   
-  if (!isProtectedRoute) {
-    return NextResponse.next({ request });
-  }
-
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() { return request.cookies.getAll(); },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+  if (isMasterRoute || isAdminRoute) {
+    let response = NextResponse.next({ request });
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet) { cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value)); response = NextResponse.next({ request }); cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options)); },
       },
-    },
-  });
-
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.search = "";
-    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
-    return NextResponse.redirect(loginUrl);
+    });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = isMasterRoute ? "/master-login" : "/login";
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return response;
   }
-
-  return response;
+  return NextResponse.next({ request });
 }
 
-export const config = {
-  matcher: ["/master-admin/:path*", "/admin/:path*", "/profile/:path*", "/"],
-};
+export const config = { matcher: ["/master-admin/:path*", "/master-login", "/admin/:path*", "/profile/:path*", "/"] };

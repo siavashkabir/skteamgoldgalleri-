@@ -85,6 +85,10 @@ export default function EditTenantDialog({ tenant }: Props) {
             <form action={formAction} className="space-y-5" encType="multipart/form-data">
               <input name="id" type="hidden" value={tenant.id} />
               <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[#e5e0d4]">رمز عبور اولیه مالک</span>
+                <input className="h-12 w-full rounded-xl border border-white/[0.09] bg-[#10100f] px-4 text-left text-sm text-[#f5f2e9]" dir="ltr" name="owner_password" type="password" placeholder="حداقل ۶ کاراکتر" />
+              </label>
+              <label className="block">
                 <span className="mb-2 block text-sm font-medium">
                   نام فروشگاه
                 </span>
@@ -146,7 +150,32 @@ export default function EditTenantDialog({ tenant }: Props) {
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
                   نوع کسب‌وکار
-                  <input className={inputClass} defaultValue={tenant.businessType} maxLength={120} name="business_type" />
+                  <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm text-[#c5c1b6]">دسته اصلی
+            <select className={inputClass} defaultValue="retail" name="category">
+              <option value="retail">فروشگاه‌ها</option>
+              <option value="services">خدمات</option>
+              <option value="health">سلامت</option>
+              <option value="tourism">گردشگری</option>
+              <option value="food">رستوران</option>
+              <option value="industry">صنعت</option>
+            </select>
+          </label>
+          <label className="text-sm text-[#c5c1b6]">زیرمجموعه
+            <select className={inputClass} defaultValue="general" name="business_type">
+              <option value="general">عمومی</option>
+              <option value="gold">طلا و جواهر</option>
+              <option value="auto_parts">قطعات خودرو</option>
+              <option value="clothing">پوشاک</option>
+              <option value="food_dairy">لبنیات</option>
+              <option value="clinic">کلینیک</option>
+              <option value="tourism">آژانس مسافرتی</option>
+            </select>
+          </label>
+        </div>
+        <label className="text-sm text-[#c5c1b6]">کسب‌وکار دلخواه (در صورت وجود نداشتن)
+          <input className={inputClass} name="custom_business_type" placeholder="مثلاً fishing" />
+        </label>
                 </label>
                 <label className="block text-sm text-[#c5c1b6]">
                   لوگو (URL)
