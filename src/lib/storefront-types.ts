@@ -9,6 +9,13 @@ export type StorefrontStore = {
   show_chart?: number | boolean | null;
   chart_type?: string | null;
   chart_color?: string | null;
+  enabled_currencies?: string | null;
+  category?: string | null;
+  owner_password?: string | null;
+  show_header_widget?: number | boolean | null;
+  show_chart?: number | boolean | null;
+  chart_type?: string | null;
+  chart_color?: string | null;
   id: string;
   slug: string;
   name: string;
