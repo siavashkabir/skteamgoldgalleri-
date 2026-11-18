@@ -118,7 +118,7 @@ export default function ThemeSettingsFields({
             <input type="hidden" name="enabled_currencies" value={JSON.stringify(currencies)} />
           </div>
 
-          <div aria-label="پیش‌نمایش پوسته" className="min-h-40 rounded-xl border border-white/10 p-4" dir="rtl" style={{ ...previewStyle, "--color-primary": theme.primary, "--color-card": theme.card, "--color-text": theme.text, backgroundColor: theme.background, color: theme.text }}>
+          <div aria-label="پیش‌نمایش پوسته" className="min-h-40 rounded-xl border border-white/10 p-4" dir="rtl" style={{ ...previewStyle, "--color-primary": theme.primary, "--color-card": theme.card, "--color-text": theme.text, backgroundColor: theme.background, color: theme.text } as React.CSSProperties}>
             <p className="text-xs font-medium text-[var(--color-accent)]">پیش‌نمایش فروشگاه</p>
             <h4 className="mt-2 text-lg font-semibold">گالری طلا</h4>
           </div>
